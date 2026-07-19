@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Board — Personal Draft Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --turf:#16302A;
+    --turf-dark:#0E211D;
+    --turf-panel:#1D3B33;
+    --chalk:#F3EFE3;
+    --chalk-dim:#A9BFB4;
+    --hash:#35544A;
+    --gold:#E7B23C;
+    --gold-dim:#8a6c28;
+    --flag-red:#C1443B;
+    --go-green:#6FAE82;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--turf);
+    color:var(--chalk);
+    font-family:'Inter',system-ui,sans-serif;
+    line-height:1.5;
+  }
+  ::selection{background:var(--gold);color:var(--turf-dark);}
+
+  a{color:var(--gold);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    padding:72px 24px 48px;
+    background:
+      repeating-linear-gradient(180deg, transparent, transparent 79px, rgba(243,239,227,0.035) 79px, rgba(243,239,227,0.035) 80px),
+      linear-gradient(180deg, var(--turf-dark), var(--turf) 60%);
+    border-bottom:1px solid var(--hash);
+  }
+  .hero-inner{max-width:1180px;margin:0 auto;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--gold);
+    margin:0 0 14px;
+  }
+  h1.title{
+    font-family:'Anton',sans-serif;
+    font-weight:400;
+    font-size:clamp(42px, 7vw, 84px);
+    line-height:0.92;
+    letter-spacing:0.01em;
+    margin:0 0 18px;
+    text-transform:uppercase;
+  }
+  .title .accent{color:var(--gold);}
+  p.dek{
+    font-size:17px;
+    color:var(--chalk-dim);
+    max-width:640px;
+    margin:0;
+  }
+
+  /* ---------- SECTION SHELLS ---------- */
+  section{padding:40px 0;}
+  .panel{
+    background:var(--turf-panel);
+    border:1px solid var(--hash);
+    border-radius:var(--radius);
+    padding:24px;
+  }
+  h2.section-title{
+    font-family:'IBM Plex Mono',monospace;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    font-size:14px;
+    color:var(--gold);
+    margin:0 0 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  h2.section-title::before{
+    content:"";
+    display:inline-block;
+    width:18px;height:2px;
+    background:var(--gold);
+  }
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  @media(max-width:860px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+  label{
+    display:block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--chalk-dim);
+    margin-bottom:6px;
+  }
+  input[type=number], input[type=text], textarea, select{
+    width:100%;
+    background:var(--turf-dark);
+    border:1px solid var(--hash);
+    border-radius:4px;
+    color:var(--chalk);
+    padding:9px 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+  }
+  input:focus, textarea:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:1px;
+  }
+  textarea{font-family:'IBM Plex Mono',monospace;min-height:120px;resize:vertical;}
+  .field{margin-bottom:16px;}
+  .field-row{display:flex;gap:12px;}
+  .field-row .field{flex:1;}
+  .hint{font-size:12px;color:var(--chalk-dim);margin-top:6px;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:11px 20px;
+    border-radius:4px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .06s ease, background .15s ease;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--gold);color:var(--turf-dark);}
+  .btn-primary:hover{background:#f0c25e;}
+  .btn-ghost{background:transparent;color:var(--chalk);border-color:var(--hash);}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+  .fetch-status{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--chalk-dim);margin-top:10px;min-height:18px;}
+  .fetch-status.error{color:var(--flag-red);}
+  .fetch-status.ok{color:var(--go-green);}
+
+  /* ---------- SOURCE CARDS ---------- */
+  .source-card{
+    background:var(--turf-panel);
+    border:1px solid var(--hash);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:16px;
+  }
+  .source-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .source-name{
+    font-family:'Anton',sans-serif;
+    font-size:22px;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    color:var(--chalk);
+  }
+  .source-weight-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:220px;
+  }
+  .source-weight-wrap input[type=range]{width:140px;}
+  .source-weight-val{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--gold);
+    width:42px;
+    text-align:right;
+  }
+  .source-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--chalk-dim);
+  }
+  .remove-source-btn{
+    background:transparent;border:1px solid var(--hash);color:var(--chalk-dim);
+    font-size:11px;padding:4px 8px;border-radius:3px;
+  }
+  .remove-source-btn:hover{border-color:var(--flag-red);color:var(--flag-red);}
+
+  /* ---------- SLIDERS ---------- */
+  .slider-block{margin-bottom:22px;}
+  .slider-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .slider-label-row .name{font-size:13px;color:var(--chalk);font-weight:600;}
+  .slider-label-row .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
+  .slider-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--chalk-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.04em;}
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    background:var(--hash);
+    border-radius:2px;
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--gold);
+    border:2px solid var(--turf-dark);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:var(--gold);border:2px solid var(--turf-dark);cursor:pointer;
+  }
+
+  details.how{margin-top:18px;font-size:13px;color:var(--chalk-dim);}
+  details.how summary{cursor:pointer;color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;}
+  details.how p{margin:10px 0 0;}
+
+  /* ---------- TABLE ---------- */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--chalk-dim);
+    padding:10px 12px;
+    border-bottom:1px solid var(--hash);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid rgba(53,84,74,0.5);
+    vertical-align:middle;
+  }
+  tbody tr:hover{background:rgba(231,178,60,0.05);}
+  .rank-num{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:var(--gold);}
+  .player-name{font-weight:600;}
+  .player-meta{font-size:12px;color:var(--chalk-dim);}
+  .pos-chip{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 7px;
+    border-radius:3px;
+    letter-spacing:0.02em;
+  }
+  .pos-QB{background:rgba(193,68,59,0.22);color:#e88f87;}
+  .pos-RB{background:rgba(111,174,130,0.22);color:#9fd6b3;}
+  .pos-WR{background:rgba(90,140,199,0.22);color:#9bc0ea;}
+  .pos-TE{background:rgba(231,178,60,0.22);color:var(--gold);}
+  .pos-K{background:rgba(160,140,200,0.22);color:#c6b3ea;}
+  .pos-DST{background:rgba(160,160,160,0.22);color:#c9c9c9;}
+  .delta{font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .delta.up{color:var(--go-green);}
+  .delta.down{color:var(--flag-red);}
+  .delta.flat{color:var(--chalk-dim);}
+  .flag-btn{
+    background:transparent;border:1px solid var(--hash);color:var(--chalk-dim);
+    font-size:11px;padding:3px 7px;border-radius:3px;margin-right:4px;font-family:'IBM Plex Mono',monospace;
+  }
+  .flag-btn.active-injury{background:rgba(193,68,59,0.25);border-color:var(--flag-red);color:#e88f87;}
+  .flag-btn.active-rookie{background:rgba(231,178,60,0.25);border-color:var(--gold);color:var(--gold);}
+  .override-input{
+    width:64px;padding:5px 6px;font-size:13px;
+  }
+
+  /* tier divider — yard-line signature element */
+  tr.tier-row td{
+    padding:0;
+    border-bottom:none;
+  }
+  .tier-marker{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:18px 0 6px;
+    color:var(--chalk-dim);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+  }
+  .tier-marker::before, .tier-marker::after{
+    content:"";
+    flex:1;
+    height:0;
+    border-top:2px dashed var(--hash);
+    position:relative;
+  }
+  .tier-marker .tier-label{
+    color:var(--gold);
+    white-space:nowrap;
+  }
+
+  footer{
+    padding:40px 24px 60px;
+    border-top:1px solid var(--hash);
+    color:var(--chalk-dim);
+    font-size:13px;
+    text-align:center;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--chalk-dim);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    button{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Personal Draft Rankings &middot; Half-PPR &middot; 12-Team Custom</p>
+    <h1 class="title">The <span class="accent">Board</span></h1>
+    <p class="dek">Consensus rankings blended from the sources you trust, weighted the way you want, re-sorted for your league's scoring, your roster's positional scarcity, and how you personally weigh risk, injury history, and rookies. Adjust the levers below — the board updates live.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="source">
+    <h2 class="section-title">Sources &amp; trust weighting</h2>
+    <div id="sourcesContainer"></div>
+    <div class="btn-row" style="margin:4px 0 0;">
+      <button class="btn-ghost" id="addSourceBtn">+ Add another source</button>
+    </div>
+    <details class="how" style="margin-top:16px;">
+      <summary>How blending works</summary>
+      <p>Each source's rankings are converted to a percentile (where a player sits within that source's own list), then combined as a weighted average using the trust weight on each source card. A player only found in one source is scored on that source alone. Where sources disagree a lot on a player, that disagreement itself feeds into the Risk Tolerance adjustment below, alongside FantasyPros' own expert-disagreement figure.</p>
+      <p><strong>FantasyPros</strong> supports live fetch (via the Worker) since its rankings sit in a fairly parseable page. <strong>Draft Sharks</strong> and any source you add are CSV-paste only — Draft Sharks' full list sits behind their paywall for logged-in subscribers, so export it yourself from your account and paste it in here rather than something scraping it on your behalf.</p>
+    </details>
+  </section>
+
+  <section id="settings">
+    <div class="panel">
+      <h2 class="section-title">League settings</h2>
+      <div class="grid-3">
+        <div class="field">
+          <label for="numTeams">Teams in league</label>
+          <input type="number" id="numTeams" value="12" min="4" max="20">
+        </div>
+        <div class="field">
+          <label for="rosterQB">QB starters</label>
+          <input type="number" id="rosterQB" value="1" min="0" max="4">
+        </div>
+        <div class="field">
+          <label for="rosterRB">RB starters</label>
+          <input type="number" id="rosterRB" value="2" min="0" max="4">
+        </div>
+        <div class="field">
+          <label for="rosterWR">WR starters</label>
+          <input type="number" id="rosterWR" value="3" min="0" max="5">
+        </div>
+        <div class="field">
+          <label for="rosterTE">TE starters</label>
+          <input type="number" id="rosterTE" value="1" min="0" max="3">
+        </div>
+        <div class="field">
+          <label for="rosterFLEX">FLEX spots (W/R/T)</label>
+          <input type="number" id="rosterFLEX" value="1" min="0" max="4">
+        </div>
+      </div>
+      <p class="hint">Flex demand is split across RB/WR/TE below — adjust if your league's flex usage skews differently than typical.</p>
+      <div class="grid-3">
+        <div class="field">
+          <label for="flexRB">Flex share — RB %</label>
+          <input type="number" id="flexRB" value="45" min="0" max="100">
+        </div>
+        <div class="field">
+          <label for="flexWR">Flex share — WR %</label>
+          <input type="number" id="flexWR" value="45" min="0" max="100">
+        </div>
+        <div class="field">
+          <label for="flexTE">Flex share — TE %</label>
+          <input type="number" id="flexTE" value="10" min="0" max="100">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="weighting">
+    <div class="panel">
+      <h2 class="section-title">Your weighting</h2>
+      <div class="grid-2">
+        <div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Positional scarcity sensitivity</span><span class="val" id="scarcityVal">50</span></div>
+            <input type="range" id="scarcitySlider" min="0" max="100" value="50">
+            <div class="slider-ends"><span>Ignore</span><span>Aggressive</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Risk tolerance</span><span class="val" id="riskVal">0</span></div>
+            <input type="range" id="riskSlider" min="-100" max="100" value="0">
+            <div class="slider-ends"><span>Safe floor</span><span>Boom / bust</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Injury-flag penalty weight</span><span class="val" id="injuryVal">50</span></div>
+            <input type="range" id="injurySlider" min="0" max="100" value="50">
+            <div class="slider-ends"><span>Ignore flags</span><span>Heavy penalty</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Rookie bias</span><span class="val" id="rookieVal">0</span></div>
+            <input type="range" id="rookieSlider" min="-100" max="100" value="0">
+            <div class="slider-ends"><span>Fade rookies</span><span>Buy rookies</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Run-blocking O-line weight (RB)</span><span class="val" id="olRunVal">0</span></div>
+            <input type="range" id="olRunSlider" min="0" max="100" value="0">
+            <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Pass-protection O-line weight (QB/WR/TE)</span><span class="val" id="olPassVal">0</span></div>
+            <input type="range" id="olPassSlider" min="0" max="100" value="0">
+            <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">QB-support weight (WR/TE)</span><span class="val" id="qbSupportVal">0</span></div>
+            <input type="range" id="qbSupportSlider" min="0" max="100" value="0">
+            <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Strength of schedule weight</span><span class="val" id="sosVal">0</span></div>
+            <input type="range" id="sosSlider" min="0" max="100" value="0">
+            <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
+          </div>
+        </div>
+      </div>
+      <details class="how">
+        <summary>How the math works</summary>
+        <p><strong>Scarcity</strong> compares your league's per-team starter demand at each position (including a flex share) against a standard 12-team/1QB/2RB/2WR/1TE/1FLEX baseline, and shifts ranks toward positions your league makes scarcer.</p>
+        <p><strong>Risk tolerance</strong> combines FantasyPros' expert-disagreement (rank std. dev.) with cross-source disagreement as a boom/bust proxy — high disagreement means a wide range of likely outcomes.</p>
+        <p><strong>Injury</strong> and <strong>rookie</strong> weighting only apply to players you've flagged in the table below — flag them, then use the sliders to control how much that flag matters.</p>
+        <p><strong>O-line and QB-support and strength-of-schedule</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders.</p>
+        <p>Set an explicit override rank on any player and it locks that player's position regardless of every slider.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="teamfactors">
+    <div class="panel">
+      <h2 class="section-title">Team factors</h2>
+      <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Enter 1–32 rank for each team (1 = best/toughest, 32 = worst/easiest — see column headers). These feed the four sliders above. Leave a team at the neutral default (16) if you don't have an opinion.</p>
+      <div class="field">
+        <label>Paste a team-factor CSV</label>
+        <textarea id="teamCsvPaste" placeholder="TEAM,OL_RUN,OL_PASS,QB_STRENGTH,SOS_RB,SOS_WRTE,SOS_QB&#10;SF,3,5,8,20,18,22&#10;..." style="min-height:80px;"></textarea>
+      </div>
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn-ghost" id="teamCsvLoadBtn">Load pasted team data</button>
+        <label class="btn-ghost" style="display:inline-block;cursor:pointer;" for="teamCsvFile">Upload .csv file</label>
+        <input type="file" id="teamCsvFile" accept=".csv" style="display:none;">
+        <span class="fetch-status" id="teamCsvStatus"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="teamFactorTable">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>O-line run<br>(1=best)</th>
+              <th>O-line pass<br>(1=best)</th>
+              <th>QB strength<br>(1=best)</th>
+              <th>SOS vs RB<br>(1=toughest)</th>
+              <th>SOS vs WR/TE<br>(1=toughest)</th>
+              <th>SOS vs QB<br>(1=toughest)</th>
+            </tr>
+          </thead>
+          <tbody id="teamFactorBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="board">
+    <h2 class="section-title" style="margin-bottom:16px;">Your board</h2>
+    <div class="btn-row" style="margin-bottom:16px;">
+      <button class="btn-ghost" id="exportBtn">Export your board as CSV</button>
+      <button class="btn-ghost" id="resetFlagsBtn">Clear all flags &amp; overrides</button>
+    </div>
+    <div class="table-wrap panel" style="padding:0;">
+      <table id="boardTable">
+        <thead>
+          <tr>
+            <th>Your Rank</th>
+            <th>Player</th>
+            <th>Pos</th>
+            <th>Consensus</th>
+            <th>Δ</th>
+            <th>Flags</th>
+            <th>Override</th>
+          </tr>
+        </thead>
+        <tbody id="boardBody">
+          <tr><td colspan="7"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  The Board — a personal draft tool. Rankings blended from the sources you add above; all adjustments below are yours.
+</footer>
+
+<script>
+(function(){
+  const STORAGE_KEY = "theboard_state_v2";
+  const el = (id) => document.getElementById(id);
+
+  // Each source config: {key, label, mode: 'fantasypros-json'|'generic', weight, liveUrl, custom}
+  let sourceConfigs = [
+    { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:65 },
+    { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:35, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
+  ];
+  // key -> array of raw rows {name,team,position,rank,tier,bye,ecrStdDev}
+  let sourceData = {};
+  // blended, adjusted board — rebuilt from sourceData whenever something changes
+  let players = [];
+
+  // ---------- Team-level factors ----------
+  // Convention: OL_RUN / OL_PASS / QB_STRENGTH — rank 1 = best/strongest, 32 = worst/weakest.
+  // SOS_RB / SOS_WRTE / SOS_QB — rank 1 = toughest schedule, 32 = easiest.
+  const TEAMS = ["ARI","ATL","BAL","BUF","CAR","CHI","CIN","CLE","DAL","DEN","DET","GB","HOU","IND",
+    "JAX","KC","LAC","LAR","LV","MIA","MIN","NE","NO","NYG","NYJ","PHI","PIT","SEA","SF","TB","TEN","WAS"];
+  const TEAM_ALIASES = { JAC:"JAX", WSH:"WAS", GNB:"GB", KAN:"KC", NWE:"NE", NOR:"NO", SFO:"SF", TAM:"TB", LA:"LAR" };
+  const TEAM_FIELDS = ["olRun","olPass","qbStrength","sosRB","sosWRTE","sosQB"];
+
+  function normalizeTeam(code){
+    const c = String(code||"").trim().toUpperCase();
+    return TEAM_ALIASES[c] || c;
+  }
+
+  function defaultTeamData(){
+    const data = {};
+    TEAMS.forEach(t => { data[t] = { olRun:16, olPass:16, qbStrength:16, sosRB:16, sosWRTE:16, sosQB:16 }; });
+    return data;
+  }
+  let teamData = defaultTeamData();
+
+  // ---------- Persistence ----------
+  function loadLocal(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      if(saved.workerUrl) window.__workerUrl = saved.workerUrl;
+      if(saved.settings) window.__savedSettings = saved.settings;
+      if(saved.sourceWeights) window.__savedWeights = saved.sourceWeights;
+      if(saved.sourceLiveUrls) window.__savedLiveUrls = saved.sourceLiveUrls;
+      if(saved.customSources) sourceConfigs = sourceConfigs.concat(saved.customSources);
+      if(saved.flags) window.__savedFlags = saved.flags;
+      if(saved.teamData) teamData = Object.assign({}, teamData, saved.teamData);
+    }catch(e){}
+  }
+
+  function saveLocal(){
+    const settingsIds = ["numTeams","rosterQB","rosterRB","rosterWR","rosterTE","rosterFLEX","flexRB","flexWR","flexTE"];
+    const settings = {};
+    settingsIds.forEach(id => { if(el(id)) settings[id] = el(id).value; });
+    const sourceWeights = {};
+    const sourceLiveUrls = {};
+    sourceConfigs.forEach(c => { sourceWeights[c.key] = c.weight; if(c.liveUrl) sourceLiveUrls[c.key] = c.liveUrl; });
+    const customSources = sourceConfigs.filter(c => c.custom).map(c => ({key:c.key, label:c.label, mode:"generic", weight:c.weight, liveUrl:c.liveUrl||"", custom:true}));
+    const flags = {};
+    players.forEach(p => {
+      if(p.injuryFlag || p.rookieFlag || p.overrideRank){
+        flags[p.id] = {injuryFlag:p.injuryFlag, rookieFlag:p.rookieFlag, overrideRank:p.overrideRank};
+      }
+    });
+    const workerUrlField = el("workerUrl");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      workerUrl: workerUrlField ? workerUrlField.value : (window.__workerUrl||""),
+      settings, sourceWeights, sourceLiveUrls, customSources, flags, teamData
+    }));
+  }
+
+  // ---------- CSV parsing (shared across sources) ----------
+  function parseCSV(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
+    if(lines.length < 2) return null;
+    const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
+
+    const findCol = (...keywords) => header.findIndex(h => keywords.some(k => h.includes(k)));
+    const idxRank = findCol("RK","RANK");
+    const idxName = findCol("PLAYER NAME","PLAYER","NAME");
+    const idxTeam = findCol("TEAM");
+    const idxPos = findCol("POS");
+    const idxTier = findCol("TIER");
+    const idxBye = findCol("BYE");
+    const idxStdDev = findCol("STD DEV","STD.DEV","RK STD");
+
+    if(idxName === -1) return null;
+
+    const rows = [];
+    for(let i=1;i<lines.length;i++){
+      const cols = splitCsvLine(lines[i]);
+      if(cols.length < 2) continue;
+      const nameRaw = (idxName!==-1 ? cols[idxName] : "").trim();
+      if(!nameRaw) continue;
+      const rawPos = idxPos !== -1 ? cols[idxPos] || "" : "";
+      const posMatch = rawPos.match(/[A-Z]+/);
+      rows.push({
+        name: nameRaw,
+        team: idxTeam!==-1 ? (cols[idxTeam]||"").trim() : "",
+        position: posMatch ? posMatch[0] : "FLEX",
+        rank: idxRank!==-1 ? (Number(cols[idxRank]) || i) : i,
+        ecrStdDev: idxStdDev!==-1 ? (Number(cols[idxStdDev])||0) : 0,
+        tier: idxTier!==-1 ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
+        bye: idxBye!==-1 ? cols[idxBye] : null,
+      });
+    }
+    // re-rank sequentially in case source rank column was sparse/non-sequential
+    rows.sort((a,b)=>a.rank-b.rank);
+    rows.forEach((r,i)=> r.rank = i+1);
+    return rows;
+  }
+
+  function splitCsvLine(line){
+    const out = [];
+    let cur = "";
+    let inQuotes = false;
+    for(let i=0;i<line.length;i++){
+      const c = line[i];
+      if(c === '"'){ inQuotes = !inQuotes; continue; }
+      if(c === ',' && !inQuotes){ out.push(cur); cur = ""; continue; }
+      cur += c;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function normalizeName(name){
+    return String(name)
+      .toLowerCase()
+      .replace(/[.']/g, "")
+      .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function applySavedFlags(){
+    if(!window.__savedFlags) return;
+    players.forEach(p => {
+      const f = window.__savedFlags[p.id];
+      if(f){
+        p.injuryFlag = !!f.injuryFlag;
+        p.rookieFlag = !!f.rookieFlag;
+        p.overrideRank = f.overrideRank || null;
+      }
+    });
+  }
+
+  // ---------- Live fetch (FantasyPros only) ----------
+  async function liveFetch(){
+    const url = el("workerUrl").value.trim();
+    const status = el("fetchStatus_fantasypros");
+    status.className = "fetch-status";
+    if(!url){
+      status.textContent = "Add your Worker URL first (see README to deploy one).";
+      status.className = "fetch-status error";
+      return;
+    }
+    status.textContent = "Fetching…";
+    try{
+      const res = await fetch(`${url}?view=overall`);
+      const data = await res.json();
+      if(!data.ok){
+        status.textContent = `Live fetch failed: ${data.error || "unknown error"}. Use CSV paste instead.`;
+        status.className = "fetch-status error";
+        return;
+      }
+      sourceData.fantasypros = data.players.map(p => ({
+        name:p.name, team:p.team, position:p.position, rank:p.ecr,
+        ecrStdDev:p.ecrStdDev||0, tier:p.tier, bye:p.bye
+      }));
+      status.textContent = `Loaded ${sourceData.fantasypros.length} players — fetched ${new Date(data.fetchedAt).toLocaleTimeString()}.`;
+      status.className = "fetch-status ok";
+      updateSourceCount("fantasypros");
+      rebuild();
+    }catch(err){
+      status.textContent = `Live fetch failed (network/CORS). Use CSV paste instead.`;
+      status.className = "fetch-status error";
+    }
+  }
+
+  function loadFromCSVText(key, text){
+    const rows = parseCSV(text);
+    const status = el(`fetchStatus_${key}`);
+    if(!rows){
+      status.textContent = "Couldn't parse that CSV — check the header row has player name / rank columns.";
+      status.className = "fetch-status error";
+      return;
+    }
+    sourceData[key] = rows;
+    status.textContent = `Loaded ${rows.length} players from CSV.`;
+    status.className = "fetch-status ok";
+    updateSourceCount(key);
+    rebuild();
+  }
+
+  // ---------- Generic live fetch (any source with a "Live page URL") ----------
+  async function genericLiveFetch(key, pageUrl){
+    const status = el(`fetchStatus_${key}`);
+    const workerUrl = el("workerUrl") ? el("workerUrl").value.trim() : (window.__workerUrl||"");
+    status.className = "fetch-status";
+    if(!workerUrl){
+      status.textContent = "Add a Worker URL on the FantasyPros card first — every source reuses that one Worker.";
+      status.className = "fetch-status error";
+      return;
+    }
+    if(!pageUrl){
+      status.textContent = "Add a live page URL first, or use CSV paste instead.";
+      status.className = "fetch-status error";
+      return;
+    }
+    status.textContent = "Fetching…";
+    try{
+      const res = await fetch(`${workerUrl}?url=${encodeURIComponent(pageUrl)}`);
+      const data = await res.json();
+      if(!data.ok){
+        status.textContent = `Live fetch failed: ${data.error || "unknown error"}. Use CSV paste instead.`;
+        status.className = "fetch-status error";
+        return;
+      }
+      const rows = parseHtmlTable(data.html);
+      if(!rows || !rows.length){
+        status.textContent = "Fetched the page, but couldn't find a rankings table in it (often means the page builds its table with JavaScript). Use CSV paste instead.";
+        status.className = "fetch-status error";
+        return;
+      }
+      sourceData[key] = rows;
+      status.textContent = `Loaded ${rows.length} players — fetched ${new Date(data.fetchedAt).toLocaleTimeString()}.`;
+      status.className = "fetch-status ok";
+      updateSourceCount(key);
+      rebuild();
+    }catch(err){
+      status.textContent = `Live fetch failed (network/CORS). Use CSV paste instead.`;
+      status.className = "fetch-status error";
+    }
+  }
+
+  // Best-effort: find the largest table in a page's HTML and map its columns
+  // the same way parseCSV does. Works for server-rendered tables; pages that
+  // build their table via JavaScript won't have rows in the raw HTML at all.
+  function parseHtmlTable(html){
+    let doc;
+    try{
+      doc = new DOMParser().parseFromString(html, "text/html");
+    }catch(e){ return null; }
+
+    const tables = Array.from(doc.querySelectorAll("table"));
+    if(!tables.length) return null;
+
+    let best = null, bestRowCount = 0;
+    tables.forEach(t => {
+      const rowCount = t.querySelectorAll("tr").length;
+      if(rowCount > bestRowCount){ bestRowCount = rowCount; best = t; }
+    });
+    if(!best || bestRowCount < 3) return null;
+
+    const trs = Array.from(best.querySelectorAll("tr"));
+    const cellText = (cell) => cell.textContent.replace(/\s+/g," ").trim();
+    const rowsRaw = trs.map(tr => Array.from(tr.querySelectorAll("th,td")).map(cellText)).filter(r => r.length >= 2);
+    if(rowsRaw.length < 3) return null;
+
+    const header = rowsRaw[0].map(h => h.toUpperCase());
+    const findCol = (...keywords) => header.findIndex(h => keywords.some(k => h.includes(k)));
+    const idxRank = findCol("RK","RANK","#");
+    const idxName = findCol("PLAYER","NAME");
+    const idxTeam = findCol("TEAM","TM");
+    const idxPos = findCol("POS");
+    const idxTier = findCol("TIER");
+    const idxBye = findCol("BYE");
+
+    if(idxName === -1) return null;
+
+    const rows = [];
+    for(let i=1;i<rowsRaw.length;i++){
+      const cols = rowsRaw[i];
+      const nameRaw = idxName < cols.length ? cols[idxName] : "";
+      if(!nameRaw || /^tier/i.test(nameRaw)) continue;
+      const rawPos = idxPos !== -1 && idxPos < cols.length ? cols[idxPos] : "";
+      const posMatch = rawPos.match(/[A-Z]+/);
+      rows.push({
+        name: nameRaw.trim(),
+        team: idxTeam !== -1 && idxTeam < cols.length ? cols[idxTeam].trim() : "",
+        position: posMatch ? posMatch[0] : "FLEX",
+        rank: idxRank !== -1 && idxRank < cols.length ? (Number(cols[idxRank]) || i) : i,
+        ecrStdDev: 0,
+        tier: idxTier !== -1 && idxTier < cols.length ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
+        bye: idxBye !== -1 && idxBye < cols.length ? cols[idxBye] : null,
+      });
+    }
+    if(!rows.length) return null;
+    rows.sort((a,b)=>a.rank-b.rank);
+    rows.forEach((r,i)=> r.rank = i+1);
+    return rows;
+  }
+
+  function updateSourceCount(key){
+    const countEl = el(`sourceCount_${key}`);
+    if(countEl) countEl.textContent = sourceData[key] ? `${sourceData[key].length} players loaded` : "No data loaded";
+  }
+
+  // ---------- Team factor table ----------
+  function renderTeamFactorTable(){
+    const body = el("teamFactorBody");
+    body.innerHTML = TEAMS.map(t => {
+      const row = teamData[t];
+      const inputs = TEAM_FIELDS.map(f => `<input type="number" min="1" max="32" value="${row[f]}" data-team="${t}" data-field="${f}" class="override-input" style="width:56px;">`).join("</td><td>");
+      return `<tr><td class="player-name">${t}</td><td>${inputs}</td></tr>`;
+    }).join("");
+
+    body.querySelectorAll("input").forEach(input => {
+      input.addEventListener("change", (e) => {
+        const t = e.target.dataset.team, f = e.target.dataset.field;
+        let v = Number(e.target.value);
+        if(!v || v < 1) v = 1;
+        if(v > 32) v = 32;
+        teamData[t][f] = v;
+        e.target.value = v;
+        render();
+        saveLocal();
+      });
+    });
+  }
+
+  function parseTeamCSV(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
+    if(lines.length < 2) return null;
+    const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
+    const findCol = (...keywords) => header.findIndex(h => keywords.some(k => h.includes(k)));
+    const idxTeam = findCol("TEAM","TM");
+    const idxOlRun = findCol("OL_RUN","OLRUN","RUN BLOCK","RUN_BLOCK");
+    const idxOlPass = findCol("OL_PASS","OLPASS","PASS BLOCK","PASS PROTECT");
+    const idxQb = findCol("QB_STRENGTH","QB STRENGTH","QB_RANK");
+    const idxSosRb = findCol("SOS_RB","SOS RB");
+    const idxSosWrte = findCol("SOS_WRTE","SOS_WR","SOS WR");
+    const idxSosQb = findCol("SOS_QB","SOS QB");
+    if(idxTeam === -1) return null;
+
+    let count = 0;
+    for(let i=1;i<lines.length;i++){
+      const cols = splitCsvLine(lines[i]);
+      const t = normalizeTeam(cols[idxTeam]);
+      if(!TEAMS.includes(t)) continue;
+      const setIf = (idx, field) => { if(idx !== -1 && cols[idx] !== undefined && cols[idx] !== ""){ const v = Number(cols[idx]); if(v>=1 && v<=32) teamData[t][field] = v; } };
+      setIf(idxOlRun, "olRun");
+      setIf(idxOlPass, "olPass");
+      setIf(idxQb, "qbStrength");
+      setIf(idxSosRb, "sosRB");
+      setIf(idxSosWrte, "sosWRTE");
+      setIf(idxSosQb, "sosQB");
+      count++;
+    }
+    return count;
+  }
+
+  // ---------- Blending ----------
+  function blendSources(){
+    const loaded = sourceConfigs.filter(c => sourceData[c.key] && sourceData[c.key].length);
+    if(!loaded.length) return [];
+
+    const percentileMaps = {}; // key -> Map(normName -> {percentile, rawRank, row})
+    loaded.forEach(c => {
+      const rows = sourceData[c.key];
+      const n = rows.length;
+      const map = new Map();
+      rows.forEach(r => {
+        map.set(normalizeName(r.name), { percentile: r.rank/n, rawRank:r.rank, row:r });
+      });
+      percentileMaps[c.key] = map;
+    });
+
+    const allNames = new Set();
+    loaded.forEach(c => percentileMaps[c.key].forEach((v,k) => allNames.add(k)));
+
+    const blended = [];
+    allNames.forEach(nameKey => {
+      let weightedSum = 0, weightSum = 0;
+      const percentileVals = [];
+      let repRow = null, fpStdDev = 0;
+      loaded.forEach(c => {
+        const entry = percentileMaps[c.key].get(nameKey);
+        if(entry){
+          const w = Math.max(0, Number(c.weight)||0);
+          weightedSum += w * entry.percentile;
+          weightSum += w;
+          percentileVals.push(entry.percentile);
+          if(!repRow) repRow = entry.row;
+          if(c.key === "fantasypros" && entry.row.ecrStdDev) fpStdDev = entry.row.ecrStdDev;
+        }
+      });
+      if(weightSum === 0 || !repRow) return;
+      const blendedPercentile = weightedSum / weightSum;
+      const spread = percentileVals.length > 1 ? (Math.max(...percentileVals) - Math.min(...percentileVals)) : 0;
+      blended.push({
+        id: nameKey + "-" + (repRow.team||""),
+        name: repRow.name,
+        team: repRow.team,
+        position: repRow.position,
+        tier: repRow.tier,
+        bye: repRow.bye,
+        blendedPercentile,
+        crossSourceSpread: spread,
+        fpStdDev,
+        sourceCount: percentileVals.length,
+        overrideRank: null, injuryFlag:false, rookieFlag:false
+      });
+    });
+
+    blended.sort((a,b) => a.blendedPercentile - b.blendedPercentile);
+    blended.forEach((p,i) => {
+      p.ecr = i+1; // composite consensus rank feeding the adjustment pipeline
+      p.ecrStdDev = p.fpStdDev + p.crossSourceSpread * blended.length * 0.25;
+    });
+    return blended;
+  }
+
+  function rebuild(){
+    players = blendSources();
+    applySavedFlags();
+    render();
+    saveLocal();
+  }
+
+  // ---------- Scoring model ----------
+  const BASELINE = { teams:12, QB:1, RB:2, WR:2, TE:1, FLEX:1, flexRB:0.4, flexWR:0.45, flexTE:0.15 };
+
+  function getSettings(){
+    return {
+      teams: Number(el("numTeams").value)||12,
+      QB: Number(el("rosterQB").value)||0,
+      RB: Number(el("rosterRB").value)||0,
+      WR: Number(el("rosterWR").value)||0,
+      TE: Number(el("rosterTE").value)||0,
+      FLEX: Number(el("rosterFLEX").value)||0,
+      flexRB: (Number(el("flexRB").value)||0)/100,
+      flexWR: (Number(el("flexWR").value)||0)/100,
+      flexTE: (Number(el("flexTE").value)||0)/100,
+    };
+  }
+
+  function demandPerTeam(settings, pos){
+    const flexAlloc = { RB: settings.flexRB, WR: settings.flexWR, TE: settings.flexTE }[pos] || 0;
+    const base = { QB: settings.QB, RB: settings.RB, WR: settings.WR, TE: settings.TE }[pos] || 0;
+    return base + settings.FLEX * flexAlloc;
+  }
+
+  function baselineDemandPerTeam(pos){
+    const flexAlloc = { RB: BASELINE.flexRB, WR: BASELINE.flexWR, TE: BASELINE.flexTE }[pos] || 0;
+    const base = { QB: BASELINE.QB, RB: BASELINE.RB, WR: BASELINE.WR, TE: BASELINE.TE }[pos] || 0;
+    return base + BASELINE.FLEX * flexAlloc;
+  }
+
+  function scarcityFactor(settings, pos){
+    if(!["QB","RB","WR","TE"].includes(pos)) return 0;
+    const league = demandPerTeam(settings, pos);
+    const base = baselineDemandPerTeam(pos);
+    if(base === 0) return 0;
+    return (league - base) / base;
+  }
+
+  // Team-factor helpers. Convention: strength ranks (OL, QB) — 1=best, 32=worst.
+  // SOS ranks — 1=toughest, 32=easiest. Both normalized to roughly [-1, +1],
+  // positive always meaning "good for this player".
+  const TEAM_FACTOR_SCALE = 20;
+  function strengthFactor(rank){ return (16.5 - rank) / 15.5; }
+  function easeFactor(rank){ return (rank - 16.5) / 15.5; }
+
+  function teamFactorAdjustment(p, weights){
+    const t = normalizeTeam(p.team);
+    const td = teamData[t];
+    if(!td) return 0;
+    let adj = 0;
+    if(p.position === "RB"){
+      adj += strengthFactor(td.olRun) * weights.olRun;
+      adj += easeFactor(td.sosRB) * weights.sos;
+    }
+    if(["QB","WR","TE"].includes(p.position)){
+      adj += strengthFactor(td.olPass) * weights.olPass;
+    }
+    if(["WR","TE"].includes(p.position)){
+      adj += strengthFactor(td.qbStrength) * weights.qbSupport;
+      adj += easeFactor(td.sosWRTE) * weights.sos;
+    }
+    if(p.position === "QB"){
+      adj += easeFactor(td.sosQB) * weights.sos;
+    }
+    return adj * TEAM_FACTOR_SCALE;
+  }
+
+  function computeBoard(){
+    const settings = getSettings();
+    const scarcitySens = Number(el("scarcitySlider").value)/100;
+    const risk = Number(el("riskSlider").value)/100;
+    const injuryWeight = Number(el("injurySlider").value)/100;
+    const rookieBias = Number(el("rookieSlider").value)/100;
+    const teamWeights = {
+      olRun: Number(el("olRunSlider").value)/100,
+      olPass: Number(el("olPassSlider").value)/100,
+      qbSupport: Number(el("qbSupportSlider").value)/100,
+      sos: Number(el("sosSlider").value)/100,
+    };
+
+    const scored = players.map(p => {
+      if(p.overrideRank){
+        return { ...p, adjusted: p.overrideRank, locked:true };
+      }
+      let adjusted = p.ecr;
+      const sf = scarcityFactor(settings, p.position);
+      adjusted -= p.ecr * sf * scarcitySens * 0.5;
+      adjusted += -(risk) * (p.ecrStdDev||0) * 1.0;
+      if(p.injuryFlag) adjusted += injuryWeight * 15;
+      if(p.rookieFlag) adjusted += -(rookieBias) * 12;
+      adjusted -= teamFactorAdjustment(p, teamWeights);
+      return { ...p, adjusted, locked:false };
+    });
+
+    scored.sort((a,b) => a.adjusted - b.adjusted);
+    scored.forEach((p,i) => p.yourRank = i+1);
+    return scored;
+  }
+
+  // ---------- Render: source cards ----------
+  function renderSourceCards(){
+    const container = el("sourcesContainer");
+    container.innerHTML = sourceConfigs.map(c => {
+      const weight = window.__savedWeights && window.__savedWeights[c.key] !== undefined ? Number(window.__savedWeights[c.key]) : c.weight;
+      c.weight = weight;
+      if(window.__savedLiveUrls && window.__savedLiveUrls[c.key] && !c.liveUrl) c.liveUrl = window.__savedLiveUrls[c.key];
+      const count = sourceData[c.key] ? `${sourceData[c.key].length} players loaded` : "No data loaded";
+      const isFP = c.mode === "fantasypros-json";
+      return `
+      <div class="source-card" data-key="${escapeAttr(c.key)}">
+        <div class="source-card-head">
+          <div>
+            <div class="source-name">${escapeHtml(c.label)}</div>
+            <div class="source-count" id="sourceCount_${escapeAttr(c.key)}">${count}</div>
+          </div>
+          <div class="source-weight-wrap">
+            <label style="margin:0;white-space:nowrap;">Trust weight</label>
+            <input type="range" min="0" max="100" value="${weight}" data-role="weight" data-key="${escapeAttr(c.key)}">
+            <span class="source-weight-val" data-role="weightVal" data-key="${escapeAttr(c.key)}">${weight}%</span>
+          </div>
+          ${c.custom ? `<button class="remove-source-btn" data-role="remove" data-key="${escapeAttr(c.key)}">Remove</button>` : ""}
+        </div>
+        ${isFP ? `
+          <div class="field">
+            <label for="workerUrl">Worker URL (shared by all sources)</label>
+            <input type="text" id="workerUrl" placeholder="https://the-board.you.workers.dev" value="${escapeAttr(window.__workerUrl||"")}">
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" data-role="livefetch-fp" data-key="${escapeAttr(c.key)}">Live fetch from ${escapeHtml(c.label)}</button>
+            <span class="fetch-status" id="fetchStatus_${escapeAttr(c.key)}"></span>
+          </div>
+          <p class="hint">Uses FantasyPros' own rankings data directly — the most reliable live option. Or paste a CSV below instead.</p>
+        ` : `
+          <div class="field">
+            <label>Live page URL</label>
+            <input type="text" data-role="liveurl" data-key="${escapeAttr(c.key)}" placeholder="https://example.com/rankings" value="${escapeAttr(c.liveUrl||"")}">
+            <p class="hint">Fetched through the same Worker (set its URL on the FantasyPros card above). Works for pages that render their table in plain HTML — won't work for JavaScript-built tables or anything behind a login.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" data-role="livefetch-generic" data-key="${escapeAttr(c.key)}">Live fetch from ${escapeHtml(c.label)}</button>
+            <span class="fetch-status" id="fetchStatus_${escapeAttr(c.key)}"></span>
+          </div>
+        `}
+        <div class="field">
+          <label>Paste ${escapeHtml(c.label)} CSV export</label>
+          <textarea data-role="csvpaste" data-key="${escapeAttr(c.key)}" placeholder="RK,PLAYER NAME,TEAM,POS,..."></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" data-role="csvload" data-key="${escapeAttr(c.key)}">Load pasted rankings</button>
+          <label class="btn-ghost" style="display:inline-block;cursor:pointer;" for="csvFile_${escapeAttr(c.key)}">Upload .csv file</label>
+          <input type="file" id="csvFile_${escapeAttr(c.key)}" accept=".csv" style="display:none;" data-role="csvfile" data-key="${escapeAttr(c.key)}">
+        </div>
+      </div>`;
+    }).join("");
+
+    // wire events for the freshly rendered cards
+    container.querySelectorAll('[data-role="weight"]').forEach(input => {
+      input.addEventListener("input", (e) => {
+        const key = e.target.dataset.key;
+        const cfg = sourceConfigs.find(c => c.key === key);
+        if(cfg) cfg.weight = Number(e.target.value);
+        const out = container.querySelector(`[data-role="weightVal"][data-key="${key}"]`);
+        if(out) out.textContent = `${e.target.value}%`;
+        rebuild();
+      });
+    });
+    container.querySelectorAll('[data-role="livefetch-fp"]').forEach(btn => {
+      btn.addEventListener("click", liveFetch);
+    });
+    container.querySelectorAll('[data-role="livefetch-generic"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const key = e.target.dataset.key;
+        const cfg = sourceConfigs.find(c => c.key === key);
+        genericLiveFetch(key, cfg ? cfg.liveUrl : "");
+      });
+    });
+    container.querySelectorAll('[data-role="liveurl"]').forEach(input => {
+      input.addEventListener("change", (e) => {
+        const key = e.target.dataset.key;
+        const cfg = sourceConfigs.find(c => c.key === key);
+        if(cfg) cfg.liveUrl = e.target.value.trim();
+        saveLocal();
+      });
+    });
+    container.querySelectorAll('[data-role="csvload"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const key = e.target.dataset.key;
+        const ta = container.querySelector(`[data-role="csvpaste"][data-key="${key}"]`);
+        loadFromCSVText(key, ta.value);
+      });
+    });
+    container.querySelectorAll('[data-role="csvfile"]').forEach(input => {
+      input.addEventListener("change", (e) => {
+        const key = e.target.dataset.key;
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => loadFromCSVText(key, ev.target.result);
+        reader.readAsText(file);
+      });
+    });
+    container.querySelectorAll('[data-role="remove"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const key = e.target.dataset.key;
+        sourceConfigs = sourceConfigs.filter(c => c.key !== key);
+        delete sourceData[key];
+        renderSourceCards();
+        rebuild();
+      });
+    });
+
+    const workerUrlField = el("workerUrl");
+    if(workerUrlField){
+      workerUrlField.addEventListener("input", () => { window.__workerUrl = workerUrlField.value; saveLocal(); });
+    }
+  }
+
+  // ---------- Render: board table ----------
+  function positionClass(pos){
+    if(pos.startsWith("DST") || pos.startsWith("DEF")) return "pos-DST";
+    if(["QB","RB","WR","TE","K"].includes(pos)) return `pos-${pos}`;
+    return "pos-WR";
+  }
+
+  function render(){
+    const body = el("boardBody");
+    if(!players.length){
+      body.innerHTML = `<tr><td colspan="7"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>`;
+      return;
+    }
+    const board = computeBoard();
+    let html = "";
+    let lastTier = null;
+    board.forEach(p => {
+      if(p.tier && p.tier !== lastTier){
+        html += `<tr class="tier-row"><td colspan="7"><div class="tier-marker"><span class="tier-label">Tier ${p.tier}</span></div></td></tr>`;
+        lastTier = p.tier;
+      }
+      const delta = p.ecr - p.yourRank;
+      const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "flat");
+      const deltaText = delta === 0 ? "—" : (delta > 0 ? `↑${delta}` : `↓${Math.abs(delta)}`);
+      const pos = (p.position||"").replace(/[0-9]/g,"");
+      const srcNote = p.sourceCount > 1 ? "" : ` <span title="Only found in one source">*</span>`;
+      html += `
+        <tr data-id="${escapeAttr(p.id)}">
+          <td class="rank-num">${p.yourRank}</td>
+          <td>
+            <div class="player-name">${escapeHtml(p.name)}${srcNote}</div>
+            <div class="player-meta">${escapeHtml(p.team||"")}${p.bye ? " · Bye " + escapeHtml(String(p.bye)) : ""}</div>
+          </td>
+          <td><span class="pos-chip ${positionClass(pos)}">${escapeHtml(pos)}</span></td>
+          <td>${p.ecr}</td>
+          <td class="delta ${deltaClass}">${deltaText}</td>
+          <td>
+            <button class="flag-btn ${p.injuryFlag?'active-injury':''}" data-action="injury" title="Flag injury risk">INJ</button>
+            <button class="flag-btn ${p.rookieFlag?'active-rookie':''}" data-action="rookie" title="Flag rookie">R</button>
+          </td>
+          <td><input type="number" class="override-input" data-action="override" placeholder="#" value="${p.overrideRank||''}"></td>
+        </tr>`;
+    });
+    body.innerHTML = html;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- Events ----------
+  el("addSourceBtn").addEventListener("click", () => {
+    const label = prompt("Name of the new source (e.g. \"ESPN\", \"PFF\"):");
+    if(!label) return;
+    const key = "custom_" + normalizeName(label).replace(/\s+/g,"_") + "_" + Date.now();
+    sourceConfigs.push({ key, label, mode:"generic", weight:20, liveUrl:"", custom:true });
+    renderSourceCards();
+    rebuild();
+  });
+
+  ["numTeams","rosterQB","rosterRB","rosterWR","rosterTE","rosterFLEX","flexRB","flexWR","flexTE"].forEach(id => {
+    el(id).addEventListener("input", () => { render(); saveLocal(); });
+  });
+
+  [["scarcitySlider","scarcityVal"],["riskSlider","riskVal"],["injurySlider","injuryVal"],["rookieSlider","rookieVal"],
+   ["olRunSlider","olRunVal"],["olPassSlider","olPassVal"],["qbSupportSlider","qbSupportVal"],["sosSlider","sosVal"]].forEach(([slider,out]) => {
+    el(slider).addEventListener("input", () => { el(out).textContent = el(slider).value; render(); saveLocal(); });
+  });
+
+  el("teamCsvLoadBtn").addEventListener("click", () => {
+    const count = parseTeamCSV(el("teamCsvPaste").value);
+    const status = el("teamCsvStatus");
+    if(count === null){
+      status.textContent = "Couldn't parse that — check it has a TEAM column.";
+      status.className = "fetch-status error";
+      return;
+    }
+    status.textContent = `Updated ${count} teams.`;
+    status.className = "fetch-status ok";
+    renderTeamFactorTable();
+    render();
+    saveLocal();
+  });
+  el("teamCsvFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const count = parseTeamCSV(ev.target.result);
+      const status = el("teamCsvStatus");
+      if(count === null){
+        status.textContent = "Couldn't parse that — check it has a TEAM column.";
+        status.className = "fetch-status error";
+        return;
+      }
+      status.textContent = `Updated ${count} teams.`;
+      status.className = "fetch-status ok";
+      renderTeamFactorTable();
+      render();
+      saveLocal();
+    };
+    reader.readAsText(file);
+  });
+
+  el("boardBody").addEventListener("click", (e) => {
+    const btn = e.target.closest(".flag-btn");
+    if(!btn) return;
+    const tr = btn.closest("tr");
+    const id = tr.getAttribute("data-id");
+    const p = players.find(pl => pl.id === id);
+    if(!p) return;
+    if(btn.dataset.action === "injury") p.injuryFlag = !p.injuryFlag;
+    if(btn.dataset.action === "rookie") p.rookieFlag = !p.rookieFlag;
+    render();
+    saveLocal();
+  });
+
+  el("boardBody").addEventListener("change", (e) => {
+    if(e.target.dataset.action !== "override") return;
+    const tr = e.target.closest("tr");
+    const id = tr.getAttribute("data-id");
+    const p = players.find(pl => pl.id === id);
+    if(!p) return;
+    const val = Number(e.target.value);
+    p.overrideRank = val > 0 ? val : null;
+    render();
+    saveLocal();
+  });
+
+  el("exportBtn").addEventListener("click", () => {
+    if(!players.length) return;
+    const board = computeBoard();
+    const rows = [["Your Rank","Player","Team","Position","Consensus","Sources Used","Tier","Injury Flag","Rookie Flag","Override"]];
+    board.forEach(p => rows.push([p.yourRank, p.name, p.team, (p.position||"").replace(/[0-9]/g,""), p.ecr, p.sourceCount, p.tier, p.injuryFlag?"Y":"", p.rookieFlag?"Y":"", p.overrideRank||""]));
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "the-board-rankings.csv";
+    a.click();
+  });
+
+  el("resetFlagsBtn").addEventListener("click", () => {
+    players.forEach(p => { p.injuryFlag=false; p.rookieFlag=false; p.overrideRank=null; });
+    render();
+    saveLocal();
+  });
+
+  loadLocal();
+  if(window.__savedSettings){
+    Object.entries(window.__savedSettings).forEach(([k,v]) => { if(el(k)) el(k).value = v; });
+  }
+  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider"].forEach(id => {
+    const out = el(id.replace("Slider","Val"));
+    if(out) out.textContent = el(id).value;
+  });
+  renderSourceCards();
+  renderTeamFactorTable();
+  render();
+})();
+</script>
+
+</body>
+</html>
