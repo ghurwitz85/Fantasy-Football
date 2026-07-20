@@ -58,7 +58,13 @@ Half-PPR scoring, 12 teams (adjust if wrong), QB/2RB/3WR/TE/1FLEX(W-R-T)/K/DEF s
   - *Pass-protection O-line* boosts/downgrades QB/WR/TE based on their team's pass-protection rank.
   - *QB support* boosts/downgrades WR/TE based on their own team's QB-strength rank.
   - *Strength of schedule* boosts/downgrades every skill position using the matching SOS list for their position.
-  - You can paste a CSV (`TEAM,OL_RUN,OL_PASS,QB_STRENGTH,SOS_RB,SOS_WRTE,SOS_QB`) or edit the 32-team table directly in the browser. Teams left at the neutral default (16) get no adjustment.
+  - You can paste a CSV (`TEAM,OL_RUN,OL_PASS,QB_STRENGTH,DEF_STRENGTH,SOS_RB,SOS_WRTE,SOS_QB`) or edit the 32-team table directly in the browser. Teams left at the neutral default (16) get no adjustment.
+  - *Game script* (new): uses the Defense rank column. A bad defense means a team trails more, boosting pass volume for its QB/WR/TE; a good defense means a team leads more, boosting rush volume for its RB.
+- **Projections and VORP**: paste raw stat projections (and/or last season's actual raw stats, blended via the History Weight slider) in the **Fantasy point projections** section. Projected Points run through your exact League Scoring Rules, then VORP (Value Over Replacement) compares each player's points to the last realistic starter at his position — the correct signal for maximizing your starting lineup's total expected points, not just raw points or consensus rank.
 - **Manual override**: type a rank directly into a player's row to lock them there, ignoring every other factor.
+
+## Auditing why a player moved
+
+Click **▸ why** next to any player to see exactly which sliders moved them and by how much — positional scarcity, risk tolerance, each team factor, VORP, everything. No need to reverse-engineer it by eye; the tool shows its work per player.
 
 This is a heuristic tool, not a formal value-based-drafting calculator — it's meant to nudge the consensus board toward your judgment, not replace it.
