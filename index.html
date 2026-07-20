@@ -538,8 +538,144 @@
     { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:65 },
     { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:35, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
   ];
+
+  // Pre-loaded 2026 FantasyPros top-250 rankings (baked in so the board is populated
+  // out of the box — covers every startable player plus deep bench for a 12-team league).
+  // Format: [rank, name, team, position, tier, bye]
+  const DEFAULT_FANTASYPROS_TOP250 = [
+    [1,"Bijan Robinson","ATL","RB",1,"11"],[2,"Jahmyr Gibbs","DET","RB",1,"6"],
+    [3,"Ja'Marr Chase","CIN","WR",1,"6"],[4,"Puka Nacua","LAR","WR",1,"11"],
+    [5,"Jaxon Smith-Njigba","SEA","WR",1,"11"],[6,"Amon-Ra St. Brown","DET","WR",1,"6"],
+    [7,"Christian McCaffrey","SF","RB",1,"8"],[8,"CeeDee Lamb","DAL","WR",2,"14"],
+    [9,"Jonathan Taylor","IND","RB",2,"13"],[10,"Justin Jefferson","MIN","WR",2,"6"],
+    [11,"James Cook III","BUF","RB",2,"7"],[12,"Ashton Jeanty","LV","RB",2,"13"],
+    [13,"Drake London","ATL","WR",2,"11"],[14,"A.J. Brown","NE","WR",2,"11"],
+    [15,"Nico Collins","HOU","WR",2,"8"],[16,"De'Von Achane","MIA","RB",2,"6"],
+    [17,"Brock Bowers","LV","TE",3,"13"],[18,"Chase Brown","CIN","RB",3,"6"],
+    [19,"Saquon Barkley","PHI","RB",3,"10"],[20,"Omarion Hampton","LAC","RB",3,"7"],
+    [21,"George Pickens","DAL","WR",3,"14"],[22,"Trey McBride","ARI","TE",3,"14"],
+    [23,"Derrick Henry","BAL","RB",3,"13"],[24,"Kenneth Walker III","KC","RB",3,"5"],
+    [25,"Chris Olave","NO","WR",3,"8"],[26,"Rashee Rice","KC","WR",3,"5"],
+    [27,"Josh Allen","BUF","QB",3,"7"],[28,"DeVonta Smith","PHI","WR",4,"10"],
+    [29,"Tetairoa McMillan","CAR","WR",4,"5"],[30,"Tee Higgins","CIN","WR",4,"6"],
+    [31,"Zay Flowers","BAL","WR",4,"13"],[32,"Jeremiyah Love","ARI","RB",4,"14"],
+    [33,"Kyren Williams","LAR","RB",4,"11"],[34,"Lamar Jackson","BAL","QB",4,"13"],
+    [35,"Drake Maye","NE","QB",4,"11"],[36,"Josh Jacobs","GB","RB",4,"11"],
+    [37,"Garrett Wilson","NYJ","WR",4,"13"],[38,"Breece Hall","NYJ","RB",4,"13"],
+    [39,"Ladd McConkey","LAC","WR",4,"7"],[40,"Emeka Egbuka","TB","WR",4,"10"],
+    [41,"Colston Loveland","CHI","TE",4,"10"],[42,"Javonte Williams","DAL","RB",4,"14"],
+    [43,"Malik Nabers","NYG","WR",4,"8"],[44,"Jaylen Waddle","DEN","WR",4,"10"],
+    [45,"Joe Burrow","CIN","QB",4,"6"],[46,"Travis Etienne Jr.","NO","RB",4,"8"],
+    [47,"Terry McLaurin","WAS","WR",4,"7"],[48,"Davante Adams","LAR","WR",5,"11"],
+    [49,"Luther Burden III","CHI","WR",5,"10"],[50,"Cam Skattebo","NYG","RB",5,"8"],
+    [51,"Jameson Williams","DET","WR",5,"6"],[52,"Quinshon Judkins","CLE","RB",5,"11"],
+    [53,"Bucky Irving","TB","RB",5,"10"],[54,"Jayden Daniels","WAS","QB",5,"7"],
+    [55,"Mike Evans","SF","WR",5,"8"],[56,"Tyler Warren","IND","TE",5,"13"],
+    [57,"D'Andre Swift","CHI","RB",5,"10"],[58,"TreVeyon Henderson","NE","RB",5,"11"],
+    [59,"Christian Watson","GB","WR",5,"11"],[60,"Jalen Hurts","PHI","QB",5,"10"],
+    [61,"DJ Moore","BUF","WR",5,"7"],[62,"David Montgomery","HOU","RB",5,"8"],
+    [63,"Rome Odunze","CHI","WR",5,"10"],[64,"Bhayshul Tuten","JAC","RB",5,"7"],
+    [65,"Tucker Kraft","GB","TE",5,"11"],[66,"Caleb Williams","CHI","QB",5,"10"],
+    [67,"Jadarian Price","SEA","RB",5,"11"],[68,"Justin Herbert","LAC","QB",6,"7"],
+    [69,"Carnell Tate","TEN","WR",6,"9"],[70,"Jaylen Warren","PIT","RB",6,"9"],
+    [71,"Marvin Harrison Jr.","ARI","WR",6,"14"],[72,"Alec Pierce","IND","WR",6,"13"],
+    [73,"Trevor Lawrence","JAC","QB",6,"7"],[74,"Tony Pollard","TEN","RB",6,"9"],
+    [75,"DK Metcalf","PIT","WR",6,"9"],[76,"Rhamondre Stevenson","NE","RB",6,"11"],
+    [77,"Brian Thomas Jr.","JAC","WR",6,"7"],[78,"Dak Prescott","DAL","QB",6,"14"],
+    [79,"Harold Fannin Jr.","CLE","TE",6,"11"],[80,"Chuba Hubbard","CAR","RB",6,"5"],
+    [81,"Courtland Sutton","DEN","WR",6,"10"],[82,"Kyle Pitts Sr.","ATL","TE",6,"11"],
+    [83,"Rico Dowdle","PIT","RB",6,"9"],[84,"Sam LaPorta","DET","TE",6,"6"],
+    [85,"Chris Godwin Jr.","TB","WR",6,"10"],[86,"Parker Washington","JAC","WR",6,"7"],
+    [87,"Jaxson Dart","NYG","QB",6,"8"],[88,"RJ Harvey","DEN","RB",6,"10"],
+    [89,"Jordyn Tyson","NO","WR",6,"8"],[90,"Kyle Monangai","CHI","RB",6,"10"],
+    [91,"Brock Purdy","SF","QB",6,"8"],[92,"Michael Wilson","ARI","WR",6,"14"],
+    [93,"Michael Pittman Jr.","PIT","WR",6,"9"],[94,"J.K. Dobbins","DEN","RB",6,"10"],
+    [95,"Blake Corum","LAR","RB",6,"11"],[96,"Quentin Johnston","LAC","WR",7,"7"],
+    [97,"Makai Lemon","PHI","WR",7,"10"],[98,"Patrick Mahomes II","KC","QB",7,"5"],
+    [99,"Bo Nix","DEN","QB",7,"10"],[100,"Jakobi Meyers","JAC","WR",7,"7"],
+    [101,"Ricky Pearsall","SF","WR",7,"8"],[102,"Matthew Stafford","LAR","QB",7,"11"],
+    [103,"Kenny Gainwell","TB","RB",7,"10"],[104,"George Kittle","SF","TE",7,"8"],
+    [105,"Travis Kelce","KC","TE",7,"5"],[106,"Wan'Dale Robinson","TEN","WR",7,"9"],
+    [107,"Rachaad White","WAS","RB",7,"7"],[108,"Jordan Addison","MIN","WR",7,"6"],
+    [109,"Josh Downs","IND","WR",7,"13"],[110,"Aaron Jones Sr.","MIN","RB",7,"6"],
+    [111,"Jared Goff","DET","QB",7,"6"],[112,"Jayden Reed","GB","WR",7,"11"],
+    [113,"Kyler Murray","MIN","QB",7,"6"],[114,"Dalton Kincaid","BUF","TE",7,"7"],
+    [115,"Jacory Croskey-Merritt","WAS","RB",7,"7"],[116,"Jake Ferguson","DAL","TE",7,"14"],
+    [117,"Jordan Mason","MIN","RB",7,"6"],[118,"Jonathon Brooks","CAR","RB",7,"5"],
+    [119,"Isaiah Likely","NYG","TE",7,"8"],[120,"Xavier Worthy","KC","WR",7,"5"],
+    [121,"Dallas Goedert","PHI","TE",7,"10"],[122,"Jordan Love","GB","QB",7,"11"],
+    [123,"Baker Mayfield","TB","QB",7,"10"],[124,"Tyler Shough","NO","QB",7,"8"],
+    [125,"Jayden Higgins","HOU","WR",7,"8"],[126,"Mark Andrews","BAL","TE",7,"13"],
+    [127,"Tyrone Tracy Jr.","NYG","RB",7,"8"],[128,"Khalil Shakir","BUF","WR",7,"7"],
+    [129,"Chris Rodriguez Jr.","JAC","RB",7,"7"],[130,"Romeo Doubs","NE","WR",7,"11"],
+    [131,"Tyler Allgeier","ARI","RB",8,"14"],[132,"Zach Charbonnet","SEA","RB",8,"11"],
+    [133,"KC Concepcion","CLE","WR",8,"11"],[134,"Malik Willis","MIA","QB",8,"6"],
+    [135,"Jalen Coker","CAR","WR",8,"5"],[136,"Matthew Golden","GB","WR",8,"11"],
+    [137,"Isiah Pacheco","DET","RB",8,"6"],[138,"Woody Marks","HOU","RB",8,"8"],
+    [139,"Tyjae Spears","TEN","RB",8,"9"],[140,"C.J. Stroud","HOU","QB",8,"8"],
+    [141,"Dylan Sampson","CLE","RB",8,"11"],[142,"Sam Darnold","SEA","QB",8,"11"],
+    [143,"Juwan Johnson","NO","TE",8,"8"],[144,"Brenton Strange","JAC","TE",8,"7"],
+    [145,"Rashid Shaheed","SEA","WR",8,"11"],[146,"Alvin Kamara","NO","RB",8,"8"],
+    [147,"Hunter Henry","NE","TE",8,"11"],[148,"Oronde Gadsden II","LAC","TE",8,"7"],
+    [149,"Chig Okonkwo","WAS","TE",8,"7"],[150,"Keaton Mitchell","LAC","RB",8,"7"],
+    [151,"Tank Bigsby","PHI","RB",8,"10"],[152,"Cam Ward","TEN","QB",8,"9"],
+    [153,"Omar Cooper Jr.","NYJ","WR",8,"13"],[154,"Jauan Jennings","MIN","WR",8,"6"],
+    [155,"Jerry Jeudy","CLE","WR",8,"11"],[156,"Brian Robinson Jr.","ATL","RB",8,"11"],
+    [157,"Denzel Boston","CLE","WR",8,"11"],[158,"Jonah Coleman","DEN","RB",8,"10"],
+    [159,"Bryce Young","CAR","QB",8,"5"],[160,"Daniel Jones","IND","QB",8,"13"],
+    [161,"Tre Tucker","LV","WR",8,"13"],[162,"Jalen McMillan","TB","WR",8,"10"],
+    [163,"Adonai Mitchell","NYJ","WR",8,"13"],[164,"Dalton Schultz","HOU","TE",8,"8"],
+    [165,"Tre' Harris","LAC","WR",8,"7"],[166,"Braelon Allen","NYJ","RB",8,"13"],
+    [167,"Travis Hunter","JAC","WR",8,"7"],[168,"T.J. Hockenson","MIN","TE",9,"6"],
+    [169,"Kenyon Sadiq","NYJ","TE",9,"13"],[170,"Ryan Flournoy","DAL","WR",9,"14"],
+    [171,"AJ Barner","SEA","TE",9,"11"],[172,"Troy Franklin","DEN","WR",9,"10"],
+    [173,"Kayshon Boutte","NE","WR",9,"11"],[174,"Emanuel Wilson","SEA","RB",9,"11"],
+    [175,"Jacoby Brissett","ARI","QB",9,"14"],[176,"Calvin Ridley","TEN","WR",9,"9"],
+    [177,"Isaac TeSlaa","DET","WR",9,"6"],[178,"Houston Texans","HOU","DST",9,"8"],
+    [179,"James Conner","ARI","RB",9,"14"],[180,"Kimani Vidal","LAC","RB",9,"7"],
+    [181,"Sean Tucker","TB","RB",9,"10"],[182,"Ray Davis","BUF","RB",9,"7"],
+    [183,"Jaylin Noel","HOU","WR",9,"8"],[184,"Jalen Nailor","LV","WR",9,"13"],
+    [185,"Gunnar Helm","TEN","TE",9,"9"],[186,"Malik Washington","MIA","WR",9,"6"],
+    [187,"Darnell Mooney","NYG","WR",9,"8"],[188,"Denver Broncos","DEN","DST",9,"10"],
+    [189,"Stefon Diggs","FA","WR",9,null],[190,"Pat Bryant","DEN","WR",9,"10"],
+    [191,"Seattle Seahawks","SEA","DST",9,"11"],[192,"De'Zhaun Stribling","SF","WR",9,"8"],
+    [193,"Los Angeles Rams","LAR","DST",9,"11"],[194,"Nicholas Singleton","TEN","RB",9,"9"],
+    [195,"Philadelphia Eagles","PHI","DST",9,"10"],[196,"Brandon Aubrey","DAL","K",9,"14"],
+    [197,"Emmett Johnson","KC","RB",9,"5"],[198,"Mike Washington Jr.","LV","RB",9,"13"],
+    [199,"Jacksonville Jaguars","JAC","DST",9,"7"],[200,"Tank Dell","HOU","WR",9,"8"],
+    [201,"Pat Freiermuth","PIT","TE",9,"9"],[202,"Ka'imi Fairbairn","HOU","K",9,"8"],
+    [203,"Cameron Dicker","LAC","K",9,"7"],[204,"Dontayvion Wicks","PHI","WR",9,"10"],
+    [205,"Rashod Bateman","BAL","WR",9,"13"],[206,"Ted Hurst III","TB","WR",9,"10"],
+    [207,"Pittsburgh Steelers","PIT","DST",9,"9"],[208,"MarShawn Lloyd","GB","RB",9,"11"],
+    [209,"Cam Little","JAC","K",9,"7"],[210,"Minnesota Vikings","MIN","DST",9,"6"],
+    [211,"Antonio Williams","WAS","WR",9,"7"],[212,"Jason Myers","SEA","K",9,"11"],
+    [213,"New England Patriots","NE","DST",9,"11"],[214,"Terrance Ferguson","LAR","TE",9,"11"],
+    [215,"Cooper Kupp","SEA","WR",9,"11"],[216,"David Njoku","LAC","TE",10,"7"],
+    [217,"Geno Smith","NYJ","QB",10,"13"],[218,"Deebo Samuel Sr.","FA","WR",10,null],
+    [219,"Aaron Rodgers","PIT","QB",10,"9"],[220,"Kaytron Allen","WAS","RB",10,"7"],
+    [221,"Los Angeles Chargers","LAC","DST",10,"7"],[222,"Eddy Pineiro","SF","K",10,"8"],
+    [223,"Cade Otton","TB","TE",10,"10"],[224,"Tyler Loop","BAL","K",10,"13"],
+    [225,"Baltimore Ravens","BAL","DST",10,"13"],[226,"Jaylen Wright","MIA","RB",10,"6"],
+    [227,"Chimere Dike","TEN","WR",10,"9"],[228,"Cairo Santos","CHI","K",10,"10"],
+    [229,"Kansas City Chiefs","KC","DST",10,"5"],[230,"Seth McGowan","IND","RB",10,"13"],
+    [231,"Jake Bates","DET","K",10,"6"],[232,"Germie Bernard","PIT","WR",10,"9"],
+    [233,"Zachariah Branch","ATL","WR",10,"11"],[234,"Colby Parkinson","LAR","TE",10,"11"],
+    [235,"Green Bay Packers","GB","DST",10,"11"],[236,"Andy Borregales","NE","K",10,"11"],
+    [237,"Detroit Lions","DET","DST",10,"6"],[238,"Fernando Mendoza","LV","QB",10,"13"],
+    [239,"Evan McPherson","CIN","K",10,"6"],[240,"Ollie Gordon II","MIA","RB",10,"6"],
+    [241,"Buffalo Bills","BUF","DST",10,"7"],[242,"Justice Hill","BAL","RB",10,"13"],
+    [243,"Harrison Mevis","LAR","K",10,"11"],[244,"Jack Bech","LV","WR",10,"13"],
+    [245,"Oscar Delp","NO","TE",10,"8"],[246,"Chase McLaughlin","TB","K",10,"10"],
+    [247,"Elic Ayomanor","TEN","WR",10,"9"],[248,"Keon Coleman","BUF","WR",10,"7"],
+    [249,"Cleveland Browns","CLE","DST",10,"11"],[250,"Harrison Butker","KC","K",10,"5"],
+  ];
+
   // key -> array of raw rows {name,team,position,rank,tier,bye,ecrStdDev}
-  let sourceData = {};
+  let sourceData = {
+    fantasypros: DEFAULT_FANTASYPROS_TOP250.map(r => ({
+      rank:r[0], name:r[1], team:r[2], position:r[3], tier:r[4], bye:r[5], ecrStdDev:0
+    }))
+  };
   // blended, adjusted board — rebuilt from sourceData whenever something changes
   let players = [];
 
@@ -648,19 +784,23 @@
     const rows = [];
     for(let i=1;i<lines.length;i++){
       const cols = splitCsvLine(lines[i]);
-      if(cols.length < 2) continue;
+      // Require enough columns to actually reach the name column — this also
+      // rejects short "divider" rows some exports insert between tiers
+      // (e.g. FantasyPros' `"",3` tier-break rows), which previously slipped
+      // through when they happened to have >=2 columns but no real player data.
+      if(cols.length < 2 || (idxName !== -1 && cols.length <= idxName)) continue;
       const nameRaw = (idxName!==-1 ? cols[idxName] : "").trim();
       if(!nameRaw) continue;
-      const rawPos = idxPos !== -1 ? cols[idxPos] || "" : "";
+      const rawPos = idxPos !== -1 && idxPos < cols.length ? cols[idxPos] || "" : "";
       const posMatch = rawPos.match(/[A-Z]+/);
       rows.push({
         name: nameRaw,
-        team: idxTeam!==-1 ? (cols[idxTeam]||"").trim() : "",
+        team: idxTeam!==-1 && idxTeam < cols.length ? (cols[idxTeam]||"").trim() : "",
         position: posMatch ? posMatch[0] : "FLEX",
-        rank: idxRank!==-1 ? (Number(cols[idxRank]) || i) : i,
-        ecrStdDev: idxStdDev!==-1 ? (Number(cols[idxStdDev])||0) : 0,
-        tier: idxTier!==-1 ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
-        bye: idxBye!==-1 ? cols[idxBye] : null,
+        rank: idxRank!==-1 && idxRank < cols.length ? (Number(cols[idxRank]) || i) : i,
+        ecrStdDev: idxStdDev!==-1 && idxStdDev < cols.length ? (Number(cols[idxStdDev])||0) : 0,
+        tier: idxTier!==-1 && idxTier < cols.length ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
+        bye: idxBye!==-1 && idxBye < cols.length ? cols[idxBye] : null,
       });
     }
     // re-rank sequentially in case source rank column was sparse/non-sequential
