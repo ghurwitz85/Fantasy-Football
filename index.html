@@ -1766,7 +1766,8 @@
         const histPayload=await histResp.json();
         (histPayload.players||histPayload||[]).forEach(r=>{ historyData[normalizeName(r.name)]={...r}; });
       }
-      blendSources();
+      players = blendSources();
+      applySavedFlags();
       renderSourceCards(); renderTeamFactorTable(); render();
       if(el("rankingsCount")) el("rankingsCount").textContent = sourceData.automatic.length;
       if(el("teamContextCount")) el("teamContextCount").textContent = Object.keys(teamData).length;
@@ -1774,7 +1775,15 @@
       if(el("yahooNotice") && Object.keys(historyData).length){
         el("yahooNotice").innerHTML = `<strong>Historical data loaded:</strong> ${Object.keys(historyData).length} player rows are active. Yahoo OAuth is still not connected directly; this data came from the bundled feed or CSV/import source.`;
       }
-      if(status){ status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`; status.className="fetch-status ok"; }
+      if(status){
+        if(sourceData.automatic.length && !players.length){
+          status.textContent = `Rankings JSON loaded (${sourceData.automatic.length} rows), but board build failed. Check source-data shape.`;
+          status.className = "fetch-status error";
+        } else {
+          status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`;
+          status.className="fetch-status ok";
+        }
+      }
     }catch(err){
       if(el("rankingsCount")) el("rankingsCount").textContent = "0";
       if(el("teamContextCount")) el("teamContextCount").textContent = Object.keys(teamData).length;
