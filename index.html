@@ -78,6 +78,39 @@
     border-radius:var(--radius);
     padding:24px;
   }
+  .v2-status-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin:16px 0;
+  }
+  .v2-status-card{
+    background:var(--turf-dark);
+    border:1px solid var(--hash);
+    border-radius:4px;
+    padding:12px;
+  }
+  .v2-status-card strong{
+    display:block;
+    color:var(--gold);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;
+    line-height:1.1;
+  }
+  .v2-status-card span{
+    display:block;
+    color:var(--chalk-dim);
+    font-size:12px;
+    margin-top:4px;
+  }
+  .v2-feature-list{
+    margin:10px 0 0;
+    padding-left:18px;
+    color:var(--chalk-dim);
+    font-size:13px;
+  }
+  .v2-feature-list strong{color:var(--chalk);}
+  @media(max-width:860px){.v2-status-grid{grid-template-columns:1fr 1fr;}}
   h2.section-title{
     font-family:'IBM Plex Mono',monospace;
     text-transform:uppercase;
@@ -344,8 +377,19 @@
 
   <section id="automatic-data">
     <div class="panel">
-      <h2 class="section-title">Automatic data feed</h2>
-      <p class="hint">The board loads cached rankings, team context, and Yahoo history from this repository automatically. GitHub Actions can refresh those files; CSV imports remain available as a fallback.</p>
+      <h2 class="section-title">V2 advanced model status</h2>
+      <p class="hint">This is the upgraded v2 app. It loads cached rankings and team context from this repository automatically, then adds projection scoring, VORP, history blending, game-script, big-play, and per-player “why” audit explanations. CSV imports remain available as a fallback.</p>
+      <div class="v2-status-grid" aria-label="V2 data status summary">
+        <div class="v2-status-card"><strong id="rankingsCount">…</strong><span>rankings loaded</span></div>
+        <div class="v2-status-card"><strong id="teamContextCount">…</strong><span>team context rows</span></div>
+        <div class="v2-status-card"><strong id="historyCount">…</strong><span>Yahoo history rows</span></div>
+        <div class="v2-status-card"><strong>VORP</strong><span>projection model enabled</span></div>
+      </div>
+      <ul class="v2-feature-list">
+        <li><strong>New controls:</strong> League Scoring Rules, Fantasy Point Projections, Historical Performance, Projection/VORP Weight, History Weight, Game Script, Big-Play Bonus.</li>
+        <li><strong>New board outputs:</strong> Projected Points, VORP, Sort by VORP, and “▸ why” adjustment explanations per player.</li>
+        <li><strong>Current data note:</strong> rankings/team context are bundled; Yahoo history only affects ranks after history data is loaded or refreshed.</li>
+      </ul>
       <div class="btn-row"><button class="btn-primary" id="refreshBundledBtn">Reload automatic data</button><span class="fetch-status" id="automaticDataStatus">Checking bundled data…</span></div>
     </div>
   </section>
@@ -1711,8 +1755,14 @@
       }
       blendSources();
       renderSourceCards(); renderTeamFactorTable(); render();
+      if(el("rankingsCount")) el("rankingsCount").textContent = sourceData.automatic.length;
+      if(el("teamContextCount")) el("teamContextCount").textContent = Object.keys(teamData).length;
+      if(el("historyCount")) el("historyCount").textContent = Object.keys(historyData).length;
       if(status){ status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`; status.className="fetch-status ok"; }
     }catch(err){
+      if(el("rankingsCount")) el("rankingsCount").textContent = "0";
+      if(el("teamContextCount")) el("teamContextCount").textContent = Object.keys(teamData).length;
+      if(el("historyCount")) el("historyCount").textContent = Object.keys(historyData).length;
       if(status){ status.textContent=`Automatic feed unavailable (${err.message}). CSV fallback is still available.`; status.className="fetch-status error"; }
     }
   }
