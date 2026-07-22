@@ -110,6 +110,16 @@
     font-size:13px;
   }
   .v2-feature-list strong{color:var(--chalk);}
+  .notice-box{
+    margin:12px 0 16px;
+    padding:12px 14px;
+    border:1px solid var(--gold-dim);
+    background:rgba(231,178,60,0.08);
+    border-radius:4px;
+    color:var(--chalk-dim);
+    font-size:13px;
+  }
+  .notice-box strong{color:var(--gold);}
   @media(max-width:860px){.v2-status-grid{grid-template-columns:1fr 1fr;}}
   h2.section-title{
     font-family:'IBM Plex Mono',monospace;
@@ -388,7 +398,7 @@
       <ul class="v2-feature-list">
         <li><strong>New controls:</strong> League Scoring Rules, Fantasy Point Projections, Historical Performance, Projection/VORP Weight, History Weight, Game Script, Big-Play Bonus.</li>
         <li><strong>New board outputs:</strong> Projected Points, VORP, Sort by VORP, and “▸ why” adjustment explanations per player.</li>
-        <li><strong>Current data note:</strong> rankings/team context are bundled; Yahoo history only affects ranks after history data is loaded or refreshed.</li>
+        <li><strong>Yahoo status:</strong> Yahoo account login is not connected yet. History only affects ranks after you load a history CSV or add the future secure Yahoo OAuth backend.</li>
       </ul>
       <div class="btn-row"><button class="btn-primary" id="refreshBundledBtn">Reload automatic data</button><span class="fetch-status" id="automaticDataStatus">Checking bundled data…</span></div>
     </div>
@@ -606,6 +616,9 @@
 
       <h2 class="section-title" style="margin-top:24px;">Historical performance</h2>
       <p class="hint" style="margin-top:-8px;">Paste last season's actual raw stats (same stat-column format as above) to blend real production in alongside forward-looking projections — useful early in the offseason when projections are still rough, or just as a sanity check against hype.</p>
+      <div class="notice-box" id="yahooNotice">
+        <strong>Yahoo is not connected yet.</strong> This static GitHub Pages app cannot safely log into Yahoo by itself because Yahoo OAuth needs private client secrets. For now, use the CSV importer below. A real “Connect Yahoo” button requires a small secure backend such as a Cloudflare Worker.
+      </div>
       <div class="field">
         <label>Paste last season's stat line CSV</label>
         <textarea id="histCsvPaste" placeholder="Player,Team,Pos,PassYds,PassTD,Int,RushYds,RushTD,Rec,RecYds,RecTD,FL" style="min-height:80px;"></textarea>
@@ -627,7 +640,7 @@
         <summary>How Projected Points and VORP work</summary>
         <p><strong>Projected Points</strong> = your pasted raw stats run through the League Scoring Rules above — accurate to your exact league, not a generic PPR number. If both a current-season projection and a historical stat line are loaded for a player, they're blended by the History Weight slider; with only one loaded, that one is used at full weight.</p>
         <p><strong>VORP</strong> (Value Over Replacement Player) compares a player's projected points to the projected points of the last realistic starter at his position in your league — using the same per-team demand math as the scarcity slider. This is the standard way to compare value across positions for draft decisions: it's what actually maximizes your starting lineup's total expected points, which raw points or rank alone can't tell you (a mediocre RB can be worth more than a good TE if the RB replacement level is much worse).</p>
-        <p>Players with no projection or history loaded get zero contribution from this slider — the rest of your weighting still applies.</p>
+        <p><strong>Important:</strong> players with no projection or history loaded get zero contribution from this slider — the rest of your weighting still applies. If the VORP column is blank/zero, load projection CSVs or historical CSVs first.</p>
       </details>
     </div>
   </section>
@@ -1758,6 +1771,9 @@
       if(el("rankingsCount")) el("rankingsCount").textContent = sourceData.automatic.length;
       if(el("teamContextCount")) el("teamContextCount").textContent = Object.keys(teamData).length;
       if(el("historyCount")) el("historyCount").textContent = Object.keys(historyData).length;
+      if(el("yahooNotice") && Object.keys(historyData).length){
+        el("yahooNotice").innerHTML = `<strong>Historical data loaded:</strong> ${Object.keys(historyData).length} player rows are active. Yahoo OAuth is still not connected directly; this data came from the bundled feed or CSV/import source.`;
+      }
       if(status){ status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`; status.className="fetch-status ok"; }
     }catch(err){
       if(el("rankingsCount")) el("rankingsCount").textContent = "0";
