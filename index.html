@@ -871,8 +871,22 @@
   }
 
   // ---------- CSV parsing (shared across sources) ----------
-  function parseCSV(text){
-    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
+  // Normalize common export/copy-paste artifacts before header matching. This
+  // keeps FantasyPros/Excel/macOS CSVs from failing on BOMs, smart punctuation,
+  // non-breaking spaces, or odd line endings.
+  function cleanCsvText(text){
+    return String(text||"")
+      .replace(/^\uFEFF/, "")
+      .replace(/\r\n?/g, "\n")
+      .replace(/[\u2018\u2019\u201A]/g, "'")
+      .replace(/[\u201C\u201D\u201E]/g, '"')
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/\u00A0/g, " ");
+  }
+
+  function parseCSV(rawText){
+    const text = cleanCsvText(rawText);
+    const lines = text.trim().split(/\n/).filter(l => l.trim().length);
     if(lines.length < 2) return null;
     const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
 
@@ -890,19 +904,22 @@
     const rows = [];
     for(let i=1;i<lines.length;i++){
       const cols = splitCsvLine(lines[i]);
-      if(cols.length < 2) continue;
+      // FantasyPros inserts short tier-divider rows such as `"",3`.
+      // They have >=2 columns but do not reach PLAYER NAME/POS columns, so
+      // every column access below must be bounds-checked.
+      if(cols.length < 2 || (idxName !== -1 && cols.length <= idxName)) continue;
       const nameRaw = (idxName!==-1 ? cols[idxName] : "").trim();
       if(!nameRaw) continue;
-      const rawPos = idxPos !== -1 ? cols[idxPos] || "" : "";
+      const rawPos = idxPos !== -1 && idxPos < cols.length ? cols[idxPos] || "" : "";
       const posMatch = rawPos.match(/[A-Z]+/);
       rows.push({
         name: nameRaw,
-        team: idxTeam!==-1 ? (cols[idxTeam]||"").trim() : "",
+        team: idxTeam!==-1 && idxTeam < cols.length ? (cols[idxTeam]||"").trim() : "",
         position: posMatch ? posMatch[0] : "FLEX",
-        rank: idxRank!==-1 ? (Number(cols[idxRank]) || i) : i,
-        ecrStdDev: idxStdDev!==-1 ? (Number(cols[idxStdDev])||0) : 0,
-        tier: idxTier!==-1 ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
-        bye: idxBye!==-1 ? cols[idxBye] : null,
+        rank: idxRank!==-1 && idxRank < cols.length ? (Number(cols[idxRank]) || i) : i,
+        ecrStdDev: idxStdDev!==-1 && idxStdDev < cols.length ? (Number(cols[idxStdDev])||0) : 0,
+        tier: idxTier!==-1 && idxTier < cols.length ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
+        bye: idxBye!==-1 && idxBye < cols.length ? cols[idxBye] : null,
       });
     }
     // re-rank sequentially in case source rank column was sparse/non-sequential
@@ -952,7 +969,7 @@
     const status = el("fetchStatus_fantasypros");
     status.className = "fetch-status";
     if(!url){
-      status.textContent = "Add your Worker URL first (see README to deploy one).";
+      status.textContent = "Live fetch requires a deployed Worker URL. Bundled rankings and CSV upload work without it.";
       status.className = "fetch-status error";
       return;
     }
@@ -980,10 +997,22 @@
   }
 
   function loadFromCSVText(key, text){
-    const rows = parseCSV(text);
     const status = el(`fetchStatus_${key}`);
+    let rows;
+    try{
+      rows = parseCSV(text);
+    }catch(err){
+      status.textContent = `CSV parser error: ${err.message || err}.`;
+      status.className = "fetch-status error";
+      return;
+    }
     if(!rows){
       status.textContent = "Couldn't parse that CSV — check the header row has player name / rank columns.";
+      status.className = "fetch-status error";
+      return;
+    }
+    if(!rows.length){
+      status.textContent = "CSV parsed, but found 0 player rows. Check that rows include PLAYER NAME and POS columns.";
       status.className = "fetch-status error";
       return;
     }
@@ -1450,7 +1479,12 @@
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => loadFromCSVText(key, ev.target.result);
+        reader.onload = (ev) => { loadFromCSVText(key, ev.target.result); e.target.value = ""; };
+        reader.onerror = () => {
+          const status = el(`fetchStatus_${key}`);
+          if(status){ status.textContent = "Could not read that file. Try exporting/downloading the CSV again."; status.className = "fetch-status error"; }
+          e.target.value = "";
+        };
         reader.readAsText(file);
       });
     });
