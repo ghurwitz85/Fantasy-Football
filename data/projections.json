@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-07-21T00:00:00Z",
+  "source": "Version 3 local fixture projections",
+  "players": [
+    {
+      "name": "Bijan Robinson",
+      "team": "ATL",
+      "position": "RB",
+      "projections": {
+        "games": 17,
+        "rushing": { "attempts": 285, "yards": 1360, "touchdowns": 12, "fortyYardRuns": 3 },
+        "receiving": { "targets": 78, "receptions": 62, "yards": 520, "touchdowns": 4, "fortyYardReceptions": 2 },
+        "fumblesLost": 2
+      }
+    },
+    {
+      "name": "Ja'Marr Chase",
+      "team": "CIN",
+      "position": "WR",
+      "projections": {
+        "games": 17,
+        "receiving": { "targets": 165, "receptions": 112, "yards": 1520, "touchdowns": 12, "fortyYardReceptions": 6 },
+        "fumblesLost": 1
+      }
+    },
+    {
+      "name": "Josh Allen",
+      "team": "BUF",
+      "position": "QB",
+      "projections": {
+        "games": 17,
+        "passing": { "attempts": 545, "completions": 356, "yards": 4050, "touchdowns": 31, "interceptions": 13, "fortyYardCompletions": 9 },
+        "rushing": { "attempts": 105, "yards": 515, "touchdowns": 10, "fortyYardRuns": 1 },
+        "fumblesLost": 3
+      }
+    }
+  ]
+}

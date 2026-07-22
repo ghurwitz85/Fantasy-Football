@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-07-21T00:00:00Z",
+  "source": "Version 3 local fixture ADP",
+  "players": [
+    { "name": "Bijan Robinson", "team": "ATL", "position": "RB", "adp": 1.8, "platform": "Fixture" },
+    { "name": "Ja'Marr Chase", "team": "CIN", "position": "WR", "adp": 2.4, "platform": "Fixture" },
+    { "name": "Josh Allen", "team": "BUF", "position": "QB", "adp": 28.5, "platform": "Fixture" }
+  ]
+}

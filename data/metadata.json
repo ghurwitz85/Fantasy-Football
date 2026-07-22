@@ -1,0 +1,11 @@
+{
+  "version": "3.0-core-fixture",
+  "lastSuccessfulRefresh": "2026-07-21T00:00:00Z",
+  "feeds": {
+    "rankings": { "status": "loaded", "path": "data/rankings.json" },
+    "projections": { "status": "fixture", "path": "data/projections.json" },
+    "adp": { "status": "fixture", "path": "data/adp.json" },
+    "teamContext": { "status": "partial", "path": "data/team-context.json" },
+    "yahooHistory": { "status": "loaded", "path": "data/yahoo-history-2025.json" }
+  }
+}

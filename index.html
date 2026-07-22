@@ -387,8 +387,8 @@
 
   <section id="automatic-data">
     <div class="panel">
-      <h2 class="section-title">V2 advanced model status</h2>
-      <p class="hint">This is the upgraded v2 app. It loads cached rankings and team context from this repository automatically, then adds projection scoring, VORP, history blending, game-script, big-play, and per-player “why” audit explanations. CSV imports remain available as a fallback.</p>
+      <h2 class="section-title">V3 projection engine status</h2>
+      <p class="hint">Version 3 core modules are now loaded alongside the existing board. They add standardized players, exact scoring, projection-first ranking components, replacement value, fixture projections, ADP, and validation. The current board UI remains available while V3 wiring is completed incrementally.</p>
       <div class="v2-status-grid" aria-label="V2 data status summary">
         <div class="v2-status-card"><strong id="rankingsCount">…</strong><span>rankings loaded</span></div>
         <div class="v2-status-card"><strong id="teamContextCount">…</strong><span>team context rows</span></div>
@@ -400,6 +400,7 @@
         <li><strong>New board outputs:</strong> Projected Points, VORP, Sort by VORP, and “▸ why” adjustment explanations per player.</li>
         <li><strong>Yahoo status:</strong> Yahoo account login is not connected yet. History only affects ranks after you load a history CSV or add the future secure Yahoo OAuth backend.</li>
       </ul>
+      <div class="v2-status-grid" id="v3DataQualityPanel" aria-label="V3 data quality status"></div>
       <div class="btn-row"><button class="btn-primary" id="refreshBundledBtn">Reload automatic data</button><span class="fetch-status" id="automaticDataStatus">Checking bundled data…</span></div>
     </div>
   </section>
@@ -1841,6 +1842,7 @@
   loadAutomaticData();
 })();
 </script>
+<script type="module" src="js/app.js"></script>
 
 </body>
 </html>

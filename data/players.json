@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-07-21T00:00:00Z",
+  "source": "Version 3 local fixture player metadata",
+  "players": [
+    { "name": "Bijan Robinson", "team": "ATL", "position": "RB", "byeWeek": 11 },
+    { "name": "Ja'Marr Chase", "team": "CIN", "position": "WR", "byeWeek": 6 },
+    { "name": "Josh Allen", "team": "BUF", "position": "QB", "byeWeek": 7 }
+  ]
+}
