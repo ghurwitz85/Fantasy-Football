@@ -1,0 +1,5 @@
+{
+  "generatedAt": "2026-07-20T00:00:00Z",
+  "players": [],
+  "instructions": "Use the Historical Performance importer for Yahoo CSV exports. This cache can later be populated by an OAuth-capable backend."
+}

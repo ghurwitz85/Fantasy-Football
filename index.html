@@ -342,6 +342,14 @@
 
 <div class="wrap">
 
+  <section id="automatic-data">
+    <div class="panel">
+      <h2 class="section-title">Automatic data feed</h2>
+      <p class="hint">The board loads cached rankings, team context, and Yahoo history from this repository automatically. GitHub Actions can refresh those files; CSV imports remain available as a fallback.</p>
+      <div class="btn-row"><button class="btn-primary" id="refreshBundledBtn">Reload automatic data</button><span class="fetch-status" id="automaticDataStatus">Checking bundled data…</span></div>
+    </div>
+  </section>
+
   <section id="source">
     <h2 class="section-title">Sources &amp; trust weighting</h2>
     <div id="sourcesContainer"></div>
@@ -449,6 +457,16 @@
             <input type="range" id="sosSlider" min="0" max="100" value="0">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Game script weight</span><span class="val" id="gameScriptVal">0</span></div>
+            <input type="range" id="gameScriptSlider" min="0" max="100" value="0">
+            <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Big-play bonus weight</span><span class="val" id="bigPlayVal">50</span></div>
+            <input type="range" id="bigPlaySlider" min="0" max="100" value="50">
+            <div class="slider-ends"><span>Ignore bonuses</span><span>Full league impact</span></div>
+          </div>
         </div>
       </div>
       <details class="how">
@@ -456,7 +474,7 @@
         <p><strong>Scarcity</strong> compares your league's per-team starter demand at each position (including a flex share) against a standard 12-team/1QB/2RB/2WR/1TE/1FLEX baseline, and shifts ranks toward positions your league makes scarcer.</p>
         <p><strong>Risk tolerance</strong> combines FantasyPros' expert-disagreement (rank std. dev.) with cross-source disagreement as a boom/bust proxy — high disagreement means a wide range of likely outcomes.</p>
         <p><strong>Injury</strong> and <strong>rookie</strong> weighting only apply to players you've flagged in the table below — flag them, then use the sliders to control how much that flag matters.</p>
-        <p><strong>O-line and QB-support and strength-of-schedule</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders.</p>
+        <p><strong>O-line, QB-support, strength-of-schedule, game-script, and big-play</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders. <strong>Game script</strong> uses your team's defense rank: a bad defense means more time spent trailing, which boosts pass volume for that team's QB/WR/TE; a good defense means more time spent leading, which boosts rush volume (and RB touches) for that team's RB.</p>
         <p>Set an explicit override rank on any player and it locks that player's position regardless of every slider.</p>
       </details>
     </div>
@@ -484,6 +502,7 @@
               <th>O-line run<br>(1=best)</th>
               <th>O-line pass<br>(1=best)</th>
               <th>QB strength<br>(1=best)</th>
+              <th>Defense<br>(1=best)</th>
               <th>SOS vs RB<br>(1=toughest)</th>
               <th>SOS vs WR/TE<br>(1=toughest)</th>
               <th>SOS vs QB<br>(1=toughest)</th>
@@ -495,12 +514,87 @@
     </div>
   </section>
 
+  <section id="scoring">
+    <div class="panel">
+      <h2 class="section-title">League scoring rules</h2>
+      <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Pre-filled with your Yahoo league. These drive the Projected Points calculation below — edit if your scoring changes.</p>
+      <div class="grid-3">
+        <div class="field"><label>Pass yards / point</label><input type="number" id="s_passYdsPerPt" value="25"></div>
+        <div class="field"><label>Pass TD</label><input type="number" id="s_passTD" value="4"></div>
+        <div class="field"><label>Interception</label><input type="number" id="s_int" value="-2"></div>
+        <div class="field"><label>Rush yards / point</label><input type="number" id="s_rushYdsPerPt" value="10"></div>
+        <div class="field"><label>Rush TD</label><input type="number" id="s_rushTD" value="6"></div>
+        <div class="field"><label>Reception</label><input type="number" id="s_rec" value="0.5" step="0.1"></div>
+        <div class="field"><label>Receiving yards / point</label><input type="number" id="s_recYdsPerPt" value="10"></div>
+        <div class="field"><label>Receiving TD</label><input type="number" id="s_recTD" value="6"></div>
+        <div class="field"><label>Fumble lost</label><input type="number" id="s_fumLost" value="-2"></div>
+        <div class="field"><label>40+ yd pass completion bonus</label><input type="number" id="s_pass40" value="1" step="0.5"></div>
+        <div class="field"><label>40+ yd rush bonus</label><input type="number" id="s_rush40" value="1" step="0.5"></div>
+        <div class="field"><label>40+ yd reception bonus</label><input type="number" id="s_rec40" value="1" step="0.5"></div>
+      </div>
+      <details class="how">
+        <summary>Scoring coverage</summary>
+        <p>40+ yard completion, run, and reception bonuses are included whenever the imported projection or Yahoo history contains those event counts. If a source omits them, the board estimates conservatively from historical big-play rates when available. Kicker distance tiers and defense weekly brackets still require weekly data and remain outside the season-total projection formula.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="projections">
+    <div class="panel">
+      <h2 class="section-title">Fantasy point projections</h2>
+      <p class="hint" style="margin-top:-8px;">Paste raw stat projections (not point totals) — FantasyPros' <a href="https://www.fantasypros.com/nfl/projections/qb.php" target="_blank" rel="noopener">QB</a>, <a href="https://www.fantasypros.com/nfl/projections/rb.php" target="_blank" rel="noopener">RB</a>, <a href="https://www.fantasypros.com/nfl/projections/wr.php" target="_blank" rel="noopener">WR</a>, and <a href="https://www.fantasypros.com/nfl/projections/te.php" target="_blank" rel="noopener">TE</a> projection pages each have an export. Load them one at a time — each load adds to the pool rather than replacing it, so QB/RB/WR/TE can all coexist.</p>
+      <div class="field">
+        <label>Paste a position's stat projections CSV</label>
+        <textarea id="projCsvPaste" placeholder="Player,Team,ATT,CMP,YDS,TDS,INTS,..." style="min-height:80px;"></textarea>
+      </div>
+      <div class="btn-row" style="margin-bottom:12px;">
+        <button class="btn-ghost" id="projCsvLoadBtn">Add to projection pool</button>
+        <label class="btn-ghost" style="display:inline-block;cursor:pointer;" for="projCsvFile">Upload .csv file</label>
+        <input type="file" id="projCsvFile" accept=".csv" style="display:none;">
+        <button class="btn-ghost" id="projClearBtn">Clear all projections</button>
+        <span class="fetch-status" id="projStatus"></span>
+      </div>
+      <div class="slider-block" style="max-width:480px;">
+        <div class="slider-label-row"><span class="name">Projection (VORP) weight</span><span class="val" id="vorpVal">50</span></div>
+        <input type="range" id="vorpSlider" min="0" max="100" value="50">
+        <div class="slider-ends"><span>Ignore projections</span><span>Draft by VORP</span></div>
+      </div>
+
+      <h2 class="section-title" style="margin-top:24px;">Historical performance</h2>
+      <p class="hint" style="margin-top:-8px;">Paste last season's actual raw stats (same stat-column format as above) to blend real production in alongside forward-looking projections — useful early in the offseason when projections are still rough, or just as a sanity check against hype.</p>
+      <div class="field">
+        <label>Paste last season's stat line CSV</label>
+        <textarea id="histCsvPaste" placeholder="Player,Team,Pos,PassYds,PassTD,Int,RushYds,RushTD,Rec,RecYds,RecTD,FL" style="min-height:80px;"></textarea>
+      </div>
+      <div class="btn-row" style="margin-bottom:12px;">
+        <button class="btn-ghost" id="histCsvLoadBtn">Add to history pool</button>
+        <label class="btn-ghost" style="display:inline-block;cursor:pointer;" for="histCsvFile">Upload .csv file</label>
+        <input type="file" id="histCsvFile" accept=".csv" style="display:none;">
+        <button class="btn-ghost" id="histClearBtn">Clear history</button>
+        <span class="fetch-status" id="histStatus"></span>
+      </div>
+      <div class="slider-block" style="max-width:480px;">
+        <div class="slider-label-row"><span class="name">History weight</span><span class="val" id="historyWeightVal">0</span></div>
+        <input type="range" id="historyWeightSlider" min="0" max="100" value="0">
+        <div class="slider-ends"><span>All projections</span><span>All history</span></div>
+      </div>
+
+      <details class="how">
+        <summary>How Projected Points and VORP work</summary>
+        <p><strong>Projected Points</strong> = your pasted raw stats run through the League Scoring Rules above — accurate to your exact league, not a generic PPR number. If both a current-season projection and a historical stat line are loaded for a player, they're blended by the History Weight slider; with only one loaded, that one is used at full weight.</p>
+        <p><strong>VORP</strong> (Value Over Replacement Player) compares a player's projected points to the projected points of the last realistic starter at his position in your league — using the same per-team demand math as the scarcity slider. This is the standard way to compare value across positions for draft decisions: it's what actually maximizes your starting lineup's total expected points, which raw points or rank alone can't tell you (a mediocre RB can be worth more than a good TE if the RB replacement level is much worse).</p>
+        <p>Players with no projection or history loaded get zero contribution from this slider — the rest of your weighting still applies.</p>
+      </details>
+    </div>
+  </section>
+
 
   <section id="board">
     <h2 class="section-title" style="margin-bottom:16px;">Your board</h2>
     <div class="btn-row" style="margin-bottom:16px;">
       <button class="btn-ghost" id="exportBtn">Export your board as CSV</button>
       <button class="btn-ghost" id="resetFlagsBtn">Clear all flags &amp; overrides</button>
+      <button class="btn-ghost" id="sortVorpBtn">Sort by VORP instead</button>
     </div>
     <div class="table-wrap panel" style="padding:0;">
       <table id="boardTable">
@@ -510,13 +604,15 @@
             <th>Player</th>
             <th>Pos</th>
             <th>Consensus</th>
+            <th>Proj Pts</th>
+            <th>VORP</th>
             <th>Δ</th>
             <th>Flags</th>
             <th>Override</th>
           </tr>
         </thead>
         <tbody id="boardBody">
-          <tr><td colspan="7"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>
+          <tr><td colspan="9"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -535,147 +631,12 @@
 
   // Each source config: {key, label, mode: 'fantasypros-json'|'generic', weight, liveUrl, custom}
   let sourceConfigs = [
-    { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:65 },
-    { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:35, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
+    { key:"automatic", label:"Automatic cached rankings", mode:"generic", weight:70 },
+    { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:20 },
+    { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:10, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
   ];
-
-  // Pre-loaded 2026 FantasyPros top-250 rankings (baked in so the board is populated
-  // out of the box — covers every startable player plus deep bench for a 12-team league).
-  // Format: [rank, name, team, position, tier, bye]
-  const DEFAULT_FANTASYPROS_TOP250 = [
-    [1,"Bijan Robinson","ATL","RB",1,"11"],[2,"Jahmyr Gibbs","DET","RB",1,"6"],
-    [3,"Ja'Marr Chase","CIN","WR",1,"6"],[4,"Puka Nacua","LAR","WR",1,"11"],
-    [5,"Jaxon Smith-Njigba","SEA","WR",1,"11"],[6,"Amon-Ra St. Brown","DET","WR",1,"6"],
-    [7,"Christian McCaffrey","SF","RB",1,"8"],[8,"CeeDee Lamb","DAL","WR",2,"14"],
-    [9,"Jonathan Taylor","IND","RB",2,"13"],[10,"Justin Jefferson","MIN","WR",2,"6"],
-    [11,"James Cook III","BUF","RB",2,"7"],[12,"Ashton Jeanty","LV","RB",2,"13"],
-    [13,"Drake London","ATL","WR",2,"11"],[14,"A.J. Brown","NE","WR",2,"11"],
-    [15,"Nico Collins","HOU","WR",2,"8"],[16,"De'Von Achane","MIA","RB",2,"6"],
-    [17,"Brock Bowers","LV","TE",3,"13"],[18,"Chase Brown","CIN","RB",3,"6"],
-    [19,"Saquon Barkley","PHI","RB",3,"10"],[20,"Omarion Hampton","LAC","RB",3,"7"],
-    [21,"George Pickens","DAL","WR",3,"14"],[22,"Trey McBride","ARI","TE",3,"14"],
-    [23,"Derrick Henry","BAL","RB",3,"13"],[24,"Kenneth Walker III","KC","RB",3,"5"],
-    [25,"Chris Olave","NO","WR",3,"8"],[26,"Rashee Rice","KC","WR",3,"5"],
-    [27,"Josh Allen","BUF","QB",3,"7"],[28,"DeVonta Smith","PHI","WR",4,"10"],
-    [29,"Tetairoa McMillan","CAR","WR",4,"5"],[30,"Tee Higgins","CIN","WR",4,"6"],
-    [31,"Zay Flowers","BAL","WR",4,"13"],[32,"Jeremiyah Love","ARI","RB",4,"14"],
-    [33,"Kyren Williams","LAR","RB",4,"11"],[34,"Lamar Jackson","BAL","QB",4,"13"],
-    [35,"Drake Maye","NE","QB",4,"11"],[36,"Josh Jacobs","GB","RB",4,"11"],
-    [37,"Garrett Wilson","NYJ","WR",4,"13"],[38,"Breece Hall","NYJ","RB",4,"13"],
-    [39,"Ladd McConkey","LAC","WR",4,"7"],[40,"Emeka Egbuka","TB","WR",4,"10"],
-    [41,"Colston Loveland","CHI","TE",4,"10"],[42,"Javonte Williams","DAL","RB",4,"14"],
-    [43,"Malik Nabers","NYG","WR",4,"8"],[44,"Jaylen Waddle","DEN","WR",4,"10"],
-    [45,"Joe Burrow","CIN","QB",4,"6"],[46,"Travis Etienne Jr.","NO","RB",4,"8"],
-    [47,"Terry McLaurin","WAS","WR",4,"7"],[48,"Davante Adams","LAR","WR",5,"11"],
-    [49,"Luther Burden III","CHI","WR",5,"10"],[50,"Cam Skattebo","NYG","RB",5,"8"],
-    [51,"Jameson Williams","DET","WR",5,"6"],[52,"Quinshon Judkins","CLE","RB",5,"11"],
-    [53,"Bucky Irving","TB","RB",5,"10"],[54,"Jayden Daniels","WAS","QB",5,"7"],
-    [55,"Mike Evans","SF","WR",5,"8"],[56,"Tyler Warren","IND","TE",5,"13"],
-    [57,"D'Andre Swift","CHI","RB",5,"10"],[58,"TreVeyon Henderson","NE","RB",5,"11"],
-    [59,"Christian Watson","GB","WR",5,"11"],[60,"Jalen Hurts","PHI","QB",5,"10"],
-    [61,"DJ Moore","BUF","WR",5,"7"],[62,"David Montgomery","HOU","RB",5,"8"],
-    [63,"Rome Odunze","CHI","WR",5,"10"],[64,"Bhayshul Tuten","JAC","RB",5,"7"],
-    [65,"Tucker Kraft","GB","TE",5,"11"],[66,"Caleb Williams","CHI","QB",5,"10"],
-    [67,"Jadarian Price","SEA","RB",5,"11"],[68,"Justin Herbert","LAC","QB",6,"7"],
-    [69,"Carnell Tate","TEN","WR",6,"9"],[70,"Jaylen Warren","PIT","RB",6,"9"],
-    [71,"Marvin Harrison Jr.","ARI","WR",6,"14"],[72,"Alec Pierce","IND","WR",6,"13"],
-    [73,"Trevor Lawrence","JAC","QB",6,"7"],[74,"Tony Pollard","TEN","RB",6,"9"],
-    [75,"DK Metcalf","PIT","WR",6,"9"],[76,"Rhamondre Stevenson","NE","RB",6,"11"],
-    [77,"Brian Thomas Jr.","JAC","WR",6,"7"],[78,"Dak Prescott","DAL","QB",6,"14"],
-    [79,"Harold Fannin Jr.","CLE","TE",6,"11"],[80,"Chuba Hubbard","CAR","RB",6,"5"],
-    [81,"Courtland Sutton","DEN","WR",6,"10"],[82,"Kyle Pitts Sr.","ATL","TE",6,"11"],
-    [83,"Rico Dowdle","PIT","RB",6,"9"],[84,"Sam LaPorta","DET","TE",6,"6"],
-    [85,"Chris Godwin Jr.","TB","WR",6,"10"],[86,"Parker Washington","JAC","WR",6,"7"],
-    [87,"Jaxson Dart","NYG","QB",6,"8"],[88,"RJ Harvey","DEN","RB",6,"10"],
-    [89,"Jordyn Tyson","NO","WR",6,"8"],[90,"Kyle Monangai","CHI","RB",6,"10"],
-    [91,"Brock Purdy","SF","QB",6,"8"],[92,"Michael Wilson","ARI","WR",6,"14"],
-    [93,"Michael Pittman Jr.","PIT","WR",6,"9"],[94,"J.K. Dobbins","DEN","RB",6,"10"],
-    [95,"Blake Corum","LAR","RB",6,"11"],[96,"Quentin Johnston","LAC","WR",7,"7"],
-    [97,"Makai Lemon","PHI","WR",7,"10"],[98,"Patrick Mahomes II","KC","QB",7,"5"],
-    [99,"Bo Nix","DEN","QB",7,"10"],[100,"Jakobi Meyers","JAC","WR",7,"7"],
-    [101,"Ricky Pearsall","SF","WR",7,"8"],[102,"Matthew Stafford","LAR","QB",7,"11"],
-    [103,"Kenny Gainwell","TB","RB",7,"10"],[104,"George Kittle","SF","TE",7,"8"],
-    [105,"Travis Kelce","KC","TE",7,"5"],[106,"Wan'Dale Robinson","TEN","WR",7,"9"],
-    [107,"Rachaad White","WAS","RB",7,"7"],[108,"Jordan Addison","MIN","WR",7,"6"],
-    [109,"Josh Downs","IND","WR",7,"13"],[110,"Aaron Jones Sr.","MIN","RB",7,"6"],
-    [111,"Jared Goff","DET","QB",7,"6"],[112,"Jayden Reed","GB","WR",7,"11"],
-    [113,"Kyler Murray","MIN","QB",7,"6"],[114,"Dalton Kincaid","BUF","TE",7,"7"],
-    [115,"Jacory Croskey-Merritt","WAS","RB",7,"7"],[116,"Jake Ferguson","DAL","TE",7,"14"],
-    [117,"Jordan Mason","MIN","RB",7,"6"],[118,"Jonathon Brooks","CAR","RB",7,"5"],
-    [119,"Isaiah Likely","NYG","TE",7,"8"],[120,"Xavier Worthy","KC","WR",7,"5"],
-    [121,"Dallas Goedert","PHI","TE",7,"10"],[122,"Jordan Love","GB","QB",7,"11"],
-    [123,"Baker Mayfield","TB","QB",7,"10"],[124,"Tyler Shough","NO","QB",7,"8"],
-    [125,"Jayden Higgins","HOU","WR",7,"8"],[126,"Mark Andrews","BAL","TE",7,"13"],
-    [127,"Tyrone Tracy Jr.","NYG","RB",7,"8"],[128,"Khalil Shakir","BUF","WR",7,"7"],
-    [129,"Chris Rodriguez Jr.","JAC","RB",7,"7"],[130,"Romeo Doubs","NE","WR",7,"11"],
-    [131,"Tyler Allgeier","ARI","RB",8,"14"],[132,"Zach Charbonnet","SEA","RB",8,"11"],
-    [133,"KC Concepcion","CLE","WR",8,"11"],[134,"Malik Willis","MIA","QB",8,"6"],
-    [135,"Jalen Coker","CAR","WR",8,"5"],[136,"Matthew Golden","GB","WR",8,"11"],
-    [137,"Isiah Pacheco","DET","RB",8,"6"],[138,"Woody Marks","HOU","RB",8,"8"],
-    [139,"Tyjae Spears","TEN","RB",8,"9"],[140,"C.J. Stroud","HOU","QB",8,"8"],
-    [141,"Dylan Sampson","CLE","RB",8,"11"],[142,"Sam Darnold","SEA","QB",8,"11"],
-    [143,"Juwan Johnson","NO","TE",8,"8"],[144,"Brenton Strange","JAC","TE",8,"7"],
-    [145,"Rashid Shaheed","SEA","WR",8,"11"],[146,"Alvin Kamara","NO","RB",8,"8"],
-    [147,"Hunter Henry","NE","TE",8,"11"],[148,"Oronde Gadsden II","LAC","TE",8,"7"],
-    [149,"Chig Okonkwo","WAS","TE",8,"7"],[150,"Keaton Mitchell","LAC","RB",8,"7"],
-    [151,"Tank Bigsby","PHI","RB",8,"10"],[152,"Cam Ward","TEN","QB",8,"9"],
-    [153,"Omar Cooper Jr.","NYJ","WR",8,"13"],[154,"Jauan Jennings","MIN","WR",8,"6"],
-    [155,"Jerry Jeudy","CLE","WR",8,"11"],[156,"Brian Robinson Jr.","ATL","RB",8,"11"],
-    [157,"Denzel Boston","CLE","WR",8,"11"],[158,"Jonah Coleman","DEN","RB",8,"10"],
-    [159,"Bryce Young","CAR","QB",8,"5"],[160,"Daniel Jones","IND","QB",8,"13"],
-    [161,"Tre Tucker","LV","WR",8,"13"],[162,"Jalen McMillan","TB","WR",8,"10"],
-    [163,"Adonai Mitchell","NYJ","WR",8,"13"],[164,"Dalton Schultz","HOU","TE",8,"8"],
-    [165,"Tre' Harris","LAC","WR",8,"7"],[166,"Braelon Allen","NYJ","RB",8,"13"],
-    [167,"Travis Hunter","JAC","WR",8,"7"],[168,"T.J. Hockenson","MIN","TE",9,"6"],
-    [169,"Kenyon Sadiq","NYJ","TE",9,"13"],[170,"Ryan Flournoy","DAL","WR",9,"14"],
-    [171,"AJ Barner","SEA","TE",9,"11"],[172,"Troy Franklin","DEN","WR",9,"10"],
-    [173,"Kayshon Boutte","NE","WR",9,"11"],[174,"Emanuel Wilson","SEA","RB",9,"11"],
-    [175,"Jacoby Brissett","ARI","QB",9,"14"],[176,"Calvin Ridley","TEN","WR",9,"9"],
-    [177,"Isaac TeSlaa","DET","WR",9,"6"],[178,"Houston Texans","HOU","DST",9,"8"],
-    [179,"James Conner","ARI","RB",9,"14"],[180,"Kimani Vidal","LAC","RB",9,"7"],
-    [181,"Sean Tucker","TB","RB",9,"10"],[182,"Ray Davis","BUF","RB",9,"7"],
-    [183,"Jaylin Noel","HOU","WR",9,"8"],[184,"Jalen Nailor","LV","WR",9,"13"],
-    [185,"Gunnar Helm","TEN","TE",9,"9"],[186,"Malik Washington","MIA","WR",9,"6"],
-    [187,"Darnell Mooney","NYG","WR",9,"8"],[188,"Denver Broncos","DEN","DST",9,"10"],
-    [189,"Stefon Diggs","FA","WR",9,null],[190,"Pat Bryant","DEN","WR",9,"10"],
-    [191,"Seattle Seahawks","SEA","DST",9,"11"],[192,"De'Zhaun Stribling","SF","WR",9,"8"],
-    [193,"Los Angeles Rams","LAR","DST",9,"11"],[194,"Nicholas Singleton","TEN","RB",9,"9"],
-    [195,"Philadelphia Eagles","PHI","DST",9,"10"],[196,"Brandon Aubrey","DAL","K",9,"14"],
-    [197,"Emmett Johnson","KC","RB",9,"5"],[198,"Mike Washington Jr.","LV","RB",9,"13"],
-    [199,"Jacksonville Jaguars","JAC","DST",9,"7"],[200,"Tank Dell","HOU","WR",9,"8"],
-    [201,"Pat Freiermuth","PIT","TE",9,"9"],[202,"Ka'imi Fairbairn","HOU","K",9,"8"],
-    [203,"Cameron Dicker","LAC","K",9,"7"],[204,"Dontayvion Wicks","PHI","WR",9,"10"],
-    [205,"Rashod Bateman","BAL","WR",9,"13"],[206,"Ted Hurst III","TB","WR",9,"10"],
-    [207,"Pittsburgh Steelers","PIT","DST",9,"9"],[208,"MarShawn Lloyd","GB","RB",9,"11"],
-    [209,"Cam Little","JAC","K",9,"7"],[210,"Minnesota Vikings","MIN","DST",9,"6"],
-    [211,"Antonio Williams","WAS","WR",9,"7"],[212,"Jason Myers","SEA","K",9,"11"],
-    [213,"New England Patriots","NE","DST",9,"11"],[214,"Terrance Ferguson","LAR","TE",9,"11"],
-    [215,"Cooper Kupp","SEA","WR",9,"11"],[216,"David Njoku","LAC","TE",10,"7"],
-    [217,"Geno Smith","NYJ","QB",10,"13"],[218,"Deebo Samuel Sr.","FA","WR",10,null],
-    [219,"Aaron Rodgers","PIT","QB",10,"9"],[220,"Kaytron Allen","WAS","RB",10,"7"],
-    [221,"Los Angeles Chargers","LAC","DST",10,"7"],[222,"Eddy Pineiro","SF","K",10,"8"],
-    [223,"Cade Otton","TB","TE",10,"10"],[224,"Tyler Loop","BAL","K",10,"13"],
-    [225,"Baltimore Ravens","BAL","DST",10,"13"],[226,"Jaylen Wright","MIA","RB",10,"6"],
-    [227,"Chimere Dike","TEN","WR",10,"9"],[228,"Cairo Santos","CHI","K",10,"10"],
-    [229,"Kansas City Chiefs","KC","DST",10,"5"],[230,"Seth McGowan","IND","RB",10,"13"],
-    [231,"Jake Bates","DET","K",10,"6"],[232,"Germie Bernard","PIT","WR",10,"9"],
-    [233,"Zachariah Branch","ATL","WR",10,"11"],[234,"Colby Parkinson","LAR","TE",10,"11"],
-    [235,"Green Bay Packers","GB","DST",10,"11"],[236,"Andy Borregales","NE","K",10,"11"],
-    [237,"Detroit Lions","DET","DST",10,"6"],[238,"Fernando Mendoza","LV","QB",10,"13"],
-    [239,"Evan McPherson","CIN","K",10,"6"],[240,"Ollie Gordon II","MIA","RB",10,"6"],
-    [241,"Buffalo Bills","BUF","DST",10,"7"],[242,"Justice Hill","BAL","RB",10,"13"],
-    [243,"Harrison Mevis","LAR","K",10,"11"],[244,"Jack Bech","LV","WR",10,"13"],
-    [245,"Oscar Delp","NO","TE",10,"8"],[246,"Chase McLaughlin","TB","K",10,"10"],
-    [247,"Elic Ayomanor","TEN","WR",10,"9"],[248,"Keon Coleman","BUF","WR",10,"7"],
-    [249,"Cleveland Browns","CLE","DST",10,"11"],[250,"Harrison Butker","KC","K",10,"5"],
-  ];
-
   // key -> array of raw rows {name,team,position,rank,tier,bye,ecrStdDev}
-  let sourceData = {
-    fantasypros: DEFAULT_FANTASYPROS_TOP250.map(r => ({
-      rank:r[0], name:r[1], team:r[2], position:r[3], tier:r[4], bye:r[5], ecrStdDev:0
-    }))
-  };
+  let sourceData = {};
   // blended, adjusted board — rebuilt from sourceData whenever something changes
   let players = [];
 
@@ -685,35 +646,137 @@
   const TEAMS = ["ARI","ATL","BAL","BUF","CAR","CHI","CIN","CLE","DAL","DEN","DET","GB","HOU","IND",
     "JAX","KC","LAC","LAR","LV","MIA","MIN","NE","NO","NYG","NYJ","PHI","PIT","SEA","SF","TB","TEN","WAS"];
   const TEAM_ALIASES = { JAC:"JAX", WSH:"WAS", GNB:"GB", KAN:"KC", NWE:"NE", NOR:"NO", SFO:"SF", TAM:"TB", LA:"LAR" };
-  const TEAM_FIELDS = ["olRun","olPass","qbStrength","sosRB","sosWRTE","sosQB"];
+  const TEAM_FIELDS = ["olRun","olPass","qbStrength","defStrength","sosRB","sosWRTE","sosQB"];
 
   function normalizeTeam(code){
     const c = String(code||"").trim().toUpperCase();
     return TEAM_ALIASES[c] || c;
   }
 
-  // Pre-loaded 2026 team factors (baked in so no upload/paste is needed out of the box).
-  // Format: [OL_RUN, OL_PASS, QB_STRENGTH, SOS_RB, SOS_WRTE, SOS_QB]
-  const DEFAULT_TEAM_FACTORS_2026 = {
-    ARI:[29,29,16,8,15,16], ATL:[21,21,16,20,24,22], BAL:[22,22,16,19,16,13], BUF:[5,5,16,2,10,7],
-    CAR:[10,10,16,4,14,15], CHI:[4,4,16,9,8,4], CIN:[26,26,16,7,29,28], CLE:[30,30,16,21,29,31],
-    DAL:[20,20,16,28,23,23], DEN:[1,1,16,10,13,7], DET:[12,12,16,30,12,18], GB:[28,28,16,16,8,14],
-    HOU:[31,31,16,18,25,24], IND:[6,6,16,23,17,25], JAX:[17,17,16,17,24,29], KC:[19,19,16,6,14,3],
-    LAC:[3,3,16,16,8,12], LAR:[7,7,16,32,17,18], LV:[27,27,16,1,10,1], MIA:[25,25,16,13,6,11],
-    MIN:[9,9,16,25,26,26], NE:[14,14,16,4,6,10], NO:[11,11,16,32,16,21], NYG:[18,18,16,23,29,28],
-    NYJ:[16,16,16,5,9,2], PHI:[2,2,16,27,32,32], PIT:[24,24,16,14,12,8], SEA:[13,13,16,30,21,20],
-    SF:[15,15,16,11,8,5], TB:[8,8,16,12,11,9], TEN:[32,32,16,24,30,30], WAS:[23,23,16,26,15,19],
-  };
-
   function defaultTeamData(){
     const data = {};
-    TEAMS.forEach(t => {
-      const d = DEFAULT_TEAM_FACTORS_2026[t] || [16,16,16,16,16,16];
-      data[t] = { olRun:d[0], olPass:d[1], qbStrength:d[2], sosRB:d[3], sosWRTE:d[4], sosQB:d[5] };
-    });
+    TEAMS.forEach(t => { data[t] = { olRun:16, olPass:16, qbStrength:16, defStrength:16, sosRB:16, sosWRTE:16, sosQB:16 }; });
     return data;
   }
   let teamData = defaultTeamData();
+
+  // ---------- Projections ----------
+  // normalized name -> {name, position, passYds, passTD, int, rushYds, rushTD, rec, recYds, recTD, fumLost}
+  let projData = {};
+
+  function getScoringRules(){
+    return {
+      passYdsPerPt: Number(el("s_passYdsPerPt").value) || 25,
+      passTD: Number(el("s_passTD").value) || 0,
+      int: Number(el("s_int").value) || 0,
+      rushYdsPerPt: Number(el("s_rushYdsPerPt").value) || 10,
+      rushTD: Number(el("s_rushTD").value) || 0,
+      rec: Number(el("s_rec").value) || 0,
+      recYdsPerPt: Number(el("s_recYdsPerPt").value) || 10,
+      recTD: Number(el("s_recTD").value) || 0,
+      fumLost: Number(el("s_fumLost").value) || 0,
+      pass40: Number(el("s_pass40")?.value) || 0,
+      rush40: Number(el("s_rush40")?.value) || 0,
+      rec40: Number(el("s_rec40")?.value) || 0,
+    };
+  }
+
+  function computeProjectedPoints(stat, rules){
+    let pts = 0;
+    pts += (stat.passYds||0) / rules.passYdsPerPt;
+    pts += (stat.passTD||0) * rules.passTD;
+    pts += (stat.int||0) * rules.int;
+    pts += (stat.rushYds||0) / rules.rushYdsPerPt;
+    pts += (stat.rushTD||0) * rules.rushTD;
+    pts += (stat.rec||0) * rules.rec;
+    pts += (stat.recYds||0) / rules.recYdsPerPt;
+    pts += (stat.recTD||0) * rules.recTD;
+    pts += (stat.fumLost||0) * rules.fumLost;
+    pts += (stat.pass40||0) * rules.pass40;
+    pts += (stat.rush40||0) * rules.rush40;
+    pts += (stat.rec40||0) * rules.rec40;
+    return pts;
+  }
+
+  function parseProjectionCSV(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
+    if(lines.length < 2) return null;
+    const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
+    const findCol = (...keywords) => header.findIndex(h => keywords.some(k => h === k || h.includes(k)));
+
+    const idxName = findCol("PLAYER NAME","PLAYER","NAME");
+    const idxPos = findCol("POS");
+    const idxPassYds = findCol("PASSING YDS","PASS YDS","PASSYDS");
+    const idxPassTD = findCol("PASSING TDS","PASSING TD","PASS TDS","PASS TD","PASSTD");
+    const idxInt = findCol("INTS","INT");
+    const idxRushYds = findCol("RUSHING YDS","RUSH YDS","RUSHYDS");
+    const idxRushTD = findCol("RUSHING TDS","RUSHING TD","RUSH TDS","RUSH TD","RUSHTD");
+    const idxRec = findCol("REC");
+    const idxRecYds = findCol("RECEIVING YDS","REC YDS","RECYDS");
+    const idxRecTD = findCol("RECEIVING TDS","RECEIVING TD","REC TDS","REC TD","RECTD");
+    const idxFum = findCol("FL","FUM LOST","FUMBLES LOST");
+    const idxPass40 = findCol("40 YD CMP","40+ PASS","PASS 40");
+    const idxRush40 = findCol("40 YD ATT","40+ RUSH","RUSH 40");
+    const idxRec40 = findCol("40 YD REC","40+ REC","REC 40");
+
+    if(idxName === -1) return null;
+
+    const rows = [];
+    for(let i=1;i<lines.length;i++){
+      const cols = splitCsvLine(lines[i]);
+      const nameRaw = idxName < cols.length ? cols[idxName] : "";
+      if(!nameRaw || !nameRaw.trim()) continue;
+      const num = (idx) => idx !== -1 && idx < cols.length ? (Number(String(cols[idx]).replace(/,/g,"")) || 0) : 0;
+      const rawPos = idxPos !== -1 && idxPos < cols.length ? cols[idxPos] : "";
+      const posMatch = rawPos.match(/[A-Z]+/);
+      rows.push({
+        name: nameRaw.trim(),
+        position: posMatch ? posMatch[0] : "",
+        passYds: num(idxPassYds), passTD: num(idxPassTD), int: num(idxInt),
+        rushYds: num(idxRushYds), rushTD: num(idxRushTD),
+        rec: num(idxRec), recYds: num(idxRecYds), recTD: num(idxRecTD),
+        fumLost: num(idxFum),
+        pass40: num(idxPass40), rush40: num(idxRush40), rec40: num(idxRec40),
+      });
+    }
+    return rows;
+  }
+
+  // Last season's actual stats, run through the same scoring formula — blended
+  // with current-season projections via the History Weight slider.
+  let historyData = {};
+
+  function getBlendedPts(p, rules, historyWeight){
+    const nk = normalizeName(p.name);
+    const curStat = projData[nk];
+    const histStat = historyData[nk];
+    const curPts = curStat ? computeProjectedPoints(curStat, rules) : null;
+    const histPts = histStat ? computeProjectedPoints(histStat, rules) : null;
+    if(curPts !== null && histPts !== null) return curPts*(1-historyWeight) + histPts*historyWeight;
+    if(curPts !== null) return curPts;
+    if(histPts !== null) return histPts;
+    return null;
+  }
+
+  function replacementLevels(){
+    // Uses the same per-team demand math as scarcity, applied to projected points
+    // to find the projected-points value of the last realistic starter per position.
+    const settings = getSettings();
+    const rules = getScoringRules();
+    const historyWeight = el("historyWeightSlider") ? Number(el("historyWeightSlider").value)/100 : 0;
+    const levels = {};
+    ["QB","RB","WR","TE"].forEach(pos => {
+      const demand = demandPerTeam(settings, pos) * settings.teams;
+      const cutoff = Math.max(1, Math.round(demand));
+      const scored = players
+        .filter(p => (p.position||"").replace(/[0-9]/g,"") === pos)
+        .map(p => getBlendedPts(p, rules, historyWeight))
+        .filter(v => v !== null)
+        .sort((a,b) => b-a);
+      levels[pos] = scored.length ? (scored[Math.min(cutoff-1, scored.length-1)] || 0) : 0;
+    });
+    return levels;
+  }
 
   // ---------- Persistence ----------
   function loadLocal(){
@@ -751,22 +814,8 @@
   }
 
   // ---------- CSV parsing (shared across sources) ----------
-  // Strips BOM, normalizes smart quotes/dashes/non-breaking spaces, and unifies
-  // line endings — protects against the most common copy/paste and Excel-export
-  // artifacts that would otherwise make the header/row matching below fail silently.
-  function cleanCsvText(text){
-    return String(text||"")
-      .replace(/^\uFEFF/, "")                 // strip BOM
-      .replace(/\r\n?/g, "\n")                // normalize line endings
-      .replace(/[\u2018\u2019\u201A]/g, "'")  // smart single quotes -> '
-      .replace(/[\u201C\u201D\u201E]/g, '"')  // smart double quotes -> "
-      .replace(/[\u2013\u2014]/g, "-")        // en/em dash -> -
-      .replace(/\u00A0/g, " ");                // non-breaking space -> space
-  }
-
-  function parseCSV(rawText){
-    const text = cleanCsvText(rawText);
-    const lines = text.trim().split(/\n/).filter(l => l.trim().length);
+  function parseCSV(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
     if(lines.length < 2) return null;
     const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
 
@@ -784,23 +833,19 @@
     const rows = [];
     for(let i=1;i<lines.length;i++){
       const cols = splitCsvLine(lines[i]);
-      // Require enough columns to actually reach the name column — this also
-      // rejects short "divider" rows some exports insert between tiers
-      // (e.g. FantasyPros' `"",3` tier-break rows), which previously slipped
-      // through when they happened to have >=2 columns but no real player data.
-      if(cols.length < 2 || (idxName !== -1 && cols.length <= idxName)) continue;
+      if(cols.length < 2) continue;
       const nameRaw = (idxName!==-1 ? cols[idxName] : "").trim();
       if(!nameRaw) continue;
-      const rawPos = idxPos !== -1 && idxPos < cols.length ? cols[idxPos] || "" : "";
+      const rawPos = idxPos !== -1 ? cols[idxPos] || "" : "";
       const posMatch = rawPos.match(/[A-Z]+/);
       rows.push({
         name: nameRaw,
-        team: idxTeam!==-1 && idxTeam < cols.length ? (cols[idxTeam]||"").trim() : "",
+        team: idxTeam!==-1 ? (cols[idxTeam]||"").trim() : "",
         position: posMatch ? posMatch[0] : "FLEX",
-        rank: idxRank!==-1 && idxRank < cols.length ? (Number(cols[idxRank]) || i) : i,
-        ecrStdDev: idxStdDev!==-1 && idxStdDev < cols.length ? (Number(cols[idxStdDev])||0) : 0,
-        tier: idxTier!==-1 && idxTier < cols.length ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
-        bye: idxBye!==-1 && idxBye < cols.length ? cols[idxBye] : null,
+        rank: idxRank!==-1 ? (Number(cols[idxRank]) || i) : i,
+        ecrStdDev: idxStdDev!==-1 ? (Number(cols[idxStdDev])||0) : 0,
+        tier: idxTier!==-1 ? (Number(cols[idxTier])||0) : Math.ceil(i/12),
+        bye: idxBye!==-1 ? cols[idxBye] : null,
       });
     }
     // re-rank sequentially in case source rank column was sparse/non-sequential
@@ -1019,9 +1064,8 @@
     });
   }
 
-  function parseTeamCSV(rawText){
-    const text = cleanCsvText(rawText);
-    const lines = text.trim().split(/\n/).filter(l => l.trim().length);
+  function parseTeamCSV(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
     if(lines.length < 2) return null;
     const header = splitCsvLine(lines[0]).map(h => h.trim().toUpperCase());
     const findCol = (...keywords) => header.findIndex(h => keywords.some(k => h.includes(k)));
@@ -1029,6 +1073,7 @@
     const idxOlRun = findCol("OL_RUN","OLRUN","RUN BLOCK","RUN_BLOCK");
     const idxOlPass = findCol("OL_PASS","OLPASS","PASS BLOCK","PASS PROTECT");
     const idxQb = findCol("QB_STRENGTH","QB STRENGTH","QB_RANK");
+    const idxDef = findCol("DEF_STRENGTH","DEFENSE","DEF_RANK","DEF STRENGTH");
     const idxSosRb = findCol("SOS_RB","SOS RB");
     const idxSosWrte = findCol("SOS_WRTE","SOS_WR","SOS WR");
     const idxSosQb = findCol("SOS_QB","SOS QB");
@@ -1043,6 +1088,7 @@
       setIf(idxOlRun, "olRun");
       setIf(idxOlPass, "olPass");
       setIf(idxQb, "qbStrength");
+      setIf(idxDef, "defStrength");
       setIf(idxSosRb, "sosRB");
       setIf(idxSosWrte, "sosWRTE");
       setIf(idxSosQb, "sosQB");
@@ -1163,26 +1209,28 @@
   function strengthFactor(rank){ return (16.5 - rank) / 15.5; }
   function easeFactor(rank){ return (rank - 16.5) / 15.5; }
 
-  function teamFactorAdjustment(p, weights){
+  function teamFactorBreakdown(p, weights){
     const t = normalizeTeam(p.team);
     const td = teamData[t];
-    if(!td) return 0;
-    let adj = 0;
+    const b = { olRun:0, olPass:0, qbSupport:0, sos:0, gameScript:0, bigPlay:0 };
+    if(!td) return b;
     if(p.position === "RB"){
-      adj += strengthFactor(td.olRun) * weights.olRun;
-      adj += easeFactor(td.sosRB) * weights.sos;
+      b.olRun = strengthFactor(td.olRun) * weights.olRun * TEAM_FACTOR_SCALE;
+      b.sos = easeFactor(td.sosRB) * weights.sos * TEAM_FACTOR_SCALE;
+      b.gameScript = strengthFactor(td.defStrength) * weights.gameScript * TEAM_FACTOR_SCALE;
     }
     if(["QB","WR","TE"].includes(p.position)){
-      adj += strengthFactor(td.olPass) * weights.olPass;
+      b.olPass = strengthFactor(td.olPass) * weights.olPass * TEAM_FACTOR_SCALE;
+      b.gameScript = easeFactor(td.defStrength) * weights.gameScript * TEAM_FACTOR_SCALE;
     }
     if(["WR","TE"].includes(p.position)){
-      adj += strengthFactor(td.qbStrength) * weights.qbSupport;
-      adj += easeFactor(td.sosWRTE) * weights.sos;
+      b.qbSupport = strengthFactor(td.qbStrength) * weights.qbSupport * TEAM_FACTOR_SCALE;
+      b.sos = easeFactor(td.sosWRTE) * weights.sos * TEAM_FACTOR_SCALE;
     }
     if(p.position === "QB"){
-      adj += easeFactor(td.sosQB) * weights.sos;
+      b.sos = easeFactor(td.sosQB) * weights.sos * TEAM_FACTOR_SCALE;
     }
-    return adj * TEAM_FACTOR_SCALE;
+    return b;
   }
 
   function computeBoard(){
@@ -1191,25 +1239,55 @@
     const risk = Number(el("riskSlider").value)/100;
     const injuryWeight = Number(el("injurySlider").value)/100;
     const rookieBias = Number(el("rookieSlider").value)/100;
+    const vorpWeight = Number(el("vorpSlider").value)/100;
+    const historyWeight = el("historyWeightSlider") ? Number(el("historyWeightSlider").value)/100 : 0;
     const teamWeights = {
       olRun: Number(el("olRunSlider").value)/100,
       olPass: Number(el("olPassSlider").value)/100,
       qbSupport: Number(el("qbSupportSlider").value)/100,
       sos: Number(el("sosSlider").value)/100,
+      gameScript: Number(el("gameScriptSlider").value)/100,
+      bigPlay: Number(el("bigPlaySlider")?.value || 0)/100,
     };
 
-    const scored = players.map(p => {
-      if(p.overrideRank){
-        return { ...p, adjusted: p.overrideRank, locked:true };
+    const rules = getScoringRules();
+    const levels = replacementLevels();
+
+    // Pass 1: blended (current + history) projected points + VORP for every player with data
+    const withProj = players.map(p => {
+      const posKey = (p.position||"").replace(/[0-9]/g,"");
+      const projPts = getBlendedPts(p, rules, historyWeight);
+      if(projPts !== null && levels[posKey] !== undefined){
+        return { p, projPts, vorp: projPts - levels[posKey] };
       }
-      let adjusted = p.ecr;
-      const sf = scarcityFactor(settings, p.position);
-      adjusted -= p.ecr * sf * scarcitySens * 0.5;
-      adjusted += -(risk) * (p.ecrStdDev||0) * 1.0;
-      if(p.injuryFlag) adjusted += injuryWeight * 15;
-      if(p.rookieFlag) adjusted += -(rookieBias) * 12;
-      adjusted -= teamFactorAdjustment(p, teamWeights);
-      return { ...p, adjusted, locked:false };
+      return { p, projPts, vorp: null };
+    });
+    const vorpVals = withProj.map(x => x.vorp).filter(v => v !== null);
+    const maxAbsVorp = vorpVals.length ? Math.max(...vorpVals.map(Math.abs), 1) : 1;
+    const VORP_SCALE = 30;
+
+    const scored = withProj.map(({p, projPts, vorp}) => {
+      if(p.overrideRank){
+        return { ...p, adjusted: p.overrideRank, locked:true, projPts, vorp, breakdown: null };
+      }
+      const tfb = teamFactorBreakdown(p, teamWeights);
+      // Each delta below is added to the base ECR; negative = moves the player UP the board.
+      const deltas = {
+        scarcity: -(p.ecr * scarcityFactor(settings, p.position) * scarcitySens * 0.5),
+        risk: -(risk) * (p.ecrStdDev||0) * 1.0,
+        injury: p.injuryFlag ? injuryWeight * 15 : 0,
+        rookie: p.rookieFlag ? -(rookieBias) * 12 : 0,
+        olRun: -tfb.olRun,
+        olPass: -tfb.olPass,
+        qbSupport: -tfb.qbSupport,
+        sos: -tfb.sos,
+        gameScript: -tfb.gameScript,
+        bigPlay: projPts !== null ? -Math.min(12, ((projData[normalizeName(p.name)]?.pass40||0) + (projData[normalizeName(p.name)]?.rush40||0) + (projData[normalizeName(p.name)]?.rec40||0)) * teamWeights.bigPlay * 0.8) : 0,
+        vorp: vorp !== null ? -((vorp / maxAbsVorp) * vorpWeight * VORP_SCALE) : 0,
+      };
+      const totalDelta = Object.values(deltas).reduce((a,b) => a+b, 0);
+      const adjusted = p.ecr + totalDelta;
+      return { ...p, adjusted, locked:false, projPts, vorp, breakdown: deltas };
     });
 
     scored.sort((a,b) => a.adjusted - b.adjusted);
@@ -1342,18 +1420,56 @@
     return "pos-WR";
   }
 
+  let sortMode = "adjusted";
+  let expandedIds = new Set();
+
+  const BREAKDOWN_LABELS = {
+    scarcity: "Positional scarcity", risk: "Risk tolerance", injury: "Injury flag", rookie: "Rookie bias",
+    olRun: "O-line run block", olPass: "O-line pass block", qbSupport: "QB support", sos: "Strength of schedule",
+    gameScript: "Game script", bigPlay: "Big-play bonuses", vorp: "Projection (VORP)",
+  };
+
+  function renderBreakdown(p){
+    if(p.locked){
+      return `<div class="player-meta">Manual override — locked at rank ${p.overrideRank}, all sliders ignored.</div>`;
+    }
+    if(!p.breakdown) return `<div class="player-meta">No adjustments applied.</div>`;
+    const entries = Object.entries(p.breakdown)
+      .map(([k,v]) => ({ label: BREAKDOWN_LABELS[k]||k, v: -v })) // flip sign: positive = moved up
+      .filter(e => Math.abs(e.v) > 0.05)
+      .sort((a,b) => Math.abs(b.v) - Math.abs(a.v));
+    if(!entries.length) return `<div class="player-meta">No active sliders moved this player — sitting at consensus rank.</div>`;
+    const rows = entries.map(e => {
+      const cls = e.v > 0 ? "up" : "down";
+      const sign = e.v > 0 ? "moved up" : "moved down";
+      return `<div class="delta ${cls}" style="display:flex;justify-content:space-between;max-width:320px;padding:2px 0;">
+        <span style="color:var(--chalk);">${escapeHtml(e.label)}</span>
+        <span>${sign} ${Math.abs(e.v).toFixed(1)}</span>
+      </div>`;
+    }).join("");
+    return `<div class="player-meta" style="margin-bottom:6px;">Consensus rank ${p.ecr} → your rank ${p.yourRank}. Breakdown by factor:</div>${rows}`;
+  }
+
   function render(){
     const body = el("boardBody");
     if(!players.length){
-      body.innerHTML = `<tr><td colspan="7"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="9"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>`;
       return;
     }
-    const board = computeBoard();
+    let board = computeBoard();
+    if(sortMode === "vorp"){
+      board = [...board].sort((a,b) => {
+        if(a.vorp === null && b.vorp === null) return 0;
+        if(a.vorp === null) return 1;
+        if(b.vorp === null) return -1;
+        return b.vorp - a.vorp;
+      });
+    }
     let html = "";
     let lastTier = null;
     board.forEach(p => {
-      if(p.tier && p.tier !== lastTier){
-        html += `<tr class="tier-row"><td colspan="7"><div class="tier-marker"><span class="tier-label">Tier ${p.tier}</span></div></td></tr>`;
+      if(sortMode === "adjusted" && p.tier && p.tier !== lastTier){
+        html += `<tr class="tier-row"><td colspan="9"><div class="tier-marker"><span class="tier-label">Tier ${p.tier}</span></div></td></tr>`;
         lastTier = p.tier;
       }
       const delta = p.ecr - p.yourRank;
@@ -1361,15 +1477,22 @@
       const deltaText = delta === 0 ? "—" : (delta > 0 ? `↑${delta}` : `↓${Math.abs(delta)}`);
       const pos = (p.position||"").replace(/[0-9]/g,"");
       const srcNote = p.sourceCount > 1 ? "" : ` <span title="Only found in one source">*</span>`;
+      const projText = p.projPts !== null ? p.projPts.toFixed(1) : "—";
+      const vorpText = p.vorp !== null ? (p.vorp >= 0 ? "+" : "") + p.vorp.toFixed(1) : "—";
+      const vorpClass = p.vorp === null ? "flat" : (p.vorp >= 0 ? "up" : "down");
+      const isExpanded = expandedIds.has(p.id);
       html += `
         <tr data-id="${escapeAttr(p.id)}">
           <td class="rank-num">${p.yourRank}</td>
           <td>
-            <div class="player-name">${escapeHtml(p.name)}${srcNote}</div>
+            <button class="flag-btn" data-action="expand" style="margin-right:6px;">${isExpanded ? "▾" : "▸"} why</button>
+            <div class="player-name" style="display:inline;">${escapeHtml(p.name)}${srcNote}</div>
             <div class="player-meta">${escapeHtml(p.team||"")}${p.bye ? " · Bye " + escapeHtml(String(p.bye)) : ""}</div>
           </td>
           <td><span class="pos-chip ${positionClass(pos)}">${escapeHtml(pos)}</span></td>
           <td>${p.ecr}</td>
+          <td>${projText}</td>
+          <td class="delta ${vorpClass}">${vorpText}</td>
           <td class="delta ${deltaClass}">${deltaText}</td>
           <td>
             <button class="flag-btn ${p.injuryFlag?'active-injury':''}" data-action="injury" title="Flag injury risk">INJ</button>
@@ -1377,6 +1500,9 @@
           </td>
           <td><input type="number" class="override-input" data-action="override" placeholder="#" value="${p.overrideRank||''}"></td>
         </tr>`;
+      if(isExpanded){
+        html += `<tr class="tier-row" data-id="${escapeAttr(p.id)}-detail"><td colspan="9" style="padding:8px 12px 14px 40px;background:rgba(0,0,0,0.15);">${renderBreakdown(p)}</td></tr>`;
+      }
     });
     body.innerHTML = html;
   }
@@ -1401,8 +1527,75 @@
   });
 
   [["scarcitySlider","scarcityVal"],["riskSlider","riskVal"],["injurySlider","injuryVal"],["rookieSlider","rookieVal"],
-   ["olRunSlider","olRunVal"],["olPassSlider","olPassVal"],["qbSupportSlider","qbSupportVal"],["sosSlider","sosVal"]].forEach(([slider,out]) => {
+   ["olRunSlider","olRunVal"],["olPassSlider","olPassVal"],["qbSupportSlider","qbSupportVal"],["sosSlider","sosVal"],
+   ["gameScriptSlider","gameScriptVal"],
+   ["vorpSlider","vorpVal"],["historyWeightSlider","historyWeightVal"]].forEach(([slider,out]) => {
     el(slider).addEventListener("input", () => { el(out).textContent = el(slider).value; render(); saveLocal(); });
+  });
+
+  function handleProjectionCSV(text){
+    const rows = parseProjectionCSV(text);
+    const status = el("projStatus");
+    if(!rows){
+      status.textContent = "Couldn't parse that — check it has a player-name column.";
+      status.className = "fetch-status error";
+      return;
+    }
+    rows.forEach(r => { projData[normalizeName(r.name)] = r; });
+    status.textContent = `Projection pool now has ${Object.keys(projData).length} players.`;
+    status.className = "fetch-status ok";
+    render();
+  }
+  el("projCsvLoadBtn").addEventListener("click", () => handleProjectionCSV(el("projCsvPaste").value));
+  el("projCsvFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => handleProjectionCSV(ev.target.result);
+    reader.readAsText(file);
+  });
+  el("projClearBtn").addEventListener("click", () => {
+    projData = {};
+    el("projStatus").textContent = "Projection pool cleared.";
+    el("projStatus").className = "fetch-status";
+    render();
+  });
+
+  function handleHistoryCSV(text){
+    const rows = parseProjectionCSV(text);
+    const status = el("histStatus");
+    if(!rows){
+      status.textContent = "Couldn't parse that — check it has a player-name column.";
+      status.className = "fetch-status error";
+      return;
+    }
+    rows.forEach(r => { historyData[normalizeName(r.name)] = r; });
+    status.textContent = `History pool now has ${Object.keys(historyData).length} players.`;
+    status.className = "fetch-status ok";
+    render();
+  }
+  el("histCsvLoadBtn").addEventListener("click", () => handleHistoryCSV(el("histCsvPaste").value));
+  el("histCsvFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => handleHistoryCSV(ev.target.result);
+    reader.readAsText(file);
+  });
+  el("histClearBtn").addEventListener("click", () => {
+    historyData = {};
+    el("histStatus").textContent = "History pool cleared.";
+    el("histStatus").className = "fetch-status";
+    render();
+  });
+  el("sortVorpBtn").addEventListener("click", () => {
+    sortMode = sortMode === "vorp" ? "adjusted" : "vorp";
+    el("sortVorpBtn").textContent = sortMode === "vorp" ? "Sort by your rank instead" : "Sort by VORP instead";
+    render();
+  });
+
+  ["s_passYdsPerPt","s_passTD","s_int","s_rushYdsPerPt","s_rushTD","s_rec","s_recYdsPerPt","s_recTD","s_fumLost","s_pass40","s_rush40","s_rec40"].forEach(id => {
+    el(id).addEventListener("input", () => render());
   });
 
   el("teamCsvLoadBtn").addEventListener("click", () => {
@@ -1445,6 +1638,11 @@
     if(!btn) return;
     const tr = btn.closest("tr");
     const id = tr.getAttribute("data-id");
+    if(btn.dataset.action === "expand"){
+      if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+      render();
+      return;
+    }
     const p = players.find(pl => pl.id === id);
     if(!p) return;
     if(btn.dataset.action === "injury") p.injuryFlag = !p.injuryFlag;
@@ -1484,17 +1682,54 @@
     saveLocal();
   });
 
+  async function loadAutomaticData(){
+    const status = el("automaticDataStatus");
+    try{
+      const [rankResp, teamResp, histResp] = await Promise.all([
+        fetch(`data/rankings.json?v=${Date.now()}`),
+        fetch(`data/team-context.json?v=${Date.now()}`),
+        fetch(`data/yahoo-history-2025.json?v=${Date.now()}`)
+      ]);
+      if(!rankResp.ok) throw new Error(`rankings ${rankResp.status}`);
+      const rankPayload = await rankResp.json();
+      const rows = Array.isArray(rankPayload) ? rankPayload : rankPayload.players;
+      sourceData.automatic = (rows||[]).map((r,i)=>({
+        name:r.name||r.player_name||r.player, team:normalizeTeam(r.team||r.player_team_id),
+        position:String(r.position||r.pos||"").replace(/[0-9]/g,""), rank:Number(r.rank||r.overallRank||r.rank_ecr||i+1),
+        tier:Number(r.tier||0)||null, bye:Number(r.bye||r.byeWeek||0)||null, ecrStdDev:Number(r.rankStdDev||r.rank_std_dev||0)||0
+      })).filter(r=>r.name);
+      if(teamResp.ok){
+        const teamPayload=await teamResp.json();
+        Object.entries(teamPayload.teams||teamPayload).forEach(([team,v])=>{
+          const t=normalizeTeam(team); if(!teamData[t]) return;
+          teamData[t]={...teamData[t],...v};
+        });
+      }
+      if(histResp.ok){
+        const histPayload=await histResp.json();
+        (histPayload.players||histPayload||[]).forEach(r=>{ historyData[normalizeName(r.name)]={...r}; });
+      }
+      blendSources();
+      renderSourceCards(); renderTeamFactorTable(); render();
+      if(status){ status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`; status.className="fetch-status ok"; }
+    }catch(err){
+      if(status){ status.textContent=`Automatic feed unavailable (${err.message}). CSV fallback is still available.`; status.className="fetch-status error"; }
+    }
+  }
+  if(el("refreshBundledBtn")) el("refreshBundledBtn").addEventListener("click", loadAutomaticData);
+
   loadLocal();
   if(window.__savedSettings){
     Object.entries(window.__savedSettings).forEach(([k,v]) => { if(el(k)) el(k).value = v; });
   }
-  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider"].forEach(id => {
+  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider","gameScriptSlider","bigPlaySlider"].forEach(id => {
     const out = el(id.replace("Slider","Val"));
     if(out) out.textContent = el(id).value;
   });
   renderSourceCards();
   renderTeamFactorTable();
   render();
+  loadAutomaticData();
 })();
 </script>
 

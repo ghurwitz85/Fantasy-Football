@@ -1,0 +1,10 @@
+{
+  "name": "personalized-fantasy-football-board",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "update-data": "node scripts/update-data.mjs",
+    "validate": "node scripts/validate-data.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
