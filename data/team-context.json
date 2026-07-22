@@ -1,0 +1,293 @@
+{
+  "generatedAt": "2026-07-20T00:00:00Z",
+  "teams": {
+    "ARI": {
+      "olRun": 29,
+      "olPass": 29,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 8,
+      "sosWRTE": 15,
+      "sosQB": 16
+    },
+    "ATL": {
+      "olRun": 21,
+      "olPass": 21,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 20,
+      "sosWRTE": 24,
+      "sosQB": 22
+    },
+    "BAL": {
+      "olRun": 22,
+      "olPass": 22,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 19,
+      "sosWRTE": 16,
+      "sosQB": 13
+    },
+    "BUF": {
+      "olRun": 5,
+      "olPass": 5,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 2,
+      "sosWRTE": 10,
+      "sosQB": 7
+    },
+    "CAR": {
+      "olRun": 10,
+      "olPass": 10,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 4,
+      "sosWRTE": 14,
+      "sosQB": 15
+    },
+    "CHI": {
+      "olRun": 4,
+      "olPass": 4,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 9,
+      "sosWRTE": 8,
+      "sosQB": 4
+    },
+    "CIN": {
+      "olRun": 26,
+      "olPass": 26,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 7,
+      "sosWRTE": 29,
+      "sosQB": 28
+    },
+    "CLE": {
+      "olRun": 30,
+      "olPass": 30,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 21,
+      "sosWRTE": 29,
+      "sosQB": 31
+    },
+    "DAL": {
+      "olRun": 20,
+      "olPass": 20,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 28,
+      "sosWRTE": 23,
+      "sosQB": 23
+    },
+    "DEN": {
+      "olRun": 1,
+      "olPass": 1,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 10,
+      "sosWRTE": 13,
+      "sosQB": 7
+    },
+    "DET": {
+      "olRun": 12,
+      "olPass": 12,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 30,
+      "sosWRTE": 12,
+      "sosQB": 18
+    },
+    "GB": {
+      "olRun": 28,
+      "olPass": 28,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 16,
+      "sosWRTE": 8,
+      "sosQB": 14
+    },
+    "HOU": {
+      "olRun": 31,
+      "olPass": 31,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 18,
+      "sosWRTE": 25,
+      "sosQB": 24
+    },
+    "IND": {
+      "olRun": 6,
+      "olPass": 6,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 23,
+      "sosWRTE": 17,
+      "sosQB": 25
+    },
+    "JAX": {
+      "olRun": 17,
+      "olPass": 17,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 17,
+      "sosWRTE": 24,
+      "sosQB": 29
+    },
+    "KC": {
+      "olRun": 19,
+      "olPass": 19,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 6,
+      "sosWRTE": 14,
+      "sosQB": 3
+    },
+    "LAC": {
+      "olRun": 3,
+      "olPass": 3,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 16,
+      "sosWRTE": 8,
+      "sosQB": 12
+    },
+    "LAR": {
+      "olRun": 7,
+      "olPass": 7,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 32,
+      "sosWRTE": 17,
+      "sosQB": 18
+    },
+    "LV": {
+      "olRun": 27,
+      "olPass": 27,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 1,
+      "sosWRTE": 10,
+      "sosQB": 1
+    },
+    "MIA": {
+      "olRun": 25,
+      "olPass": 25,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 13,
+      "sosWRTE": 6,
+      "sosQB": 11
+    },
+    "MIN": {
+      "olRun": 9,
+      "olPass": 9,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 25,
+      "sosWRTE": 26,
+      "sosQB": 26
+    },
+    "NE": {
+      "olRun": 14,
+      "olPass": 14,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 4,
+      "sosWRTE": 6,
+      "sosQB": 10
+    },
+    "NO": {
+      "olRun": 11,
+      "olPass": 11,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 32,
+      "sosWRTE": 16,
+      "sosQB": 21
+    },
+    "NYG": {
+      "olRun": 18,
+      "olPass": 18,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 23,
+      "sosWRTE": 29,
+      "sosQB": 28
+    },
+    "NYJ": {
+      "olRun": 16,
+      "olPass": 16,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 5,
+      "sosWRTE": 9,
+      "sosQB": 2
+    },
+    "PHI": {
+      "olRun": 2,
+      "olPass": 2,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 27,
+      "sosWRTE": 32,
+      "sosQB": 32
+    },
+    "PIT": {
+      "olRun": 24,
+      "olPass": 24,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 14,
+      "sosWRTE": 12,
+      "sosQB": 8
+    },
+    "SEA": {
+      "olRun": 13,
+      "olPass": 13,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 30,
+      "sosWRTE": 21,
+      "sosQB": 20
+    },
+    "SF": {
+      "olRun": 15,
+      "olPass": 15,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 11,
+      "sosWRTE": 8,
+      "sosQB": 5
+    },
+    "TB": {
+      "olRun": 8,
+      "olPass": 8,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 12,
+      "sosWRTE": 11,
+      "sosQB": 9
+    },
+    "TEN": {
+      "olRun": 32,
+      "olPass": 32,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 24,
+      "sosWRTE": 30,
+      "sosQB": 30
+    },
+    "WAS": {
+      "olRun": 23,
+      "olPass": 23,
+      "qbStrength": 16,
+      "defStrength": 16,
+      "sosRB": 26,
+      "sosWRTE": 15,
+      "sosQB": 19
+    }
+  }
+}

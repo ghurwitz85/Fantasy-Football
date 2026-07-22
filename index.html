@@ -342,6 +342,14 @@
 
 <div class="wrap">
 
+  <section id="automatic-data">
+    <div class="panel">
+      <h2 class="section-title">Automatic data feed</h2>
+      <p class="hint">The board loads cached rankings, team context, and Yahoo history from this repository automatically. GitHub Actions can refresh those files; CSV imports remain available as a fallback.</p>
+      <div class="btn-row"><button class="btn-primary" id="refreshBundledBtn">Reload automatic data</button><span class="fetch-status" id="automaticDataStatus">Checking bundled data…</span></div>
+    </div>
+  </section>
+
   <section id="source">
     <h2 class="section-title">Sources &amp; trust weighting</h2>
     <div id="sourcesContainer"></div>
@@ -454,6 +462,11 @@
             <input type="range" id="gameScriptSlider" min="0" max="100" value="0">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span class="name">Big-play bonus weight</span><span class="val" id="bigPlayVal">50</span></div>
+            <input type="range" id="bigPlaySlider" min="0" max="100" value="50">
+            <div class="slider-ends"><span>Ignore bonuses</span><span>Full league impact</span></div>
+          </div>
         </div>
       </div>
       <details class="how">
@@ -461,7 +474,7 @@
         <p><strong>Scarcity</strong> compares your league's per-team starter demand at each position (including a flex share) against a standard 12-team/1QB/2RB/2WR/1TE/1FLEX baseline, and shifts ranks toward positions your league makes scarcer.</p>
         <p><strong>Risk tolerance</strong> combines FantasyPros' expert-disagreement (rank std. dev.) with cross-source disagreement as a boom/bust proxy — high disagreement means a wide range of likely outcomes.</p>
         <p><strong>Injury</strong> and <strong>rookie</strong> weighting only apply to players you've flagged in the table below — flag them, then use the sliders to control how much that flag matters.</p>
-        <p><strong>O-line, QB-support, strength-of-schedule, and game-script</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders. <strong>Game script</strong> uses your team's defense rank: a bad defense means more time spent trailing, which boosts pass volume for that team's QB/WR/TE; a good defense means more time spent leading, which boosts rush volume (and RB touches) for that team's RB.</p>
+        <p><strong>O-line, QB-support, strength-of-schedule, game-script, and big-play</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders. <strong>Game script</strong> uses your team's defense rank: a bad defense means more time spent trailing, which boosts pass volume for that team's QB/WR/TE; a good defense means more time spent leading, which boosts rush volume (and RB touches) for that team's RB.</p>
         <p>Set an explicit override rank on any player and it locks that player's position regardless of every slider.</p>
       </details>
     </div>
@@ -515,10 +528,13 @@
         <div class="field"><label>Receiving yards / point</label><input type="number" id="s_recYdsPerPt" value="10"></div>
         <div class="field"><label>Receiving TD</label><input type="number" id="s_recTD" value="6"></div>
         <div class="field"><label>Fumble lost</label><input type="number" id="s_fumLost" value="-2"></div>
+        <div class="field"><label>40+ yd pass completion bonus</label><input type="number" id="s_pass40" value="1" step="0.5"></div>
+        <div class="field"><label>40+ yd rush bonus</label><input type="number" id="s_rush40" value="1" step="0.5"></div>
+        <div class="field"><label>40+ yd reception bonus</label><input type="number" id="s_rec40" value="1" step="0.5"></div>
       </div>
       <details class="how">
-        <summary>Not included in the formula</summary>
-        <p>40+ yard completion/run/reception bonuses, kicker distance tiers, and defense's weekly points-allowed brackets all need play-by-play or week-by-week data that season-total stat projections don't carry — they're left out rather than estimated. K and DST keep using their consensus rank instead of a projected-points formula.</p>
+        <summary>Scoring coverage</summary>
+        <p>40+ yard completion, run, and reception bonuses are included whenever the imported projection or Yahoo history contains those event counts. If a source omits them, the board estimates conservatively from historical big-play rates when available. Kicker distance tiers and defense weekly brackets still require weekly data and remain outside the season-total projection formula.</p>
       </details>
     </div>
   </section>
@@ -615,8 +631,9 @@
 
   // Each source config: {key, label, mode: 'fantasypros-json'|'generic', weight, liveUrl, custom}
   let sourceConfigs = [
-    { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:65 },
-    { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:35, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
+    { key:"automatic", label:"Automatic cached rankings", mode:"generic", weight:70 },
+    { key:"fantasypros", label:"FantasyPros", mode:"fantasypros-json", weight:20 },
+    { key:"draftsharks", label:"Draft Sharks", mode:"generic", weight:10, liveUrl:"https://www.draftsharks.com/rankings/half-ppr" },
   ];
   // key -> array of raw rows {name,team,position,rank,tier,bye,ecrStdDev}
   let sourceData = {};
@@ -658,6 +675,9 @@
       recYdsPerPt: Number(el("s_recYdsPerPt").value) || 10,
       recTD: Number(el("s_recTD").value) || 0,
       fumLost: Number(el("s_fumLost").value) || 0,
+      pass40: Number(el("s_pass40")?.value) || 0,
+      rush40: Number(el("s_rush40")?.value) || 0,
+      rec40: Number(el("s_rec40")?.value) || 0,
     };
   }
 
@@ -672,6 +692,9 @@
     pts += (stat.recYds||0) / rules.recYdsPerPt;
     pts += (stat.recTD||0) * rules.recTD;
     pts += (stat.fumLost||0) * rules.fumLost;
+    pts += (stat.pass40||0) * rules.pass40;
+    pts += (stat.rush40||0) * rules.rush40;
+    pts += (stat.rec40||0) * rules.rec40;
     return pts;
   }
 
@@ -692,6 +715,9 @@
     const idxRecYds = findCol("RECEIVING YDS","REC YDS","RECYDS");
     const idxRecTD = findCol("RECEIVING TDS","RECEIVING TD","REC TDS","REC TD","RECTD");
     const idxFum = findCol("FL","FUM LOST","FUMBLES LOST");
+    const idxPass40 = findCol("40 YD CMP","40+ PASS","PASS 40");
+    const idxRush40 = findCol("40 YD ATT","40+ RUSH","RUSH 40");
+    const idxRec40 = findCol("40 YD REC","40+ REC","REC 40");
 
     if(idxName === -1) return null;
 
@@ -710,6 +736,7 @@
         rushYds: num(idxRushYds), rushTD: num(idxRushTD),
         rec: num(idxRec), recYds: num(idxRecYds), recTD: num(idxRecTD),
         fumLost: num(idxFum),
+        pass40: num(idxPass40), rush40: num(idxRush40), rec40: num(idxRec40),
       });
     }
     return rows;
@@ -1185,7 +1212,7 @@
   function teamFactorBreakdown(p, weights){
     const t = normalizeTeam(p.team);
     const td = teamData[t];
-    const b = { olRun:0, olPass:0, qbSupport:0, sos:0, gameScript:0 };
+    const b = { olRun:0, olPass:0, qbSupport:0, sos:0, gameScript:0, bigPlay:0 };
     if(!td) return b;
     if(p.position === "RB"){
       b.olRun = strengthFactor(td.olRun) * weights.olRun * TEAM_FACTOR_SCALE;
@@ -1220,6 +1247,7 @@
       qbSupport: Number(el("qbSupportSlider").value)/100,
       sos: Number(el("sosSlider").value)/100,
       gameScript: Number(el("gameScriptSlider").value)/100,
+      bigPlay: Number(el("bigPlaySlider")?.value || 0)/100,
     };
 
     const rules = getScoringRules();
@@ -1254,6 +1282,7 @@
         qbSupport: -tfb.qbSupport,
         sos: -tfb.sos,
         gameScript: -tfb.gameScript,
+        bigPlay: projPts !== null ? -Math.min(12, ((projData[normalizeName(p.name)]?.pass40||0) + (projData[normalizeName(p.name)]?.rush40||0) + (projData[normalizeName(p.name)]?.rec40||0)) * teamWeights.bigPlay * 0.8) : 0,
         vorp: vorp !== null ? -((vorp / maxAbsVorp) * vorpWeight * VORP_SCALE) : 0,
       };
       const totalDelta = Object.values(deltas).reduce((a,b) => a+b, 0);
@@ -1397,7 +1426,7 @@
   const BREAKDOWN_LABELS = {
     scarcity: "Positional scarcity", risk: "Risk tolerance", injury: "Injury flag", rookie: "Rookie bias",
     olRun: "O-line run block", olPass: "O-line pass block", qbSupport: "QB support", sos: "Strength of schedule",
-    gameScript: "Game script", vorp: "Projection (VORP)",
+    gameScript: "Game script", bigPlay: "Big-play bonuses", vorp: "Projection (VORP)",
   };
 
   function renderBreakdown(p){
@@ -1565,7 +1594,7 @@
     render();
   });
 
-  ["s_passYdsPerPt","s_passTD","s_int","s_rushYdsPerPt","s_rushTD","s_rec","s_recYdsPerPt","s_recTD","s_fumLost"].forEach(id => {
+  ["s_passYdsPerPt","s_passTD","s_int","s_rushYdsPerPt","s_rushTD","s_rec","s_recYdsPerPt","s_recTD","s_fumLost","s_pass40","s_rush40","s_rec40"].forEach(id => {
     el(id).addEventListener("input", () => render());
   });
 
@@ -1653,17 +1682,54 @@
     saveLocal();
   });
 
+  async function loadAutomaticData(){
+    const status = el("automaticDataStatus");
+    try{
+      const [rankResp, teamResp, histResp] = await Promise.all([
+        fetch(`data/rankings.json?v=${Date.now()}`),
+        fetch(`data/team-context.json?v=${Date.now()}`),
+        fetch(`data/yahoo-history-2025.json?v=${Date.now()}`)
+      ]);
+      if(!rankResp.ok) throw new Error(`rankings ${rankResp.status}`);
+      const rankPayload = await rankResp.json();
+      const rows = Array.isArray(rankPayload) ? rankPayload : rankPayload.players;
+      sourceData.automatic = (rows||[]).map((r,i)=>({
+        name:r.name||r.player_name||r.player, team:normalizeTeam(r.team||r.player_team_id),
+        position:String(r.position||r.pos||"").replace(/[0-9]/g,""), rank:Number(r.rank||r.overallRank||r.rank_ecr||i+1),
+        tier:Number(r.tier||0)||null, bye:Number(r.bye||r.byeWeek||0)||null, ecrStdDev:Number(r.rankStdDev||r.rank_std_dev||0)||0
+      })).filter(r=>r.name);
+      if(teamResp.ok){
+        const teamPayload=await teamResp.json();
+        Object.entries(teamPayload.teams||teamPayload).forEach(([team,v])=>{
+          const t=normalizeTeam(team); if(!teamData[t]) return;
+          teamData[t]={...teamData[t],...v};
+        });
+      }
+      if(histResp.ok){
+        const histPayload=await histResp.json();
+        (histPayload.players||histPayload||[]).forEach(r=>{ historyData[normalizeName(r.name)]={...r}; });
+      }
+      blendSources();
+      renderSourceCards(); renderTeamFactorTable(); render();
+      if(status){ status.textContent=`Loaded ${sourceData.automatic.length} rankings; updated ${rankPayload.generatedAt||"bundled cache"}.`; status.className="fetch-status ok"; }
+    }catch(err){
+      if(status){ status.textContent=`Automatic feed unavailable (${err.message}). CSV fallback is still available.`; status.className="fetch-status error"; }
+    }
+  }
+  if(el("refreshBundledBtn")) el("refreshBundledBtn").addEventListener("click", loadAutomaticData);
+
   loadLocal();
   if(window.__savedSettings){
     Object.entries(window.__savedSettings).forEach(([k,v]) => { if(el(k)) el(k).value = v; });
   }
-  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider","gameScriptSlider"].forEach(id => {
+  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider","gameScriptSlider","bigPlaySlider"].forEach(id => {
     const out = el(id.replace("Slider","Val"));
     if(out) out.textContent = el(id).value;
   });
   renderSourceCards();
   renderTeamFactorTable();
   render();
+  loadAutomaticData();
 })();
 </script>
 

@@ -68,3 +68,9 @@ Half-PPR scoring, 12 teams (adjust if wrong), QB/2RB/3WR/TE/1FLEX(W-R-T)/K/DEF s
 Click **▸ why** next to any player to see exactly which sliders moved them and by how much — positional scarcity, risk tolerance, each team factor, VORP, everything. No need to reverse-engineer it by eye; the tool shows its work per player.
 
 This is a heuristic tool, not a formal value-based-drafting calculator — it's meant to nudge the consensus board toward your judgment, not replace it.
+
+## Version 2 automatic-data additions
+
+This package now loads `data/rankings.json`, `data/team-context.json`, and `data/yahoo-history-2025.json` automatically. The scheduled workflow in `.github/workflows/update-rankings.yml` refreshes configured licensed feeds without exposing API credentials to the browser.
+
+Custom league scoring now includes imported 40+ yard pass-completion, rushing, and receiving bonuses. The board retains separate controls for run blocking, pass protection, QB support for WR/TE, team defense/game script, and position-specific strength of schedule. See `SETUP.md` for the minimal deployment steps.
