@@ -647,6 +647,31 @@
   </section>
 
 
+  <section id="v3-preview">
+    <h2 class="section-title" style="margin-bottom:16px;">V3 projection-first preview</h2>
+    <p class="hint" style="margin-top:-8px;">This preview uses the new V3 pipeline: cached consensus + fixture projections + ADP → league scoring → replacement value → normalized final draft score. The legacy board below remains available for comparison during the transition.</p>
+    <span class="fetch-status" id="v3BoardPreviewStatus">Loading V3 board preview…</span>
+    <div class="table-wrap panel" style="padding:0;margin-top:12px;">
+      <table id="v3BoardPreviewTable">
+        <thead>
+          <tr>
+            <th>V3 Rank</th>
+            <th>Player</th>
+            <th>Pos</th>
+            <th>Consensus</th>
+            <th>ADP</th>
+            <th>Adj Proj</th>
+            <th>VORP</th>
+            <th>V3 Score</th>
+          </tr>
+        </thead>
+        <tbody id="v3BoardPreviewBody">
+          <tr><td colspan="8"><div class="empty-state">Loading V3 projection-first rankings…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <section id="board">
     <h2 class="section-title" style="margin-bottom:16px;">Your board</h2>
     <div class="btn-row" style="margin-bottom:16px;">
