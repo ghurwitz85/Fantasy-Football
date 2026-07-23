@@ -64,6 +64,7 @@ test('applies VORP to each player', () => {
     flexEligibility: ['RB', 'WR', 'TE'],
   });
 
+  assert.equal(withValues[0].adjusted.replacementBaseline, 300);
   assert.equal(withValues[0].adjusted.replacementValue, 0);
   assert.equal(withValues[1].adjusted.replacementValue, -50);
 });

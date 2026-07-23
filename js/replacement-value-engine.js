@@ -71,11 +71,13 @@ export function applyReplacementValues(players = [], settings = DEFAULT_LEAGUE_S
   const replacementLevels = calculateReplacementLevels(players, settings);
   return players.map((player) => {
     const position = positionOf(player);
-    const replacementValue = projectionOf(player) - (replacementLevels[position] || 0);
+    const replacementBaseline = replacementLevels[position] || 0;
+    const replacementValue = projectionOf(player) - replacementBaseline;
     return {
       ...player,
       adjusted: {
         ...(player.adjusted || {}),
+        replacementBaseline,
         replacementValue,
       },
     };

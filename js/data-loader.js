@@ -1,3 +1,5 @@
+import { normalizeLegacyTeamContext } from './team-environment-engine.js';
+
 export async function loadJson(path) {
   const response = await fetch(`${path}?v=${Date.now()}`);
   if (!response.ok) throw new Error(`${path} returned ${response.status}`);
@@ -35,5 +37,11 @@ function summarizeTeams(result) {
   if (result.status !== 'fulfilled') return { status: 'missing', count: 0 };
   const rows = result.value.teams || result.value;
   const count = rows && typeof rows === 'object' ? Object.keys(rows).length : 0;
-  return { status: count >= 32 ? 'loaded' : count ? 'partial' : 'missing', count };
+  const normalized = count ? normalizeLegacyTeamContext(result.value) : null;
+  return {
+    status: count >= 32 ? 'loaded' : count ? 'partial' : 'missing',
+    count,
+    environment: normalized?.summary || { supported: 0, populated: 0, active: 0, neutral: 0 },
+    fieldStatus: normalized?.status || {},
+  };
 }

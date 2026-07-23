@@ -518,9 +518,9 @@
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Big-play bonus weight</span><span class="val" id="bigPlayVal">50</span></div>
+            <div class="slider-label-row"><span class="name">Big-play confidence</span><span class="val" id="bigPlayVal">50</span></div>
             <input type="range" id="bigPlaySlider" min="0" max="100" value="50">
-            <div class="slider-ends"><span>Ignore bonuses</span><span>Full league impact</span></div>
+            <div class="slider-ends"><span>Regress 40+ counts</span><span>Trust projected counts</span></div>
           </div>
         </div>
       </div>
@@ -529,7 +529,7 @@
         <p><strong>Scarcity</strong> compares your league's per-team starter demand at each position (including a flex share) against a standard 12-team/1QB/2RB/2WR/1TE/1FLEX baseline, and shifts ranks toward positions your league makes scarcer.</p>
         <p><strong>Risk tolerance</strong> combines FantasyPros' expert-disagreement (rank std. dev.) with cross-source disagreement as a boom/bust proxy — high disagreement means a wide range of likely outcomes.</p>
         <p><strong>Injury</strong> and <strong>rookie</strong> weighting only apply to players you've flagged in the table below — flag them, then use the sliders to control how much that flag matters.</p>
-        <p><strong>O-line, QB-support, strength-of-schedule, game-script, and big-play</strong> weights pull from the Team Factors table below, matched to each player's team. A player on a team you haven't entered data for gets no adjustment from these sliders. <strong>Game script</strong> uses your team's defense rank: a bad defense means more time spent trailing, which boosts pass volume for that team's QB/WR/TE; a good defense means more time spent leading, which boosts rush volume (and RB touches) for that team's RB.</p>
+        <p><strong>O-line, QB-support, strength-of-schedule, and game-script</strong> weights now flow through the V3 team-context model. <strong>Big-play confidence</strong> controls how much the V3 model trusts projected 40+ yard event counts before applying your league's actual bonus scoring; it does not multiply the scoring rule itself. Cached normalized QB, defense, and game-script scores are active for all 32 teams; the table below remains as a transparent manual fallback for legacy rank-style O-line and schedule inputs.</p>
         <p>Set an explicit override rank on any player and it locks that player's position regardless of every slider.</p>
       </details>
     </div>
@@ -537,8 +537,8 @@
 
   <section id="teamfactors">
     <div class="panel">
-      <h2 class="section-title">Team factors</h2>
-      <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Enter 1–32 rank for each team (1 = best/toughest, 32 = worst/easiest — see column headers). These feed the four sliders above. Leave a team at the neutral default (16) if you don't have an opinion.</p>
+      <h2 class="section-title">Team context / manual fallback</h2>
+      <p class="hint" style="margin-top:-8px;margin-bottom:16px;">V3 uses normalized cached team context for QB environment, defense, and game script. This table is still useful for transparency and manual fallback rank-style inputs: 1–32 ranks are normalized before affecting projections, and neutral defaults are visibly reported in the V3 status panel.</p>
       <div class="field">
         <label>Paste a team-factor CSV</label>
         <textarea id="teamCsvPaste" placeholder="TEAM,OL_RUN,OL_PASS,QB_STRENGTH,SOS_RB,SOS_WRTE,SOS_QB&#10;SF,3,5,8,20,18,22&#10;..." style="min-height:80px;"></textarea>
@@ -556,8 +556,8 @@
               <th>Team</th>
               <th>O-line run<br>(1=best)</th>
               <th>O-line pass<br>(1=best)</th>
-              <th>QB strength<br>(1=best)</th>
-              <th>Defense<br>(1=best)</th>
+              <th>Legacy QB strength<br>(fallback rank)</th>
+              <th>Legacy Defense<br>(fallback rank)</th>
               <th>SOS vs RB<br>(1=toughest)</th>
               <th>SOS vs WR/TE<br>(1=toughest)</th>
               <th>SOS vs QB<br>(1=toughest)</th>
@@ -655,14 +655,14 @@
       <table id="v3BoardPreviewTable">
         <thead>
           <tr>
-            <th>V3 Rank</th>
-            <th>Player</th>
-            <th>Pos</th>
-            <th>Consensus</th>
-            <th>ADP</th>
-            <th>Adj Proj</th>
-            <th>VORP</th>
-            <th>V3 Score</th>
+            <th data-v3-preview-sort="personalRank">V3 Rank</th>
+            <th data-v3-preview-sort="name">Player</th>
+            <th data-v3-preview-sort="position">Pos</th>
+            <th data-v3-preview-sort="consensusRank">Consensus</th>
+            <th data-v3-preview-sort="adp">ADP</th>
+            <th data-v3-preview-sort="adjustedProjection">Adj Proj</th>
+            <th data-v3-preview-sort="vorp">VORP</th>
+            <th data-v3-preview-sort="finalDraftScore">V3 Score</th>
           </tr>
         </thead>
         <tbody id="v3BoardPreviewBody">
@@ -683,14 +683,14 @@
       <table id="boardTable">
         <thead>
           <tr>
-            <th>Your Rank</th>
-            <th>Player</th>
-            <th>Pos</th>
-            <th>Consensus</th>
-            <th>Proj Pts</th>
-            <th>VORP</th>
-            <th>Δ</th>
-            <th>Flags</th>
+            <th data-v3-main-sort="personalRank">Your Rank</th>
+            <th data-v3-main-sort="name">Player</th>
+            <th data-v3-main-sort="position">Pos</th>
+            <th data-v3-main-sort="consensusRank">Consensus</th>
+            <th data-v3-main-sort="adjustedProjection">Adj Proj</th>
+            <th data-v3-main-sort="vorp">VORP</th>
+            <th data-v3-main-sort="finalDraftScore">V3 Score</th>
+            <th data-v3-main-sort="warningsCount">Status</th>
             <th>Override</th>
           </tr>
         </thead>
@@ -1646,7 +1646,7 @@
   [["scarcitySlider","scarcityVal"],["riskSlider","riskVal"],["injurySlider","injuryVal"],["rookieSlider","rookieVal"],
    ["olRunSlider","olRunVal"],["olPassSlider","olPassVal"],["qbSupportSlider","qbSupportVal"],["sosSlider","sosVal"],
    ["gameScriptSlider","gameScriptVal"],
-   ["vorpSlider","vorpVal"],["historyWeightSlider","historyWeightVal"]].forEach(([slider,out]) => {
+   ["bigPlaySlider","bigPlayVal"],["vorpSlider","vorpVal"],["historyWeightSlider","historyWeightVal"]].forEach(([slider,out]) => {
     el(slider).addEventListener("input", () => { el(out).textContent = el(slider).value; render(); saveLocal(); });
   });
 

@@ -8,7 +8,23 @@
       "defStrength": 16,
       "sosRB": 8,
       "sosWRTE": 15,
-      "sosQB": 16
+      "sosQB": 16,
+      "quarterback": {
+        "overallScore": 0.05,
+        "accuracyScore": 0.02,
+        "deepAccuracyScore": 0.18,
+        "touchdownEfficiencyScore": 0,
+        "pressureToSackScore": 0.07,
+        "stabilityScore": 0.1
+      },
+      "defense": {
+        "overallScore": -0.35
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.18,
+        "trailingProbabilityScore": 0.18,
+        "source": "local-normalized-fixture"
+      }
     },
     "ATL": {
       "olRun": 21,
@@ -17,7 +33,23 @@
       "defStrength": 16,
       "sosRB": 20,
       "sosWRTE": 24,
-      "sosQB": 22
+      "sosQB": 22,
+      "quarterback": {
+        "overallScore": -0.2,
+        "accuracyScore": -0.15,
+        "deepAccuracyScore": -0.1,
+        "touchdownEfficiencyScore": -0.12,
+        "pressureToSackScore": -0.18,
+        "stabilityScore": -0.25
+      },
+      "defense": {
+        "overallScore": -0.1
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.11,
+        "trailingProbabilityScore": 0.11,
+        "source": "local-normalized-fixture"
+      }
     },
     "BAL": {
       "olRun": 22,
@@ -26,7 +58,23 @@
       "defStrength": 16,
       "sosRB": 19,
       "sosWRTE": 16,
-      "sosQB": 13
+      "sosQB": 13,
+      "quarterback": {
+        "overallScore": 0.88,
+        "accuracyScore": 0.45,
+        "deepAccuracyScore": 0.7,
+        "touchdownEfficiencyScore": 0.75,
+        "pressureToSackScore": 0.56,
+        "stabilityScore": 0.8
+      },
+      "defense": {
+        "overallScore": 0.55
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.52,
+        "trailingProbabilityScore": -0.52,
+        "source": "local-normalized-fixture"
+      }
     },
     "BUF": {
       "olRun": 5,
@@ -35,7 +83,23 @@
       "defStrength": 16,
       "sosRB": 2,
       "sosWRTE": 10,
-      "sosQB": 7
+      "sosQB": 7,
+      "quarterback": {
+        "overallScore": 0.95,
+        "accuracyScore": 0.55,
+        "deepAccuracyScore": 0.85,
+        "touchdownEfficiencyScore": 0.85,
+        "pressureToSackScore": 0.63,
+        "stabilityScore": 0.9
+      },
+      "defense": {
+        "overallScore": 0.4
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.51,
+        "trailingProbabilityScore": -0.51,
+        "source": "local-normalized-fixture"
+      }
     },
     "CAR": {
       "olRun": 10,
@@ -44,7 +108,23 @@
       "defStrength": 16,
       "sosRB": 4,
       "sosWRTE": 14,
-      "sosQB": 15
+      "sosQB": 15,
+      "quarterback": {
+        "overallScore": -0.45,
+        "accuracyScore": -0.35,
+        "deepAccuracyScore": -0.3,
+        "touchdownEfficiencyScore": -0.35,
+        "pressureToSackScore": -0.14,
+        "stabilityScore": -0.2
+      },
+      "defense": {
+        "overallScore": -0.55
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.47,
+        "trailingProbabilityScore": 0.47,
+        "source": "local-normalized-fixture"
+      }
     },
     "CHI": {
       "olRun": 4,
@@ -53,7 +133,23 @@
       "defStrength": 16,
       "sosRB": 9,
       "sosWRTE": 8,
-      "sosQB": 4
+      "sosQB": 4,
+      "quarterback": {
+        "overallScore": 0.1,
+        "accuracyScore": 0.05,
+        "deepAccuracyScore": 0.2,
+        "touchdownEfficiencyScore": 0,
+        "pressureToSackScore": 0.11,
+        "stabilityScore": 0.15
+      },
+      "defense": {
+        "overallScore": 0.2
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.16,
+        "trailingProbabilityScore": -0.16,
+        "source": "local-normalized-fixture"
+      }
     },
     "CIN": {
       "olRun": 26,
@@ -62,7 +158,23 @@
       "defStrength": 16,
       "sosRB": 7,
       "sosWRTE": 29,
-      "sosQB": 28
+      "sosQB": 28,
+      "quarterback": {
+        "overallScore": 0.82,
+        "accuracyScore": 0.78,
+        "deepAccuracyScore": 0.65,
+        "touchdownEfficiencyScore": 0.88,
+        "pressureToSackScore": 0.32,
+        "stabilityScore": 0.45
+      },
+      "defense": {
+        "overallScore": -0.25
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.11,
+        "trailingProbabilityScore": -0.11,
+        "source": "local-normalized-fixture"
+      }
     },
     "CLE": {
       "olRun": 30,
@@ -71,7 +183,23 @@
       "defStrength": 16,
       "sosRB": 21,
       "sosWRTE": 29,
-      "sosQB": 31
+      "sosQB": 31,
+      "quarterback": {
+        "overallScore": -0.35,
+        "accuracyScore": -0.3,
+        "deepAccuracyScore": -0.2,
+        "touchdownEfficiencyScore": -0.35,
+        "pressureToSackScore": -0.39,
+        "stabilityScore": -0.55
+      },
+      "defense": {
+        "overallScore": 0.35
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.08,
+        "trailingProbabilityScore": -0.08,
+        "source": "local-normalized-fixture"
+      }
     },
     "DAL": {
       "olRun": 20,
@@ -80,7 +208,23 @@
       "defStrength": 16,
       "sosRB": 28,
       "sosWRTE": 23,
-      "sosQB": 23
+      "sosQB": 23,
+      "quarterback": {
+        "overallScore": 0.42,
+        "accuracyScore": 0.5,
+        "deepAccuracyScore": 0.35,
+        "touchdownEfficiencyScore": 0.45,
+        "pressureToSackScore": 0.39,
+        "stabilityScore": 0.55
+      },
+      "defense": {
+        "overallScore": 0.25
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.26,
+        "trailingProbabilityScore": -0.26,
+        "source": "local-normalized-fixture"
+      }
     },
     "DEN": {
       "olRun": 1,
@@ -89,7 +233,23 @@
       "defStrength": 16,
       "sosRB": 10,
       "sosWRTE": 13,
-      "sosQB": 7
+      "sosQB": 7,
+      "quarterback": {
+        "overallScore": 0.18,
+        "accuracyScore": 0.12,
+        "deepAccuracyScore": 0.1,
+        "touchdownEfficiencyScore": 0.08,
+        "pressureToSackScore": 0.18,
+        "stabilityScore": 0.25
+      },
+      "defense": {
+        "overallScore": 0.45
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.28,
+        "trailingProbabilityScore": -0.28,
+        "source": "local-normalized-fixture"
+      }
     },
     "DET": {
       "olRun": 12,
@@ -98,7 +258,23 @@
       "defStrength": 16,
       "sosRB": 30,
       "sosWRTE": 12,
-      "sosQB": 18
+      "sosQB": 18,
+      "quarterback": {
+        "overallScore": 0.62,
+        "accuracyScore": 0.7,
+        "deepAccuracyScore": 0.42,
+        "touchdownEfficiencyScore": 0.58,
+        "pressureToSackScore": 0.56,
+        "stabilityScore": 0.8
+      },
+      "defense": {
+        "overallScore": 0.1
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.32,
+        "trailingProbabilityScore": -0.32,
+        "source": "local-normalized-fixture"
+      }
     },
     "GB": {
       "olRun": 28,
@@ -107,7 +283,23 @@
       "defStrength": 16,
       "sosRB": 16,
       "sosWRTE": 8,
-      "sosQB": 14
+      "sosQB": 14,
+      "quarterback": {
+        "overallScore": 0.45,
+        "accuracyScore": 0.35,
+        "deepAccuracyScore": 0.5,
+        "touchdownEfficiencyScore": 0.45,
+        "pressureToSackScore": 0.42,
+        "stabilityScore": 0.6
+      },
+      "defense": {
+        "overallScore": 0.18
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.26,
+        "trailingProbabilityScore": -0.26,
+        "source": "local-normalized-fixture"
+      }
     },
     "HOU": {
       "olRun": 31,
@@ -116,7 +308,23 @@
       "defStrength": 16,
       "sosRB": 18,
       "sosWRTE": 25,
-      "sosQB": 24
+      "sosQB": 24,
+      "quarterback": {
+        "overallScore": 0.65,
+        "accuracyScore": 0.55,
+        "deepAccuracyScore": 0.72,
+        "touchdownEfficiencyScore": 0.55,
+        "pressureToSackScore": 0.49,
+        "stabilityScore": 0.7
+      },
+      "defense": {
+        "overallScore": 0.32
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.38,
+        "trailingProbabilityScore": -0.38,
+        "source": "local-normalized-fixture"
+      }
     },
     "IND": {
       "olRun": 6,
@@ -125,7 +333,23 @@
       "defStrength": 16,
       "sosRB": 23,
       "sosWRTE": 17,
-      "sosQB": 25
+      "sosQB": 25,
+      "quarterback": {
+        "overallScore": 0.05,
+        "accuracyScore": -0.05,
+        "deepAccuracyScore": 0.28,
+        "touchdownEfficiencyScore": 0.08,
+        "pressureToSackScore": 0.07,
+        "stabilityScore": 0.1
+      },
+      "defense": {
+        "overallScore": -0.2
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.1,
+        "trailingProbabilityScore": 0.1,
+        "source": "local-normalized-fixture"
+      }
     },
     "JAX": {
       "olRun": 17,
@@ -134,7 +358,23 @@
       "defStrength": 16,
       "sosRB": 17,
       "sosWRTE": 24,
-      "sosQB": 29
+      "sosQB": 29,
+      "quarterback": {
+        "overallScore": 0.2,
+        "accuracyScore": 0.22,
+        "deepAccuracyScore": 0.15,
+        "touchdownEfficiencyScore": 0.12,
+        "pressureToSackScore": 0.21,
+        "stabilityScore": 0.3
+      },
+      "defense": {
+        "overallScore": -0.05
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.02,
+        "trailingProbabilityScore": -0.02,
+        "source": "local-normalized-fixture"
+      }
     },
     "KC": {
       "olRun": 19,
@@ -143,7 +383,23 @@
       "defStrength": 16,
       "sosRB": 6,
       "sosWRTE": 14,
-      "sosQB": 3
+      "sosQB": 3,
+      "quarterback": {
+        "overallScore": 0.98,
+        "accuracyScore": 0.82,
+        "deepAccuracyScore": 0.92,
+        "touchdownEfficiencyScore": 0.9,
+        "pressureToSackScore": 0.67,
+        "stabilityScore": 0.95
+      },
+      "defense": {
+        "overallScore": 0.5
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.55,
+        "trailingProbabilityScore": -0.55,
+        "source": "local-normalized-fixture"
+      }
     },
     "LAC": {
       "olRun": 3,
@@ -152,7 +408,23 @@
       "defStrength": 16,
       "sosRB": 16,
       "sosWRTE": 8,
-      "sosQB": 12
+      "sosQB": 12,
+      "quarterback": {
+        "overallScore": 0.55,
+        "accuracyScore": 0.58,
+        "deepAccuracyScore": 0.45,
+        "touchdownEfficiencyScore": 0.48,
+        "pressureToSackScore": 0.49,
+        "stabilityScore": 0.7
+      },
+      "defense": {
+        "overallScore": 0.22
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.27,
+        "trailingProbabilityScore": -0.27,
+        "source": "local-normalized-fixture"
+      }
     },
     "LAR": {
       "olRun": 7,
@@ -161,7 +433,23 @@
       "defStrength": 16,
       "sosRB": 32,
       "sosWRTE": 17,
-      "sosQB": 18
+      "sosQB": 18,
+      "quarterback": {
+        "overallScore": 0.48,
+        "accuracyScore": 0.55,
+        "deepAccuracyScore": 0.4,
+        "touchdownEfficiencyScore": 0.45,
+        "pressureToSackScore": 0.25,
+        "stabilityScore": 0.35
+      },
+      "defense": {
+        "overallScore": -0.05
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.07,
+        "trailingProbabilityScore": -0.07,
+        "source": "local-normalized-fixture"
+      }
     },
     "LV": {
       "olRun": 27,
@@ -170,7 +458,23 @@
       "defStrength": 16,
       "sosRB": 1,
       "sosWRTE": 10,
-      "sosQB": 1
+      "sosQB": 1,
+      "quarterback": {
+        "overallScore": -0.5,
+        "accuracyScore": -0.45,
+        "deepAccuracyScore": -0.35,
+        "touchdownEfficiencyScore": -0.45,
+        "pressureToSackScore": -0.35,
+        "stabilityScore": -0.5
+      },
+      "defense": {
+        "overallScore": -0.3
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.35,
+        "trailingProbabilityScore": 0.35,
+        "source": "local-normalized-fixture"
+      }
     },
     "MIA": {
       "olRun": 25,
@@ -179,7 +483,23 @@
       "defStrength": 16,
       "sosRB": 13,
       "sosWRTE": 6,
-      "sosQB": 11
+      "sosQB": 11,
+      "quarterback": {
+        "overallScore": 0.5,
+        "accuracyScore": 0.55,
+        "deepAccuracyScore": 0.65,
+        "touchdownEfficiencyScore": 0.42,
+        "pressureToSackScore": 0.25,
+        "stabilityScore": 0.35
+      },
+      "defense": {
+        "overallScore": 0.05
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.22,
+        "trailingProbabilityScore": -0.22,
+        "source": "local-normalized-fixture"
+      }
     },
     "MIN": {
       "olRun": 9,
@@ -188,7 +508,23 @@
       "defStrength": 16,
       "sosRB": 25,
       "sosWRTE": 26,
-      "sosQB": 26
+      "sosQB": 26,
+      "quarterback": {
+        "overallScore": 0,
+        "accuracyScore": 0.02,
+        "deepAccuracyScore": 0.05,
+        "touchdownEfficiencyScore": 0,
+        "pressureToSackScore": -0.07,
+        "stabilityScore": -0.1
+      },
+      "defense": {
+        "overallScore": 0.28
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.15,
+        "trailingProbabilityScore": -0.15,
+        "source": "local-normalized-fixture"
+      }
     },
     "NE": {
       "olRun": 14,
@@ -197,7 +533,23 @@
       "defStrength": 16,
       "sosRB": 4,
       "sosWRTE": 6,
-      "sosQB": 10
+      "sosQB": 10,
+      "quarterback": {
+        "overallScore": -0.25,
+        "accuracyScore": -0.2,
+        "deepAccuracyScore": -0.15,
+        "touchdownEfficiencyScore": -0.25,
+        "pressureToSackScore": -0.14,
+        "stabilityScore": -0.2
+      },
+      "defense": {
+        "overallScore": -0.15
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.22,
+        "trailingProbabilityScore": 0.22,
+        "source": "local-normalized-fixture"
+      }
     },
     "NO": {
       "olRun": 11,
@@ -206,7 +558,23 @@
       "defStrength": 16,
       "sosRB": 32,
       "sosWRTE": 16,
-      "sosQB": 21
+      "sosQB": 21,
+      "quarterback": {
+        "overallScore": -0.3,
+        "accuracyScore": -0.28,
+        "deepAccuracyScore": -0.18,
+        "touchdownEfficiencyScore": -0.22,
+        "pressureToSackScore": -0.25,
+        "stabilityScore": -0.35
+      },
+      "defense": {
+        "overallScore": -0.18
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.2,
+        "trailingProbabilityScore": 0.2,
+        "source": "local-normalized-fixture"
+      }
     },
     "NYG": {
       "olRun": 18,
@@ -215,7 +583,23 @@
       "defStrength": 16,
       "sosRB": 23,
       "sosWRTE": 29,
-      "sosQB": 28
+      "sosQB": 28,
+      "quarterback": {
+        "overallScore": -0.48,
+        "accuracyScore": -0.4,
+        "deepAccuracyScore": -0.32,
+        "touchdownEfficiencyScore": -0.45,
+        "pressureToSackScore": -0.32,
+        "stabilityScore": -0.45
+      },
+      "defense": {
+        "overallScore": -0.4
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.42,
+        "trailingProbabilityScore": 0.42,
+        "source": "local-normalized-fixture"
+      }
     },
     "NYJ": {
       "olRun": 16,
@@ -224,7 +608,23 @@
       "defStrength": 16,
       "sosRB": 5,
       "sosWRTE": 9,
-      "sosQB": 2
+      "sosQB": 2,
+      "quarterback": {
+        "overallScore": 0.12,
+        "accuracyScore": 0.18,
+        "deepAccuracyScore": 0.05,
+        "touchdownEfficiencyScore": 0.1,
+        "pressureToSackScore": -0.18,
+        "stabilityScore": -0.25
+      },
+      "defense": {
+        "overallScore": 0.6
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.33,
+        "trailingProbabilityScore": -0.33,
+        "source": "local-normalized-fixture"
+      }
     },
     "PHI": {
       "olRun": 2,
@@ -233,7 +633,23 @@
       "defStrength": 16,
       "sosRB": 27,
       "sosWRTE": 32,
-      "sosQB": 32
+      "sosQB": 32,
+      "quarterback": {
+        "overallScore": 0.72,
+        "accuracyScore": 0.5,
+        "deepAccuracyScore": 0.62,
+        "touchdownEfficiencyScore": 0.7,
+        "pressureToSackScore": 0.6,
+        "stabilityScore": 0.85
+      },
+      "defense": {
+        "overallScore": 0.42
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.5,
+        "trailingProbabilityScore": -0.5,
+        "source": "local-normalized-fixture"
+      }
     },
     "PIT": {
       "olRun": 24,
@@ -242,7 +658,23 @@
       "defStrength": 16,
       "sosRB": 14,
       "sosWRTE": 12,
-      "sosQB": 8
+      "sosQB": 8,
+      "quarterback": {
+        "overallScore": 0,
+        "accuracyScore": 0.05,
+        "deepAccuracyScore": 0.02,
+        "touchdownEfficiencyScore": 0.02,
+        "pressureToSackScore": 0.04,
+        "stabilityScore": 0.05
+      },
+      "defense": {
+        "overallScore": 0.48
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.27,
+        "trailingProbabilityScore": -0.27,
+        "source": "local-normalized-fixture"
+      }
     },
     "SEA": {
       "olRun": 13,
@@ -251,7 +683,23 @@
       "defStrength": 16,
       "sosRB": 30,
       "sosWRTE": 21,
-      "sosQB": 20
+      "sosQB": 20,
+      "quarterback": {
+        "overallScore": 0.15,
+        "accuracyScore": 0.2,
+        "deepAccuracyScore": 0.25,
+        "touchdownEfficiencyScore": 0.12,
+        "pressureToSackScore": 0.11,
+        "stabilityScore": 0.15
+      },
+      "defense": {
+        "overallScore": 0.12
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.13,
+        "trailingProbabilityScore": -0.13,
+        "source": "local-normalized-fixture"
+      }
     },
     "SF": {
       "olRun": 15,
@@ -260,7 +708,23 @@
       "defStrength": 16,
       "sosRB": 11,
       "sosWRTE": 8,
-      "sosQB": 5
+      "sosQB": 5,
+      "quarterback": {
+        "overallScore": 0.58,
+        "accuracyScore": 0.62,
+        "deepAccuracyScore": 0.55,
+        "touchdownEfficiencyScore": 0.6,
+        "pressureToSackScore": 0.46,
+        "stabilityScore": 0.65
+      },
+      "defense": {
+        "overallScore": 0.52
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.53,
+        "trailingProbabilityScore": -0.53,
+        "source": "local-normalized-fixture"
+      }
     },
     "TB": {
       "olRun": 8,
@@ -269,7 +733,23 @@
       "defStrength": 16,
       "sosRB": 12,
       "sosWRTE": 11,
-      "sosQB": 9
+      "sosQB": 9,
+      "quarterback": {
+        "overallScore": 0.35,
+        "accuracyScore": 0.38,
+        "deepAccuracyScore": 0.3,
+        "touchdownEfficiencyScore": 0.35,
+        "pressureToSackScore": 0.32,
+        "stabilityScore": 0.45
+      },
+      "defense": {
+        "overallScore": 0.08
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.13,
+        "trailingProbabilityScore": -0.13,
+        "source": "local-normalized-fixture"
+      }
     },
     "TEN": {
       "olRun": 32,
@@ -278,7 +758,23 @@
       "defStrength": 16,
       "sosRB": 24,
       "sosWRTE": 30,
-      "sosQB": 30
+      "sosQB": 30,
+      "quarterback": {
+        "overallScore": -0.38,
+        "accuracyScore": -0.32,
+        "deepAccuracyScore": -0.25,
+        "touchdownEfficiencyScore": -0.35,
+        "pressureToSackScore": -0.21,
+        "stabilityScore": -0.3
+      },
+      "defense": {
+        "overallScore": -0.28
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": -0.3,
+        "trailingProbabilityScore": 0.3,
+        "source": "local-normalized-fixture"
+      }
     },
     "WAS": {
       "olRun": 23,
@@ -287,7 +783,23 @@
       "defStrength": 16,
       "sosRB": 26,
       "sosWRTE": 15,
-      "sosQB": 19
+      "sosQB": 19,
+      "quarterback": {
+        "overallScore": 0.68,
+        "accuracyScore": 0.45,
+        "deepAccuracyScore": 0.6,
+        "touchdownEfficiencyScore": 0.7,
+        "pressureToSackScore": 0.39,
+        "stabilityScore": 0.55
+      },
+      "defense": {
+        "overallScore": -0.12
+      },
+      "expectedGameScript": {
+        "leadProbabilityScore": 0.1,
+        "trailingProbabilityScore": -0.1,
+        "source": "local-normalized-fixture"
+      }
     }
   }
 }

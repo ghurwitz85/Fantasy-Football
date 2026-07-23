@@ -53,3 +53,15 @@ test('uses normalized name matching across apostrophe variants', () => {
   assert.equal(row.v3Status.hasProjection, true);
   assert.equal(row.v3Row.adjustedProjection, 5);
 });
+
+test('passes big-play confidence through the V3 board audit', () => {
+  const [row] = buildV3BoardRows({
+    rankings: [{ name: 'Explosive Back', team: 'ATL', position: 'RB', rank: 1 }],
+    projections: [{ name: 'Explosive Back', team: 'ATL', position: 'RB', projections: { rushing: { yards: 100, touchdowns: 1, fortyYardRuns: 2 } } }],
+    adp: [],
+  }, undefined, leagueSettings, { bigPlayConfidence: 0.5 });
+
+  assert.equal(row.v3Row.audit.adjustments.bigPlayBonus, 1);
+  assert.equal(row.v3Row.audit.adjustments.bigPlayConfidenceAdjustment, -1);
+  assert.equal(row.v3Row.audit.bigPlay.confidence, 0.5);
+});
