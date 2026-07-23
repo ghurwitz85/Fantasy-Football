@@ -468,58 +468,66 @@
   <section id="weighting">
     <div class="panel">
       <h2 class="section-title">Your weighting</h2>
+      <div class="notice-box">
+        <strong>Recommended accuracy preset:</strong> balanced for your 12-team, half-PPR, 3-WR + FLEX league. It leans projection/VORP-forward while keeping context adjustments modest to avoid double-counting.
+      </div>
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn-primary" id="applyRecommendedPresetBtn">Apply recommended accuracy preset</button>
+        <button class="btn-ghost" id="resetLocalSettingsBtn">Reset saved local settings</button>
+        <span class="fetch-status" id="presetStatus"></span>
+      </div>
       <div class="grid-2">
         <div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Positional scarcity sensitivity</span><span class="val" id="scarcityVal">50</span></div>
-            <input type="range" id="scarcitySlider" min="0" max="100" value="50">
+            <div class="slider-label-row"><span class="name">Positional scarcity sensitivity</span><span class="val" id="scarcityVal">45</span></div>
+            <input type="range" id="scarcitySlider" min="0" max="100" value="45">
             <div class="slider-ends"><span>Ignore</span><span>Aggressive</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Risk tolerance</span><span class="val" id="riskVal">0</span></div>
-            <input type="range" id="riskSlider" min="-100" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Risk tolerance</span><span class="val" id="riskVal">40</span></div>
+            <input type="range" id="riskSlider" min="-100" max="100" value="40">
             <div class="slider-ends"><span>Safe floor</span><span>Boom / bust</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Injury-flag penalty weight</span><span class="val" id="injuryVal">50</span></div>
-            <input type="range" id="injurySlider" min="0" max="100" value="50">
+            <div class="slider-label-row"><span class="name">Injury-flag penalty weight</span><span class="val" id="injuryVal">65</span></div>
+            <input type="range" id="injurySlider" min="0" max="100" value="65">
             <div class="slider-ends"><span>Ignore flags</span><span>Heavy penalty</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Rookie bias</span><span class="val" id="rookieVal">0</span></div>
-            <input type="range" id="rookieSlider" min="-100" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Rookie bias</span><span class="val" id="rookieVal">25</span></div>
+            <input type="range" id="rookieSlider" min="-100" max="100" value="25">
             <div class="slider-ends"><span>Fade rookies</span><span>Buy rookies</span></div>
           </div>
         </div>
         <div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Run-blocking O-line weight (RB)</span><span class="val" id="olRunVal">0</span></div>
-            <input type="range" id="olRunSlider" min="0" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Run-blocking O-line weight (RB)</span><span class="val" id="olRunVal">30</span></div>
+            <input type="range" id="olRunSlider" min="0" max="100" value="30">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Pass-protection O-line weight (QB/WR/TE)</span><span class="val" id="olPassVal">0</span></div>
-            <input type="range" id="olPassSlider" min="0" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Pass-protection O-line weight (QB/WR/TE)</span><span class="val" id="olPassVal">25</span></div>
+            <input type="range" id="olPassSlider" min="0" max="100" value="25">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">QB-support weight (WR/TE)</span><span class="val" id="qbSupportVal">0</span></div>
-            <input type="range" id="qbSupportSlider" min="0" max="100" value="0">
+            <div class="slider-label-row"><span class="name">QB-support weight (WR/TE)</span><span class="val" id="qbSupportVal">35</span></div>
+            <input type="range" id="qbSupportSlider" min="0" max="100" value="35">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Strength of schedule weight</span><span class="val" id="sosVal">0</span></div>
-            <input type="range" id="sosSlider" min="0" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Strength of schedule weight</span><span class="val" id="sosVal">15</span></div>
+            <input type="range" id="sosSlider" min="0" max="100" value="15">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Game script weight</span><span class="val" id="gameScriptVal">0</span></div>
-            <input type="range" id="gameScriptSlider" min="0" max="100" value="0">
+            <div class="slider-label-row"><span class="name">Game script weight</span><span class="val" id="gameScriptVal">25</span></div>
+            <input type="range" id="gameScriptSlider" min="0" max="100" value="25">
             <div class="slider-ends"><span>Ignore</span><span>Heavy weight</span></div>
           </div>
           <div class="slider-block">
-            <div class="slider-label-row"><span class="name">Big-play confidence</span><span class="val" id="bigPlayVal">50</span></div>
-            <input type="range" id="bigPlaySlider" min="0" max="100" value="50">
+            <div class="slider-label-row"><span class="name">Big-play confidence</span><span class="val" id="bigPlayVal">60</span></div>
+            <input type="range" id="bigPlaySlider" min="0" max="100" value="60">
             <div class="slider-ends"><span>Regress 40+ counts</span><span>Trust projected counts</span></div>
           </div>
         </div>
@@ -610,8 +618,8 @@
         <span class="fetch-status" id="projStatus"></span>
       </div>
       <div class="slider-block" style="max-width:480px;">
-        <div class="slider-label-row"><span class="name">Projection (VORP) weight</span><span class="val" id="vorpVal">50</span></div>
-        <input type="range" id="vorpSlider" min="0" max="100" value="50">
+        <div class="slider-label-row"><span class="name">Projection (VORP) weight</span><span class="val" id="vorpVal">65</span></div>
+        <input type="range" id="vorpSlider" min="0" max="100" value="65">
         <div class="slider-ends"><span>Ignore projections</span><span>Draft by VORP</span></div>
       </div>
 
@@ -632,8 +640,8 @@
         <span class="fetch-status" id="histStatus"></span>
       </div>
       <div class="slider-block" style="max-width:480px;">
-        <div class="slider-label-row"><span class="name">History weight</span><span class="val" id="historyWeightVal">0</span></div>
-        <input type="range" id="historyWeightSlider" min="0" max="100" value="0">
+        <div class="slider-label-row"><span class="name">History weight</span><span class="val" id="historyWeightVal">10</span></div>
+        <input type="range" id="historyWeightSlider" min="0" max="100" value="10">
         <div class="slider-ends"><span>All projections</span><span>All history</span></div>
       </div>
 
@@ -643,6 +651,24 @@
         <p><strong>VORP</strong> (Value Over Replacement Player) compares a player's projected points to the projected points of the last realistic starter at his position in your league — using the same per-team demand math as the scarcity slider. This is the standard way to compare value across positions for draft decisions: it's what actually maximizes your starting lineup's total expected points, which raw points or rank alone can't tell you (a mediocre RB can be worth more than a good TE if the RB replacement level is much worse).</p>
         <p><strong>Important:</strong> players with no projection or history loaded get zero contribution from this slider — the rest of your weighting still applies. If the VORP column is blank/zero, load projection CSVs or historical CSVs first.</p>
       </details>
+    </div>
+  </section>
+
+  <section id="adp-import">
+    <div class="panel">
+      <h2 class="section-title">ADP / draft cost</h2>
+      <p class="hint" style="margin-top:-8px;">Paste or upload an ADP CSV to improve draft-cost and next-pick availability estimates. Supported columns include Player, Team, Pos, ADP, Platform, and Std Dev.</p>
+      <div class="field">
+        <label>Paste ADP CSV</label>
+        <textarea id="adpCsvPaste" placeholder="Player,Team,Pos,ADP,Platform,Std Dev&#10;Bijan Robinson,ATL,RB,1.8,Yahoo,4.2" style="min-height:80px;"></textarea>
+      </div>
+      <div class="btn-row" style="margin-bottom:12px;">
+        <button class="btn-ghost" id="adpCsvLoadBtn">Add to ADP pool</button>
+        <label class="btn-ghost" style="display:inline-block;cursor:pointer;" for="adpCsvFile">Upload .csv file</label>
+        <input type="file" id="adpCsvFile" accept=".csv" style="display:none;">
+        <button class="btn-ghost" id="adpClearBtn">Clear imported ADP</button>
+        <span class="fetch-status" id="adpStatus"></span>
+      </div>
     </div>
   </section>
 
@@ -711,6 +737,30 @@
 (function(){
   const STORAGE_KEY = "theboard_state_v2";
   const el = (id) => document.getElementById(id);
+  const V3_PREFERENCES_KEY = "theboard_state_v3_preferences";
+  const RECOMMENDED_ACCURACY_PRESET = {
+    scarcitySlider: 45,
+    riskSlider: 40,
+    injurySlider: 65,
+    rookieSlider: 25,
+    olRunSlider: 30,
+    olPassSlider: 25,
+    qbSupportSlider: 35,
+    sosSlider: 15,
+    gameScriptSlider: 25,
+    bigPlaySlider: 60,
+    vorpSlider: 65,
+    historyWeightSlider: 10,
+    numTeams: 12,
+    rosterQB: 1,
+    rosterRB: 2,
+    rosterWR: 3,
+    rosterTE: 1,
+    rosterFLEX: 1,
+    flexRB: 45,
+    flexWR: 45,
+    flexTE: 10,
+  };
 
   // Each source config: {key, label, mode: 'fantasypros-json'|'generic', weight, liveUrl, custom}
   let sourceConfigs = [
@@ -894,6 +944,37 @@
       workerUrl: workerUrlField ? workerUrlField.value : (window.__workerUrl||""),
       settings, sourceWeights, sourceLiveUrls, customSources, flags, teamData
     }));
+  }
+
+  function updateSliderReadout(id){
+    const out = el(id.replace("Slider","Val"));
+    if(out && el(id)) out.textContent = el(id).value;
+  }
+
+  function applyRecommendedPreset(){
+    Object.entries(RECOMMENDED_ACCURACY_PRESET).forEach(([id,value]) => {
+      if(el(id)) el(id).value = value;
+      if(id.endsWith("Slider")) updateSliderReadout(id);
+    });
+    render();
+    saveLocal();
+    const status = el("presetStatus");
+    if(status){
+      status.textContent = "Recommended accuracy preset applied.";
+      status.className = "fetch-status ok";
+    }
+    document.dispatchEvent(new CustomEvent("v3:preset-applied"));
+  }
+
+  function resetSavedLocalSettings(){
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(V3_PREFERENCES_KEY);
+    const status = el("presetStatus");
+    if(status){
+      status.textContent = "Saved settings cleared. Reloading with code defaults…";
+      status.className = "fetch-status ok";
+    }
+    window.setTimeout(() => window.location.reload(), 250);
   }
 
   // ---------- CSV parsing (shared across sources) ----------
@@ -1639,6 +1720,9 @@
     rebuild();
   });
 
+  el("applyRecommendedPresetBtn")?.addEventListener("click", applyRecommendedPreset);
+  el("resetLocalSettingsBtn")?.addEventListener("click", resetSavedLocalSettings);
+
   ["numTeams","rosterQB","rosterRB","rosterWR","rosterTE","rosterFLEX","flexRB","flexWR","flexTE"].forEach(id => {
     el(id).addEventListener("input", () => { render(); saveLocal(); });
   });
@@ -1857,7 +1941,7 @@
   if(window.__savedSettings){
     Object.entries(window.__savedSettings).forEach(([k,v]) => { if(el(k)) el(k).value = v; });
   }
-  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider","gameScriptSlider","bigPlaySlider"].forEach(id => {
+  ["scarcitySlider","riskSlider","injurySlider","rookieSlider","olRunSlider","olPassSlider","qbSupportSlider","sosSlider","gameScriptSlider","bigPlaySlider","vorpSlider","historyWeightSlider"].forEach(id => {
     const out = el(id.replace("Slider","Val"));
     if(out) out.textContent = el(id).value;
   });
@@ -1867,7 +1951,7 @@
   loadAutomaticData();
 })();
 </script>
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/app.js?v=v3-local-20260722"></script>
 
 </body>
 </html>

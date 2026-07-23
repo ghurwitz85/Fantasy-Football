@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  adpCsvTextToV3,
   applyV3Preferences,
   buildV3ContextWeightsFromFormValues,
   buildV3LeagueSettingsFromFormValues,
@@ -128,6 +129,18 @@ test('parses projection CSV text into expanded V3 projection rows', () => {
   assert.equal(row.role.targetShare, 0.10);
 });
 
+test('parses ADP CSV text into V3 ADP rows', () => {
+  const rows = adpCsvTextToV3('Player,Team,Pos,ADP,Platform,Std Dev\nBijan Robinson,ATL,RB,1.8,Yahoo,4.2\nNo ADP,ATL,RB,,Yahoo,');
+
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].name, 'Bijan Robinson');
+  assert.equal(rows[0].team, 'ATL');
+  assert.equal(rows[0].position, 'RB');
+  assert.equal(rows[0].adp, 1.8);
+  assert.equal(rows[0].platform, 'Yahoo');
+  assert.equal(rows[0].adpStdDev, 4.2);
+});
+
 test('applies injury, rookie, and manual override preferences to V3 players', () => {
   const players = [
     { name: 'Safe Player', team: 'ATL', position: 'RB', adjusted: { finalDraftScore: 0.8 }, v3Row: { finalDraftScore: 0.8 } },
@@ -180,7 +193,7 @@ test('converts injury and rookie sliders to modest final-score preference weight
 });
 
 test('converts context sliders to V3 context weights', () => {
-  const weights = buildV3ContextWeightsFromFormValues({ olRunSlider: '35', olPassSlider: '60', qbSupportSlider: '45', sosSlider: '20', gameScriptSlider: '30', bigPlaySlider: '60' });
+  const weights = buildV3ContextWeightsFromFormValues({ olRunSlider: '35', olPassSlider: '60', qbSupportSlider: '45', sosSlider: '20', gameScriptSlider: '30', bigPlaySlider: '60', historyWeightSlider: '12', vorpSlider: '65' });
 
   assert.equal(weights.runBlocking, 0.35);
   assert.equal(weights.passProtection, 0.6);
@@ -188,4 +201,11 @@ test('converts context sliders to V3 context weights', () => {
   assert.equal(weights.bigPlayConfidence, 0.6);
   assert.equal(weights.schedule, 0.2);
   assert.equal(weights.gameScript, 0.3);
+  assert.equal(weights.historyWeight, 0.12);
+  assert.ok(weights.rankingWeights.projection > 0.4);
+  assert.ok(weights.rankingWeights.vorp > 0.2);
+  assert.equal(
+    Number(Object.values(weights.rankingWeights).reduce((sum, value) => sum + value, 0).toFixed(6)),
+    1,
+  );
 });

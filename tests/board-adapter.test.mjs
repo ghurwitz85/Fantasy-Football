@@ -40,7 +40,23 @@ test('marks missing projections and ADP with visible warnings', () => {
 
   assert.equal(row.v3Status.hasProjection, false);
   assert.equal(row.v3Status.hasAdp, false);
+  assert.equal(row.v3Row.adp, 99);
+  assert.equal(row.v3Row.adpSource, 'consensus-fallback');
   assert.equal(row.v3Row.warnings.length, 2);
+  assert.ok(row.v3Row.warnings.some((warning) => warning.includes('using consensus rank')));
+});
+
+test('uses loaded ADP ahead of consensus fallback when available', () => {
+  const [row] = buildV3BoardRows({
+    rankings: [{ name: 'Market Player', team: 'BUF', position: 'QB', rank: 10 }],
+    projections: [{ name: 'Market Player', team: 'BUF', position: 'QB', projections: { passing: { yards: 4000, touchdowns: 30 } } }],
+    adp: [{ name: 'Market Player', team: 'BUF', position: 'QB', adp: 27.5, platform: 'Yahoo' }],
+  }, undefined, leagueSettings);
+
+  assert.equal(row.v3Status.hasAdp, true);
+  assert.equal(row.v3Row.adp, 27.5);
+  assert.equal(row.v3Row.adpSource, 'loaded');
+  assert.equal(row.v3Row.adpPlatform, 'Yahoo');
 });
 
 test('uses normalized name matching across apostrophe variants', () => {

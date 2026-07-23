@@ -1,6 +1,7 @@
 import { buildV3BoardRows } from './board-adapter.js';
 import { loadJson, loadV3StatusData } from './data-loader.js';
 import {
+  adpCsvTextToV3,
   applyV3Preferences,
   buildV3ContextWeightsFromFormValues,
   buildV3LeagueSettingsFromFormValues,
@@ -16,17 +17,20 @@ const FORM_VALUE_IDS = [
   's_recYdsPerPt', 's_recTD', 's_fumLost', 's_pass40', 's_rush40', 's_rec40',
   'numTeams', 'rosterQB', 'rosterRB', 'rosterWR', 'rosterTE', 'rosterFLEX',
   'riskSlider', 'injurySlider', 'rookieSlider', 'olRunSlider', 'olPassSlider', 'qbSupportSlider', 'sosSlider', 'gameScriptSlider',
-  'bigPlaySlider',
+  'bigPlaySlider', 'historyWeightSlider', 'vorpSlider',
 ];
 
 let v3RawPayloads = null;
 let v3CachedProjections = [];
 let v3ImportedProjections = [];
+let v3CachedAdp = [];
+let v3ImportedAdp = [];
 let v3Preferences = loadV3Preferences();
 const v3SortState = {
   main: null,
   preview: null,
 };
+let v3OwnsMainBoard = false;
 
 function formValues() {
   return Object.fromEntries(FORM_VALUE_IDS.map((id) => [id, document.getElementById(id)?.value]));
@@ -170,6 +174,7 @@ function updateV3SortHeaders() {
 function renderV3MainBoard(board) {
   const body = document.getElementById('boardBody');
   if (!body || !Array.isArray(board) || !board.length) return;
+  v3OwnsMainBoard = true;
 
   body.innerHTML = sortV3BoardForView(board, 'main').slice(0, 250).map((player) => {
     const row = player.v3Row;
@@ -187,6 +192,7 @@ function renderV3MainBoard(board) {
     const bigPlayBonus = audit.adjustments?.bigPlayBonus;
     const bigPlayConfidenceAdjustment = adjustments.bigPlayConfidenceAdjustment;
     const projectionLabel = row.projectionSource === 'loaded' ? 'Loaded projection' : 'Fallback projection';
+    const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'Consensus fallback ADP' : 'ADP missing';
     const whyId = `why-${escapeHtml(player.playerId)}`;
     return `<tr data-id="${escapeHtml(player.playerId)}">
       <td class="rank-num">${row.personalRank}</td>
@@ -195,7 +201,7 @@ function renderV3MainBoard(board) {
         <button class="flag-btn v3-rookie-toggle ${pref.rookieFlag ? 'active-rookie' : ''}" data-pref-key="${escapeHtml(key)}" title="Toggle V3 rookie preference">ROK</button>
         <button class="flag-btn v3-why-toggle" data-why-id="${whyId}" title="Show V3 explanation">why</button>
         <div class="player-name" style="display:inline;">${escapeHtml(row.name)}</div>
-        <div class="player-meta">${escapeHtml(row.team || '')} · ${projectionLabel}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} pts @ ${formatNumber(bigPlay.confidence * 100, 0)}% (${formatSigned(bigPlayConfidenceAdjustment, 1)})` : ''}</div>
+          <div class="player-meta">${escapeHtml(row.team || '')} · ${projectionLabel} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} pts @ ${formatNumber(bigPlay.confidence * 100, 0)}% (${formatSigned(bigPlayConfidenceAdjustment, 1)})` : ''}</div>
       </td>
       <td><span class="pos-chip pos-${escapeHtml(row.position)}">${escapeHtml(row.position)}</span></td>
       <td>${row.consensusRank || '—'}</td>
@@ -212,6 +218,7 @@ function renderV3MainBoard(board) {
           <strong>${escapeHtml(row.name)} — V3 why</strong><br>
           Base league projection: ${formatNumber(row.baseProjection, 1)}<br>
           Projection source: ${escapeHtml(projectionLabel)}<br>
+          ADP source: ${escapeHtml(adpLabel)}${row.adpSource === 'consensus-fallback' ? ' — availability/cost is approximate until a real ADP feed is loaded.' : ''}<br>
           Expected 40+ yard bonuses: ${formatNumber(bigPlayBonus, 1)}${bigPlay ? ` (confidence ${formatNumber(bigPlay.confidence * 100, 0)}%; before confidence ${formatNumber(bigPlay.projectedBonusBeforeConfidence, 1)})` : ''}<br>
           Big-play confidence adjustment: ${formatSigned(adjustments.bigPlayConfidenceAdjustment, 1)}<br>
           Run-blocking adjustment: ${formatSigned(adjustments.runBlocking, 1)}<br>
@@ -260,6 +267,79 @@ function renderCurrentV3Board() {
   window.__v3Board = board;
   renderV3MainBoard(board);
   renderV3PreviewRows(board);
+  renderV3CoverageStatus(board);
+}
+
+function v3CoverageSummary(board = []) {
+  return board.reduce((summary, player) => {
+    const row = player.v3Row || {};
+    const projectionSource = row.projectionSource || 'unknown';
+    const adpSource = row.adpSource || 'unknown';
+    if (projectionSource === 'loaded') summary.projections.loaded += 1;
+    else if (projectionSource === 'consensus-fallback') summary.projections.fallback += 1;
+    else summary.projections.missing += 1;
+
+    if (adpSource === 'loaded') summary.adp.loaded += 1;
+    else if (adpSource === 'consensus-fallback') summary.adp.fallback += 1;
+    else summary.adp.missing += 1;
+    return summary;
+  }, {
+    total: board.length,
+    projections: { loaded: 0, fallback: 0, missing: 0 },
+    adp: { loaded: 0, fallback: 0, missing: 0 },
+  });
+}
+
+function renderV3CoverageStatus(board = []) {
+  const status = document.getElementById('v3BoardPreviewStatus');
+  if (!status || !board.length) return;
+  const coverage = v3CoverageSummary(board);
+  status.textContent = `V3 loaded ${coverage.total} ranked players. Projections: ${coverage.projections.loaded} loaded, ${coverage.projections.fallback} fallback. ADP: ${coverage.adp.loaded} loaded, ${coverage.adp.fallback} consensus fallback, ${coverage.adp.missing} missing.`;
+  status.className = coverage.adp.loaded && !coverage.adp.fallback && !coverage.adp.missing ? 'fetch-status ok' : 'fetch-status error';
+  if (coverage.adp.fallback || coverage.adp.missing) status.className = 'fetch-status';
+}
+
+function csvCell(value) {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
+function exportCurrentV3Board() {
+  const board = rebuildV3BoardFromState();
+  if (!board.length) return;
+  const headers = [
+    'Personal Rank', 'Player', 'Team', 'Position', 'Consensus Rank', 'ADP', 'ADP Source',
+    'Adjusted Projection', 'Base Projection', 'Replacement Baseline', 'VORP', 'Final Draft Score',
+    'Availability Next Pick', 'Draft Urgency', 'Projection Source', 'Warnings',
+  ];
+  const rowsToExport = sortV3BoardForView(board, 'main').map((player) => {
+    const row = player.v3Row || {};
+    const warnings = [...(row.warnings || []), ...(row.audit?.warnings || []), ...(player.v3PreferenceAudit || [])];
+    return [
+      row.personalRank,
+      row.name,
+      row.team,
+      row.position,
+      row.consensusRank,
+      row.adp,
+      row.adpSource,
+      formatNumber(row.adjustedProjection, 2),
+      formatNumber(row.baseProjection, 2),
+      formatNumber(row.replacementBaseline, 2),
+      formatNumber(row.vorp, 2),
+      formatNumber(row.finalDraftScore, 4),
+      formatNumber(row.availabilityProbability, 4),
+      formatNumber(row.draftUrgency, 2),
+      row.projectionSource,
+      warnings.join(' '),
+    ];
+  });
+  const csv = [headers, ...rowsToExport].map((row) => row.map(csvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'the-board-v3-rankings.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function updateSliderReadout(id) {
@@ -284,11 +364,34 @@ function mergeV3ProjectionRows(rowsToAdd = []) {
   }
 }
 
+function mergeV3AdpRows(rowsToAdd = []) {
+  const byKey = new Map();
+  [...v3CachedAdp, ...v3ImportedAdp, ...rowsToAdd].forEach((row) => {
+    const key = createPreferenceKey(row);
+    if (key) byKey.set(key, row);
+  });
+  v3ImportedAdp = [...v3ImportedAdp, ...rowsToAdd];
+  if (v3RawPayloads) {
+    v3RawPayloads = {
+      ...v3RawPayloads,
+      adp: Array.from(byKey.values()),
+    };
+    renderCurrentV3Board();
+  }
+}
+
 function setV3ProjectionStatus(message, className = 'ok') {
   const status = document.getElementById('projStatus');
   if (!status) return;
   const existing = status.textContent ? `${status.textContent} ` : '';
   status.textContent = `${existing}V3: ${message}`;
+  status.className = `fetch-status ${className}`;
+}
+
+function setV3AdpStatus(message, className = 'ok') {
+  const status = document.getElementById('adpStatus');
+  if (!status) return;
+  status.textContent = message;
   status.className = `fetch-status ${className}`;
 }
 
@@ -302,7 +405,36 @@ function handleV3ProjectionImport(text) {
   setV3ProjectionStatus(`${rowsToAdd.length} expanded projection row(s) added to the V3 board.`, 'ok');
 }
 
+function handleV3AdpImport(text) {
+  const rowsToAdd = adpCsvTextToV3(text);
+  if (!rowsToAdd.length) {
+    setV3AdpStatus('No ADP rows found. Check for Player and ADP columns.', 'error');
+    return;
+  }
+  mergeV3AdpRows(rowsToAdd);
+  setV3AdpStatus(`${rowsToAdd.length} ADP row(s) added to the V3 board.`, 'ok');
+}
+
 document.addEventListener('click', (event) => {
+  const exportButton = event.target.closest?.('#exportBtn');
+  if (exportButton && v3OwnsMainBoard) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    exportCurrentV3Board();
+    return;
+  }
+
+  const legacyVorpButton = event.target.closest?.('#sortVorpBtn');
+  if (legacyVorpButton && v3OwnsMainBoard) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const currentlyVorp = v3SortState.main?.key === 'vorp';
+    v3SortState.main = currentlyVorp ? null : { key: 'vorp', direction: 'desc' };
+    legacyVorpButton.textContent = currentlyVorp ? 'Sort by VORP instead' : 'Sort by your rank instead';
+    renderCurrentV3Board();
+    return;
+  }
+
   const whyButton = event.target.closest?.('.v3-why-toggle');
   if (whyButton) {
     const whyRow = document.getElementById(whyButton.dataset.whyId);
@@ -316,7 +448,7 @@ document.addEventListener('click', (event) => {
   const key = button.dataset.prefKey;
   const current = v3Preferences[key] || {};
   updateV3Preference(key, injuryButton ? { injuryFlag: !current.injuryFlag } : { rookieFlag: !current.rookieFlag });
-});
+}, true);
 
 document.addEventListener('change', (event) => {
   if (!event.target.matches?.('.v3-override-input')) return;
@@ -345,11 +477,38 @@ document.getElementById('projClearBtn')?.addEventListener('click', () => {
   setV3ProjectionStatus('Imported V3 projections cleared; cached fixture projections remain active.', 'ok');
 });
 
+document.getElementById('adpCsvLoadBtn')?.addEventListener('click', () => {
+  handleV3AdpImport(document.getElementById('adpCsvPaste')?.value || '');
+});
+
+document.getElementById('adpCsvFile')?.addEventListener('change', (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (readerEvent) => handleV3AdpImport(readerEvent.target?.result || '');
+  reader.onerror = () => setV3AdpStatus('Could not read ADP file.', 'error');
+  reader.readAsText(file);
+});
+
+document.getElementById('adpClearBtn')?.addEventListener('click', () => {
+  v3ImportedAdp = [];
+  if (v3RawPayloads) {
+    v3RawPayloads = { ...v3RawPayloads, adp: v3CachedAdp };
+    renderCurrentV3Board();
+  }
+  setV3AdpStatus('Imported ADP cleared; cached ADP rows remain active.', 'ok');
+});
+
 FORM_VALUE_IDS.forEach((id) => {
   document.getElementById(id)?.addEventListener('input', () => {
     updateSliderReadout(id);
     renderCurrentV3Board();
   });
+});
+
+document.addEventListener('v3:preset-applied', () => {
+  FORM_VALUE_IDS.forEach(updateSliderReadout);
+  renderCurrentV3Board();
 });
 
 function renderV3PreviewRows(board) {
@@ -362,9 +521,10 @@ function renderV3PreviewRows(board) {
     const bigPlay = row.audit?.bigPlay || null;
     const bigPlayBonus = row.audit?.adjustments?.bigPlayBonus;
     const bigPlayAdjustment = row.audit?.adjustments?.bigPlayConfidenceAdjustment;
+    const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'fallback ADP' : 'ADP missing';
     return `<tr>
       <td class="rank-num">${row.personalRank}</td>
-      <td><div class="player-name">${escapeHtml(row.name)}${warning}</div><div class="player-meta">${escapeHtml(row.team || '')} · ${row.projectionSource === 'loaded' ? 'loaded' : 'fallback'}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} @ ${formatNumber(bigPlay.confidence * 100, 0)}%` : ''}</div></td>
+      <td><div class="player-name">${escapeHtml(row.name)}${warning}</div><div class="player-meta">${escapeHtml(row.team || '')} · ${row.projectionSource === 'loaded' ? 'loaded' : 'fallback'} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} @ ${formatNumber(bigPlay.confidence * 100, 0)}%` : ''}</div></td>
       <td><span class="pos-chip pos-${escapeHtml(row.position)}">${escapeHtml(row.position)}</span></td>
       <td>${row.consensusRank || '—'}</td>
       <td>${formatNumber(row.adp, 1)}</td>
@@ -399,10 +559,11 @@ async function renderV3BoardPreview() {
       loadJson('data/yahoo-history-2025.json'),
     ]);
     v3CachedProjections = rows(projectionsPayload);
+    v3CachedAdp = rows(adpPayload);
     v3RawPayloads = {
-      rankings: rows(rankingsPayload).slice(0, 80),
+      rankings: rows(rankingsPayload),
       projections: [...v3CachedProjections, ...v3ImportedProjections],
-      adp: rows(adpPayload),
+      adp: [...v3CachedAdp, ...v3ImportedAdp],
       teamContext: teamContextPayload,
       historical: historicalPayload,
     };
@@ -411,12 +572,7 @@ async function renderV3BoardPreview() {
 
     renderV3PreviewRows(board);
 
-    if (status) {
-      const projectedCount = board.filter((player) => player.v3Status?.hasProjection).length;
-      const fallbackCount = board.filter((player) => player.v3Row?.projectionSource === 'consensus-fallback').length;
-      status.textContent = `V3 preview loaded ${board.length} ranked players; ${projectedCount} have loaded stat projections; ${fallbackCount} use explicit consensus-derived fallback projections.`;
-      status.className = 'fetch-status ok';
-    }
+    renderV3CoverageStatus(board);
     renderV3MainBoard(board);
     setTimeout(() => renderV3MainBoard(board), 750);
   } catch (error) {

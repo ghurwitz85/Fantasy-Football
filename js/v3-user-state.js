@@ -86,6 +86,33 @@ export function projectionCsvTextToV3(text = '') {
   return projectionCsvRowsToV3(rows);
 }
 
+export function adpCsvTextToV3(text = '') {
+  const lines = cleanCsvText(text).trim().split(/\n/).filter((line) => line.trim().length);
+  if (lines.length < 2) return [];
+  const header = splitCsvLine(lines[0]);
+  const rows = lines.slice(1).map((line) => {
+    const cells = splitCsvLine(line);
+    return Object.fromEntries(header.map((field, index) => [field, cells[index] ?? '']));
+  });
+  return adpCsvRowsToV3(rows);
+}
+
+export function adpCsvRowsToV3(rows = []) {
+  return rows.map((row) => {
+    const name = lookupValue(row, ['name', 'player', 'playerName', 'PLAYER NAME', 'Player Name']);
+    const adp = nullableNumberFrom(row, ['adp', 'avg pick', 'average pick', 'overall', 'AVG', 'ADP']);
+    return {
+      name,
+      team: normalizeTeam(lookupValue(row, ['team', 'tm', 'TEAM', 'player_team_id']) || ''),
+      position: normalizePosition(lookupValue(row, ['position', 'pos', 'POS']) || ''),
+      adp,
+      overall: adp,
+      platform: lookupValue(row, ['platform', 'source', 'site', 'Platform']) || 'Imported CSV',
+      adpStdDev: nullableNumberFrom(row, ['stdDev', 'adpStdDev', 'std dev', 'stdev', 'SD']),
+    };
+  }).filter((row) => row.name && row.adp !== null && row.adp > 0);
+}
+
 export function projectionCsvRowsToV3(rows = []) {
   return rows.map((row) => ({
     name: lookupValue(row, ['name', 'player', 'playerName', 'PLAYER NAME', 'Player Name']),
@@ -198,6 +225,9 @@ export function buildV3RiskOptionsFromFormValues(values = {}) {
 }
 
 export function buildV3ContextWeightsFromFormValues(values = {}) {
+  const projectionVorpSlider = Math.max(0, Math.min(1, numberValue(values, 'vorpSlider', 50) / 100));
+  const projectionAndVorpShare = 0.40 + projectionVorpSlider * 0.40;
+  const nonProjectionScale = (1 - projectionAndVorpShare) / 0.40;
   return {
     runBlocking: Math.max(0, numberValue(values, 'olRunSlider', 0)) / 100,
     passProtection: Math.max(0, numberValue(values, 'olPassSlider', 0)) / 100,
@@ -205,6 +235,16 @@ export function buildV3ContextWeightsFromFormValues(values = {}) {
     schedule: Math.max(0, numberValue(values, 'sosSlider', 0)) / 100,
     gameScript: Math.max(0, numberValue(values, 'gameScriptSlider', 0)) / 100,
     bigPlayConfidence: Math.max(0, Math.min(1, numberValue(values, 'bigPlaySlider', 100) / 100)),
+    historyWeight: Math.max(0, Math.min(1, numberValue(values, 'historyWeightSlider', 4) / 100)),
+    rankingWeights: {
+      projection: projectionAndVorpShare * (2 / 3),
+      vorp: projectionAndVorpShare * (1 / 3),
+      consensus: 0.15 * nonProjectionScale,
+      adp: 0.10 * nonProjectionScale,
+      risk: 0.07 * nonProjectionScale,
+      history: 0.04 * nonProjectionScale,
+      contextConfidence: 0.04 * nonProjectionScale,
+    },
     ...buildV3RiskOptionsFromFormValues(values),
   };
 }
