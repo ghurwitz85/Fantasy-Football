@@ -97,9 +97,64 @@ function applyBigPlayConfidence(stats, confidence = 1) {
   return { stats: adjustedStats, confidence: normalizedConfidence };
 }
 
+export function derivePlayerArchetype(player = {}) {
+  const position = String(player.position || '').replace(/[0-9]/g, '').toUpperCase();
+  const stats = normalizeStats(player.projections || {});
+  const role = player.role || {};
+  const rushAttempts = Number(stats.rushing.attempts || 0);
+  const targets = Number(stats.receiving.targets || 0);
+  const receptions = Number(stats.receiving.receptions || 0);
+  const receivingYards = Number(stats.receiving.yards || 0);
+  const receivingTouchdowns = Number(stats.receiving.touchdowns || 0);
+  const ypr = receptions ? receivingYards / receptions : 0;
+  const rushShare = Number(role.rushShare || 0);
+  const targetShare = Number(role.targetShare || 0);
+  const routeParticipation = Number(role.routeParticipation || 0);
+  const thirdDownShare = Number(role.thirdDownShare || 0);
+  const goalLineShare = Number(role.goalLineShare || 0);
+  const deepTargetShare = Number(role.deepTargetShare || 0);
+  const redZoneTargetShare = Number(role.redZoneTargetShare || 0);
+
+  if (position === 'RB') {
+    if ((rushAttempts >= 220 || rushShare >= 0.6) && (targets >= 55 || thirdDownShare >= 0.55)) return 'Three-down RB';
+    if ((rushAttempts >= 170 || rushShare >= 0.5) && (goalLineShare >= 0.45 || Number(stats.rushing.touchdowns || 0) >= 7)) return 'Early-down/goal-line RB';
+    if (targets >= 55 || thirdDownShare >= 0.6 || targetShare >= 0.12) return 'Receiving RB';
+    if (rushAttempts < 100 && targets < 30) return 'Handcuff/contingent-upside RB';
+    return 'Committee RB';
+  }
+
+  if (position === 'WR') {
+    if (targets >= 130 || targetShare >= 0.26) return 'Alpha target earner';
+    if (deepTargetShare >= 0.28 || ypr >= 14.5) return 'Deep threat';
+    if (receivingTouchdowns >= 8 || redZoneTargetShare >= 0.22) return 'Red-zone specialist';
+    if (targets >= 90 && ypr < 12) return 'Possession receiver';
+    return 'Low-volume boom/bust receiver';
+  }
+
+  if (position === 'TE') {
+    if (targets >= 110 || targetShare >= 0.22) return 'Elite target earner TE';
+    if (routeParticipation >= 0.72 || targets >= 75) return 'Route-heavy receiving TE';
+    if (receivingTouchdowns >= 6 || redZoneTargetShare >= 0.2) return 'Red-zone TE';
+    return 'Blocking-heavy TE';
+  }
+
+  if (position === 'QB') return 'Quarterback';
+  return 'Unclassified';
+}
+
+function archetypeOf(player = {}) {
+  return player.audit?.archetype || derivePlayerArchetype(player);
+}
+
+function archetypeMultiplier(player = {}, table = {}, fallback = 1) {
+  return Number(table[archetypeOf(player)] ?? fallback);
+}
+
 export function attachBaseProjection(player, scoring, options = {}) {
   const hasProjection = Boolean(player.projections);
   const rawStats = hasProjection ? normalizeStats(player.projections) : createFallbackProjection(player, scoring);
+  const playerWithStats = { ...player, projections: rawStats };
+  const archetype = derivePlayerArchetype(playerWithStats);
   const rawBigPlayPoints = calculateBigPlayPoints(rawStats, scoring);
   const { stats, confidence: bigPlayConfidence } = applyBigPlayConfidence(rawStats, options.bigPlayConfidence ?? 1);
   const baseFantasyPoints = calculateFantasyPoints(stats, scoring);
@@ -120,7 +175,8 @@ export function attachBaseProjection(player, scoring, options = {}) {
         bigPlayConfidenceAdjustment: bigPlayPoints - rawBigPlayPoints,
       },
       finalProjection: baseFantasyPoints,
-      projectionSource: hasProjection ? 'loaded' : 'consensus-fallback',
+      projectionSource: hasProjection ? (player.projectionSource || 'loaded') : 'consensus-fallback',
+      archetype,
       bigPlay: {
         confidence: bigPlayConfidence,
         projectedBonusBeforeConfidence: rawBigPlayPoints,
@@ -306,24 +362,40 @@ export function applyRiskAdjustedProjections(players = [], options = {}) {
 }
 
 function playerRushShare(player) {
+  const archetypeBoost = archetypeMultiplier(player, {
+    'Three-down RB': 1.08,
+    'Early-down/goal-line RB': 1.05,
+    'Receiving RB': 0.72,
+    'Committee RB': 0.88,
+    'Handcuff/contingent-upside RB': 0.70,
+  });
   const explicitShare = Number(player.role?.rushShare);
-  if (Number.isFinite(explicitShare) && explicitShare > 0) return clamp(explicitShare, 0, 1);
+  if (Number.isFinite(explicitShare) && explicitShare > 0) return clamp(explicitShare * archetypeBoost, 0, 1);
   const attempts = Number(player.projections?.rushing?.attempts || 0);
-  if (!attempts) return 0.35;
-  if (attempts >= 250) return 0.75;
-  if (attempts >= 175) return 0.60;
-  if (attempts >= 100) return 0.45;
-  return 0.25;
+  let inferred = 0.25;
+  if (!attempts) inferred = 0.35;
+  else if (attempts >= 250) inferred = 0.75;
+  else if (attempts >= 175) inferred = 0.60;
+  else if (attempts >= 100) inferred = 0.45;
+  return clamp(inferred * archetypeBoost, 0, 1);
 }
 
 function playerGoalLineShare(player) {
+  const archetypeBoost = archetypeMultiplier(player, {
+    'Three-down RB': 1.04,
+    'Early-down/goal-line RB': 1.12,
+    'Receiving RB': 0.68,
+    'Committee RB': 0.90,
+    'Handcuff/contingent-upside RB': 0.75,
+  });
   const explicitShare = Number(player.role?.goalLineShare);
-  if (Number.isFinite(explicitShare) && explicitShare > 0) return clamp(explicitShare, 0, 1);
+  if (Number.isFinite(explicitShare) && explicitShare > 0) return clamp(explicitShare * archetypeBoost, 0, 1);
   const rushingTouchdowns = Number(player.projections?.rushing?.touchdowns || 0);
-  if (rushingTouchdowns >= 10) return 0.70;
-  if (rushingTouchdowns >= 6) return 0.55;
-  if (rushingTouchdowns >= 3) return 0.40;
-  return 0.25;
+  let inferred = 0.25;
+  if (rushingTouchdowns >= 10) inferred = 0.70;
+  else if (rushingTouchdowns >= 6) inferred = 0.55;
+  else if (rushingTouchdowns >= 3) inferred = 0.40;
+  return clamp(inferred * archetypeBoost, 0, 1);
 }
 
 export function calculateRunBlockingAdjustment(player, teamEnvironment, scoring, weight = 0) {
@@ -447,7 +519,17 @@ function receiverProtectionSensitivity(player) {
   const yardsPerReception = receptions ? yards / receptions : 0;
   const inferredDeepRole = yardsPerReception >= 14 ? 0.25 : yardsPerReception >= 12 ? 0.15 : 0;
   const inferredRouteRole = targets >= 120 ? 0.15 : targets >= 80 ? 0.1 : 0.05;
-  return clamp(0.5 + Math.max(deepTargetShare, inferredDeepRole) * 0.35 + Math.max(routeParticipation, inferredRouteRole) * 0.15, 0.35, 1);
+  const baseSensitivity = 0.5 + Math.max(deepTargetShare, inferredDeepRole) * 0.35 + Math.max(routeParticipation, inferredRouteRole) * 0.15;
+  const archetypeBoost = archetypeMultiplier(player, {
+    'Deep threat': 1.14,
+    'Low-volume boom/bust receiver': 1.08,
+    'Alpha target earner': 1.04,
+    'Possession receiver': 0.92,
+    'Red-zone specialist': 0.95,
+    'Route-heavy receiving TE': 1.04,
+    'Blocking-heavy TE': 0.82,
+  });
+  return clamp(baseSensitivity * archetypeBoost, 0.35, 1);
 }
 
 export function calculateReceiverPassProtectionAdjustment(player, teamEnvironment, scoring, weight = 0) {
@@ -507,7 +589,12 @@ function receiverQbSensitivity(player) {
   const possessionSensitivity = Math.max(Number(role.targetShare || 0), targets >= 120 ? 0.9 : targets >= 80 ? 0.7 : 0.45);
   const deepThreatSensitivity = Math.max(Number(role.deepTargetShare || 0), yardsPerReception >= 14 ? 0.85 : yardsPerReception >= 12 ? 0.55 : 0.25);
   const redZoneSensitivity = Math.max(Number(role.redZoneTargetShare || 0), touchdowns >= 8 ? 0.85 : touchdowns >= 5 ? 0.6 : 0.35);
-  return { possessionSensitivity, deepThreatSensitivity, redZoneSensitivity };
+  const archetype = archetypeOf(player);
+  return {
+    possessionSensitivity: clamp(possessionSensitivity * (archetype === 'Possession receiver' ? 1.12 : archetype === 'Alpha target earner' ? 1.06 : 1), 0, 1),
+    deepThreatSensitivity: clamp(deepThreatSensitivity * (archetype === 'Deep threat' || archetype === 'Low-volume boom/bust receiver' ? 1.15 : archetype === 'Possession receiver' ? 0.88 : 1), 0, 1),
+    redZoneSensitivity: clamp(redZoneSensitivity * (archetype === 'Red-zone specialist' || archetype === 'Red-zone TE' ? 1.16 : 1), 0, 1),
+  };
 }
 
 export function calculateReceiverQbEnvironmentAdjustment(player, teamEnvironment, scoring, weight = 0) {
@@ -645,8 +732,11 @@ export function applyScheduleAdjustments(players = [], teamEnvironments = {}, sc
 
 function rbGameScriptRoles(player) {
   const role = player.role || {};
-  const earlyDownRole = Number(role.rushShare ?? playerRushShare(player));
-  const receivingRole = Number(role.thirdDownShare ?? role.targetShare ?? (Number(player.projections?.receiving?.targets || 0) >= 60 ? 0.75 : Number(player.projections?.receiving?.targets || 0) >= 35 ? 0.55 : 0.25));
+  const archetype = archetypeOf(player);
+  const earlyDownMultiplier = archetype === 'Early-down/goal-line RB' ? 1.12 : archetype === 'Receiving RB' ? 0.72 : archetype === 'Three-down RB' ? 1.04 : 1;
+  const receivingMultiplier = archetype === 'Receiving RB' ? 1.22 : archetype === 'Three-down RB' ? 1.08 : archetype === 'Early-down/goal-line RB' ? 0.70 : 1;
+  const earlyDownRole = Number(role.rushShare ?? playerRushShare(player)) * earlyDownMultiplier;
+  const receivingRole = Number(role.thirdDownShare ?? role.targetShare ?? (Number(player.projections?.receiving?.targets || 0) >= 60 ? 0.75 : Number(player.projections?.receiving?.targets || 0) >= 35 ? 0.55 : 0.25)) * receivingMultiplier;
   return { earlyDownRole: clamp(earlyDownRole, 0, 1), receivingRole: clamp(receivingRole, 0, 1) };
 }
 

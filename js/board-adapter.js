@@ -84,6 +84,7 @@ export function buildV3BoardRows({ rankings = [], projections = [], adp = [], pl
         ...(metadataRow?.sourceIds || {}),
       },
       projections: projectionRow?.projections || null,
+      projectionSource: projectionRow?.projectionSource || null,
       adp: adpValue,
       metadataSource: metadataRow?.metadataSource || [],
       v3Status: {
@@ -186,6 +187,7 @@ export function buildV3BoardRows({ rankings = [], projections = [], adp = [], pl
       nextPick: player.draft?.nextPick,
       audit: player.audit || null,
       projectionSource: player.audit?.projectionSource || 'unknown',
+      archetype: player.audit?.archetype || 'Unclassified',
       metadataSource: player.metadataSource || [],
       warnings: player.v3Status?.warnings || [],
     },

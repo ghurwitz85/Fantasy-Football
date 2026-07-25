@@ -138,6 +138,27 @@ function formatSigned(value, digits = 1) {
   return `${number >= 0 ? '+' : ''}${number.toFixed(digits)}`;
 }
 
+function formatPercent(value, digits = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `${(number * 100).toFixed(digits)}%` : '—';
+}
+
+function isFallbackProjectionSource(source = '') {
+  return source === 'consensus-fallback';
+}
+
+function isLoadedProjectionSource(source = '') {
+  return Boolean(source) && !isFallbackProjectionSource(source) && source !== 'unknown';
+}
+
+function projectionSourceLabel(source = '') {
+  if (isFallbackProjectionSource(source)) return 'Fallback projection';
+  if (source === 'yahoo-2026-export') return 'Yahoo 2026 projection';
+  if (source === 'consensus-derived-fixture') return 'Consensus-derived fixture projection';
+  if (source === 'loaded') return 'Loaded projection';
+  return source ? `${source} projection` : 'Projection source unknown';
+}
+
 function valueForV3Sort(player = {}, key = '') {
   const row = player.v3Row || {};
   const auditWarnings = row.audit?.warnings || [];
@@ -199,10 +220,11 @@ function renderV3MainBoard(board) {
     const contextCap = audit.contextCap || null;
     const risk = audit.risk || null;
     const history = audit.history || null;
+    const details = audit.details || {};
     const bigPlay = audit.bigPlay || null;
     const bigPlayBonus = audit.adjustments?.bigPlayBonus;
     const bigPlayConfidenceAdjustment = adjustments.bigPlayConfidenceAdjustment;
-    const projectionLabel = row.projectionSource === 'loaded' ? 'Loaded projection' : 'Fallback projection';
+    const projectionLabel = projectionSourceLabel(row.projectionSource);
     const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'Consensus fallback ADP' : 'ADP missing';
     const whyId = `why-${escapeHtml(player.playerId)}`;
     return `<tr data-id="${escapeHtml(player.playerId)}">
@@ -229,15 +251,22 @@ function renderV3MainBoard(board) {
           <strong>${escapeHtml(row.name)} — V3 why</strong><br>
           Base league projection: ${formatNumber(row.baseProjection, 1)}<br>
           Projection source: ${escapeHtml(projectionLabel)}<br>
+          Derived archetype: ${escapeHtml(row.archetype || 'Unclassified')}<br>
           ADP source: ${escapeHtml(adpLabel)}${row.adpSource === 'consensus-fallback' ? ' — availability/cost is approximate until a real ADP feed is loaded.' : ''}<br>
           Expected 40+ yard bonuses: ${formatNumber(bigPlayBonus, 1)}${bigPlay ? ` (confidence ${formatNumber(bigPlay.confidence * 100, 0)}%; before confidence ${formatNumber(bigPlay.projectedBonusBeforeConfidence, 1)})` : ''}<br>
           Big-play confidence adjustment: ${formatSigned(adjustments.bigPlayConfidenceAdjustment, 1)}<br>
           Run-blocking adjustment: ${formatSigned(adjustments.runBlocking, 1)}<br>
+          ${details.runBlocking ? `Run-blocking role inputs: rush share ${formatPercent(details.runBlocking.rushShare)}, goal-line share ${formatPercent(details.runBlocking.goalLineShare)}, yard factor ${formatSigned(details.runBlocking.rushYardsAdjustment * 100, 2)}%, TD factor ${formatSigned(details.runBlocking.rushTdAdjustment * 100, 2)}%<br>` : ''}
           Pass-protection adjustment: ${formatSigned(adjustments.passProtection, 1)}<br>
+          ${details.passProtection ? `QB pass-protection inputs: pass-block score ${formatSigned(details.passProtection.passBlockScore, 2)}, efficiency factor ${formatSigned(details.passProtection.passEfficiencyAdjustment * 100, 2)}%, deep factor ${formatSigned(details.passProtection.deepCompletionAdjustment * 100, 2)}%<br>` : ''}
           Receiver pass-protection adjustment: ${formatSigned(adjustments.receiverPassProtection, 1)}<br>
+          ${details.receiverPassProtection ? `Receiver protection sensitivity: ${formatPercent(details.receiverPassProtection.sensitivity)}; yard factor ${formatSigned(details.receiverPassProtection.yardsAdjustment * 100, 2)}%, big-play factor ${formatSigned(details.receiverPassProtection.bigPlayAdjustment * 100, 2)}%<br>` : ''}
           QB-environment adjustment: ${formatSigned(adjustments.qbEnvironment, 1)}<br>
+          ${details.qbEnvironment ? `QB-environment sensitivities: possession ${formatPercent(details.qbEnvironment.possessionSensitivity)}, deep ${formatPercent(details.qbEnvironment.deepThreatSensitivity)}, red-zone ${formatPercent(details.qbEnvironment.redZoneSensitivity)}<br>` : ''}
           Strength-of-schedule adjustment: ${formatSigned(adjustments.schedule, 1)}<br>
+          ${details.schedule ? `Schedule input: ${escapeHtml(details.schedule.position)} SOS score ${formatSigned(details.schedule.sosScore, 2)}, factor ${formatSigned(details.schedule.factor * 100, 2)}%<br>` : ''}
           Game-script adjustment: ${formatSigned(adjustments.gameScript, 1)}<br>
+          ${details.gameScript ? `Game-script inputs: lead score ${formatSigned(details.gameScript.leadScore, 2)}, trailing score ${formatSigned(details.gameScript.trailingScore, 2)}${details.gameScript.earlyDownRole !== undefined ? `, early-down role ${formatPercent(details.gameScript.earlyDownRole)}, receiving role ${formatPercent(details.gameScript.receivingRole)}` : ''}${details.gameScript.routeRole !== undefined ? `, route role ${formatPercent(details.gameScript.routeRole)}, target role ${formatPercent(details.gameScript.targetRole)}` : ''}${details.gameScript.volumeAdjustment !== undefined ? `, volume factor ${formatSigned(details.gameScript.volumeAdjustment * 100, 2)}%` : ''}<br>` : ''}
           Raw context total before aggregate cap: ${formatSigned(contextCap?.rawTotal, 1)}<br>
           Aggregate context cap: ${contextCap ? `${formatSigned(contextCap.cappedTotal, 1)} (${formatNumber(contextCap.totalPct * 100, 1)}%; ${contextCap.applied ? 'cap applied' : 'within cap'})` : '—'}<br>
           Floor / median / ceiling: ${risk ? `${formatNumber(risk.floor, 1)} / ${formatNumber(risk.median, 1)} / ${formatNumber(risk.ceiling, 1)}` : '—'}<br>
@@ -286,8 +315,9 @@ function v3CoverageSummary(board = []) {
     const row = player.v3Row || {};
     const projectionSource = row.projectionSource || 'unknown';
     const adpSource = row.adpSource || 'unknown';
-    if (projectionSource === 'loaded') summary.projections.loaded += 1;
-    else if (projectionSource === 'consensus-fallback') summary.projections.fallback += 1;
+    summary.projectionSources[projectionSource] = (summary.projectionSources[projectionSource] || 0) + 1;
+    if (isLoadedProjectionSource(projectionSource)) summary.projections.loaded += 1;
+    else if (isFallbackProjectionSource(projectionSource)) summary.projections.fallback += 1;
     else summary.projections.missing += 1;
 
     if (adpSource === 'loaded') summary.adp.loaded += 1;
@@ -297,6 +327,7 @@ function v3CoverageSummary(board = []) {
   }, {
     total: board.length,
     projections: { loaded: 0, fallback: 0, missing: 0 },
+    projectionSources: {},
     adp: { loaded: 0, fallback: 0, missing: 0 },
   });
 }
@@ -305,7 +336,11 @@ function renderV3CoverageStatus(board = []) {
   const status = document.getElementById('v3BoardPreviewStatus');
   if (!status || !board.length) return;
   const coverage = v3CoverageSummary(board);
-  status.textContent = `V3 loaded ${coverage.total} ranked players. Projections: ${coverage.projections.loaded} loaded, ${coverage.projections.fallback} fallback. ADP: ${coverage.adp.loaded} loaded, ${coverage.adp.fallback} consensus fallback, ${coverage.adp.missing} missing.`;
+  const sourceBreakdown = Object.entries(coverage.projectionSources)
+    .sort(([, a], [, b]) => b - a)
+    .map(([source, count]) => `${source}: ${count}`)
+    .join('; ');
+  status.textContent = `V3 loaded ${coverage.total} ranked players. Projections: ${coverage.projections.loaded} loaded, ${coverage.projections.fallback} fallback, ${coverage.projections.missing} missing/unknown. Source breakdown: ${sourceBreakdown}. ADP: ${coverage.adp.loaded} loaded, ${coverage.adp.fallback} consensus fallback, ${coverage.adp.missing} missing.`;
   status.className = coverage.adp.loaded && !coverage.adp.fallback && !coverage.adp.missing ? 'fetch-status ok' : 'fetch-status error';
   if (coverage.adp.fallback || coverage.adp.missing) status.className = 'fetch-status';
 }
@@ -320,7 +355,7 @@ function exportCurrentV3Board() {
   const headers = [
     'Personal Rank', 'Player', 'Team', 'Position', 'Consensus Rank', 'ADP', 'ADP Source',
     'Adjusted Projection', 'Base Projection', 'Replacement Baseline', 'VORP', 'Final Draft Score',
-    'Availability Next Pick', 'Draft Urgency', 'Projection Source', 'Warnings',
+    'Availability Next Pick', 'Draft Urgency', 'Projection Source', 'Archetype', 'Warnings',
   ];
   const rowsToExport = sortV3BoardForView(board, 'main').map((player) => {
     const row = player.v3Row || {};
@@ -341,6 +376,7 @@ function exportCurrentV3Board() {
       formatNumber(row.availabilityProbability, 4),
       formatNumber(row.draftUrgency, 2),
       row.projectionSource,
+      row.archetype,
       warnings.join(' '),
     ];
   });
@@ -535,7 +571,7 @@ function renderV3PreviewRows(board) {
     const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'fallback ADP' : 'ADP missing';
     return `<tr>
       <td class="rank-num">${row.personalRank}</td>
-      <td><div class="player-name">${escapeHtml(row.name)}${warning}</div><div class="player-meta">${escapeHtml(row.team || '')} · ${row.projectionSource === 'loaded' ? 'loaded' : 'fallback'} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} @ ${formatNumber(bigPlay.confidence * 100, 0)}%` : ''}</div></td>
+      <td><div class="player-name">${escapeHtml(row.name)}${warning}</div><div class="player-meta">${escapeHtml(row.team || '')} · ${escapeHtml(row.projectionSource || 'unknown')} · ${escapeHtml(row.archetype || 'Unclassified')} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} @ ${formatNumber(bigPlay.confidence * 100, 0)}%` : ''}</div></td>
       <td><span class="pos-chip pos-${escapeHtml(row.position)}">${escapeHtml(row.position)}</span></td>
       <td>${row.consensusRank || '—'}</td>
       <td>${formatNumber(row.adp, 1)}</td>

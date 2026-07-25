@@ -94,6 +94,8 @@ test('prefers later Yahoo projection rows over earlier fallback projections for 
   assert.equal(row.v3Status.hasProjection, true);
   assert.equal(row.projections.rushing.yards, 200);
   assert.equal(row.v3Row.baseProjection, 20);
+  assert.equal(row.v3Row.projectionSource, 'yahoo-2026-export');
+  assert.equal(row.v3Row.audit.projectionSource, 'yahoo-2026-export');
 });
 
 test('uses normalized name matching across apostrophe variants', () => {
@@ -117,4 +119,15 @@ test('passes big-play confidence through the V3 board audit', () => {
   assert.equal(row.v3Row.audit.adjustments.bigPlayBonus, 1);
   assert.equal(row.v3Row.audit.adjustments.bigPlayConfidenceAdjustment, -1);
   assert.equal(row.v3Row.audit.bigPlay.confidence, 0.5);
+});
+
+test('exposes derived player archetype on V3 board rows', () => {
+  const [row] = buildV3BoardRows({
+    rankings: [{ name: 'Workhorse Back', team: 'ATL', position: 'RB', rank: 1 }],
+    projections: [{ name: 'Workhorse Back', team: 'ATL', position: 'RB', projections: { rushing: { attempts: 245, yards: 1100, touchdowns: 9 }, receiving: { targets: 70, receptions: 55, yards: 420 } } }],
+    adp: [],
+  }, undefined, leagueSettings);
+
+  assert.equal(row.v3Row.archetype, 'Three-down RB');
+  assert.equal(row.v3Row.audit.archetype, 'Three-down RB');
 });

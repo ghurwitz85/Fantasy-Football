@@ -303,6 +303,43 @@ test('strong QB deep accuracy helps deep WRs more than possession WRs', () => {
   assert.ok(deepAdjustment > possessionAdjustment);
 });
 
+test('derived archetypes modestly shape context sensitivities', () => {
+  const runEnvironment = { offensiveLine: { runBlockScore: 1 } };
+  const earlyDown = attachBaseProjection({
+    name: 'Early Archetype RB',
+    position: 'RB',
+    projections: { rushing: { attempts: 190, yards: 800, touchdowns: 9 }, receiving: { targets: 20, receptions: 15, yards: 100 } },
+  });
+  const receiving = attachBaseProjection({
+    name: 'Receiving Archetype RB',
+    position: 'RB',
+    projections: { rushing: { attempts: 80, yards: 360, touchdowns: 2 }, receiving: { targets: 60, receptions: 48, yards: 390 } },
+  });
+
+  const earlyRunAdjustment = calculateRunBlockingAdjustment(earlyDown, runEnvironment, undefined, 1);
+  const receivingRunAdjustment = calculateRunBlockingAdjustment(receiving, runEnvironment, undefined, 1);
+  assert.equal(earlyDown.audit.archetype, 'Early-down/goal-line RB');
+  assert.equal(receiving.audit.archetype, 'Receiving RB');
+  assert.ok(earlyRunAdjustment.details.goalLineShare > receivingRunAdjustment.details.goalLineShare);
+
+  const passEnvironment = { offensiveLine: { passBlockScore: 1 } };
+  const deepThreat = attachBaseProjection({
+    name: 'Archetype Deep WR',
+    position: 'WR',
+    projections: { receiving: { targets: 80, receptions: 45, yards: 720, touchdowns: 4, fortyYardReceptions: 4 } },
+  });
+  const possession = attachBaseProjection({
+    name: 'Archetype Possession WR',
+    position: 'WR',
+    projections: { receiving: { targets: 100, receptions: 82, yards: 850, touchdowns: 5, fortyYardReceptions: 1 } },
+  });
+  const deepProtection = calculateReceiverPassProtectionAdjustment(deepThreat, passEnvironment, undefined, 1);
+  const possessionProtection = calculateReceiverPassProtectionAdjustment(possession, passEnvironment, undefined, 1);
+  assert.equal(deepThreat.audit.archetype, 'Deep threat');
+  assert.equal(possession.audit.archetype, 'Possession receiver');
+  assert.ok(deepProtection.details.sensitivity > possessionProtection.details.sensitivity);
+});
+
 test('schedule adjustment is position-specific and capped to low preseason impact', () => {
   const rb = attachBaseProjection({
     name: 'Schedule RB',
