@@ -124,6 +124,8 @@ test('local team-context fixture has active normalized QB and defense examples',
   assert.ok(normalized.teams.BUF.quarterback.overallScore > 0);
   assert.ok(normalized.teams.CAR.quarterback.overallScore < 0);
   assert.ok(normalized.teams.BUF.defense.overallScore > 0);
-  assert.ok(normalized.teams.CAR.defense.overallScore < 0);
+  assert.ok(normalized.teams.ARI.defense.overallScore < 0);
   assert.equal(normalized.teams.BUF.expectedGameScript.source, 'normalized-v3');
+  assert.equal(fixture.defenseSource.provider, 'TeamRankings');
+  assert.equal(Object.values(fixture.teams).filter((team) => team.defense?.source === 'TeamRankings opponent points per game').length, 32);
 });

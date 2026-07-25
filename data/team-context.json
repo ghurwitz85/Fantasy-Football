@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-07-20T00:00:00Z",
+  "generatedAt": "2026-07-25T19:40:17.527Z",
   "teams": {
     "ARI": {
       "olRun": 29,
       "olPass": 29,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 29,
       "sosRB": 8,
       "sosWRTE": 15,
       "sosQB": 16,
@@ -18,7 +18,10 @@
         "stabilityScore": 0.1
       },
       "defense": {
-        "overallScore": -0.35
+        "overallScore": -0.787,
+        "pointsAllowedProjection": 28.7059,
+        "sourceRank": 29,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.18,
@@ -30,7 +33,7 @@
       "olRun": 21,
       "olPass": 21,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 19,
       "sosRB": 20,
       "sosWRTE": 24,
       "sosQB": 22,
@@ -43,7 +46,10 @@
         "stabilityScore": -0.25
       },
       "defense": {
-        "overallScore": -0.1
+        "overallScore": -0.067,
+        "pointsAllowedProjection": 23.5882,
+        "sourceRank": 19,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.11,
@@ -55,7 +61,7 @@
       "olRun": 22,
       "olPass": 22,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 18,
       "sosRB": 19,
       "sosWRTE": 16,
       "sosQB": 13,
@@ -68,7 +74,10 @@
         "stabilityScore": 0.8
       },
       "defense": {
-        "overallScore": 0.55
+        "overallScore": -0.042,
+        "pointsAllowedProjection": 23.4118,
+        "sourceRank": 18,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.52,
@@ -80,7 +89,7 @@
       "olRun": 5,
       "olPass": 5,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 12,
       "sosRB": 2,
       "sosWRTE": 10,
       "sosQB": 7,
@@ -93,7 +102,10 @@
         "stabilityScore": 0.9
       },
       "defense": {
-        "overallScore": 0.4
+        "overallScore": 0.127,
+        "pointsAllowedProjection": 22.2105,
+        "sourceRank": 12,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.51,
@@ -118,7 +130,10 @@
         "stabilityScore": -0.2
       },
       "defense": {
-        "overallScore": -0.55
+        "overallScore": 0.016,
+        "pointsAllowedProjection": 23,
+        "sourceRank": 16,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.47,
@@ -130,7 +145,7 @@
       "olRun": 4,
       "olPass": 4,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 23,
       "sosRB": 9,
       "sosWRTE": 8,
       "sosQB": 4,
@@ -143,7 +158,10 @@
         "stabilityScore": 0.15
       },
       "defense": {
-        "overallScore": 0.2
+        "overallScore": -0.169,
+        "pointsAllowedProjection": 24.3158,
+        "sourceRank": 23,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.16,
@@ -155,7 +173,7 @@
       "olRun": 26,
       "olPass": 26,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 30,
       "sosRB": 7,
       "sosWRTE": 29,
       "sosQB": 28,
@@ -168,7 +186,10 @@
         "stabilityScore": 0.45
       },
       "defense": {
-        "overallScore": -0.25
+        "overallScore": -0.82,
+        "pointsAllowedProjection": 28.9412,
+        "sourceRank": 30,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.11,
@@ -180,7 +201,7 @@
       "olRun": 30,
       "olPass": 30,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 13,
       "sosRB": 21,
       "sosWRTE": 29,
       "sosQB": 31,
@@ -193,7 +214,10 @@
         "stabilityScore": -0.55
       },
       "defense": {
-        "overallScore": 0.35
+        "overallScore": 0.116,
+        "pointsAllowedProjection": 22.2941,
+        "sourceRank": 13,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.08,
@@ -205,7 +229,7 @@
       "olRun": 20,
       "olPass": 20,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 32,
       "sosRB": 28,
       "sosWRTE": 23,
       "sosQB": 23,
@@ -218,7 +242,10 @@
         "stabilityScore": 0.55
       },
       "defense": {
-        "overallScore": 0.25
+        "overallScore": -0.978,
+        "pointsAllowedProjection": 30.0588,
+        "sourceRank": 32,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.26,
@@ -230,7 +257,7 @@
       "olRun": 1,
       "olPass": 1,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 4,
       "sosRB": 10,
       "sosWRTE": 13,
       "sosQB": 7,
@@ -243,7 +270,10 @@
         "stabilityScore": 0.25
       },
       "defense": {
-        "overallScore": 0.45
+        "overallScore": 0.654,
+        "pointsAllowedProjection": 18.4737,
+        "sourceRank": 4,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.28,
@@ -255,7 +285,7 @@
       "olRun": 12,
       "olPass": 12,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 22,
       "sosRB": 30,
       "sosWRTE": 12,
       "sosQB": 18,
@@ -268,7 +298,10 @@
         "stabilityScore": 0.8
       },
       "defense": {
-        "overallScore": 0.1
+        "overallScore": -0.166,
+        "pointsAllowedProjection": 24.2941,
+        "sourceRank": 22,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.32,
@@ -280,7 +313,7 @@
       "olRun": 28,
       "olPass": 28,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 11,
       "sosRB": 16,
       "sosWRTE": 8,
       "sosQB": 14,
@@ -293,7 +326,10 @@
         "stabilityScore": 0.6
       },
       "defense": {
-        "overallScore": 0.18
+        "overallScore": 0.196,
+        "pointsAllowedProjection": 21.7222,
+        "sourceRank": 11,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.26,
@@ -305,7 +341,7 @@
       "olRun": 31,
       "olPass": 31,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 2,
       "sosRB": 18,
       "sosWRTE": 25,
       "sosQB": 24,
@@ -318,7 +354,10 @@
         "stabilityScore": 0.7
       },
       "defense": {
-        "overallScore": 0.32
+        "overallScore": 0.817,
+        "pointsAllowedProjection": 17.3158,
+        "sourceRank": 2,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.38,
@@ -330,7 +369,7 @@
       "olRun": 6,
       "olPass": 6,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 21,
       "sosRB": 23,
       "sosWRTE": 17,
       "sosQB": 25,
@@ -343,7 +382,10 @@
         "stabilityScore": 0.1
       },
       "defense": {
-        "overallScore": -0.2
+        "overallScore": -0.158,
+        "pointsAllowedProjection": 24.2353,
+        "sourceRank": 21,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.1,
@@ -355,7 +397,7 @@
       "olRun": 17,
       "olPass": 17,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 9,
       "sosRB": 17,
       "sosWRTE": 24,
       "sosQB": 29,
@@ -368,7 +410,10 @@
         "stabilityScore": 0.3
       },
       "defense": {
-        "overallScore": -0.05
+        "overallScore": 0.415,
+        "pointsAllowedProjection": 20.1667,
+        "sourceRank": 9,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.02,
@@ -380,7 +425,7 @@
       "olRun": 19,
       "olPass": 19,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 5,
       "sosRB": 6,
       "sosWRTE": 14,
       "sosQB": 3,
@@ -393,7 +438,10 @@
         "stabilityScore": 0.95
       },
       "defense": {
-        "overallScore": 0.5
+        "overallScore": 0.538,
+        "pointsAllowedProjection": 19.2941,
+        "sourceRank": 5,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.55,
@@ -405,7 +453,7 @@
       "olRun": 3,
       "olPass": 3,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 8,
       "sosRB": 16,
       "sosWRTE": 8,
       "sosQB": 12,
@@ -418,7 +466,10 @@
         "stabilityScore": 0.7
       },
       "defense": {
-        "overallScore": 0.22
+        "overallScore": 0.47,
+        "pointsAllowedProjection": 19.7778,
+        "sourceRank": 8,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.27,
@@ -430,7 +481,7 @@
       "olRun": 7,
       "olPass": 7,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 10,
       "sosRB": 32,
       "sosWRTE": 17,
       "sosQB": 18,
@@ -443,7 +494,10 @@
         "stabilityScore": 0.35
       },
       "defense": {
-        "overallScore": -0.05
+        "overallScore": 0.263,
+        "pointsAllowedProjection": 21.25,
+        "sourceRank": 10,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.07,
@@ -455,7 +509,7 @@
       "olRun": 27,
       "olPass": 27,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 25,
       "sosRB": 1,
       "sosWRTE": 10,
       "sosQB": 1,
@@ -468,7 +522,10 @@
         "stabilityScore": -0.5
       },
       "defense": {
-        "overallScore": -0.3
+        "overallScore": -0.323,
+        "pointsAllowedProjection": 25.4118,
+        "sourceRank": 25,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.35,
@@ -480,7 +537,7 @@
       "olRun": 25,
       "olPass": 25,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 24,
       "sosRB": 13,
       "sosWRTE": 6,
       "sosQB": 11,
@@ -493,7 +550,10 @@
         "stabilityScore": 0.35
       },
       "defense": {
-        "overallScore": 0.05
+        "overallScore": -0.257,
+        "pointsAllowedProjection": 24.9412,
+        "sourceRank": 24,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.22,
@@ -505,7 +565,7 @@
       "olRun": 9,
       "olPass": 9,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 7,
       "sosRB": 25,
       "sosWRTE": 26,
       "sosQB": 26,
@@ -518,7 +578,10 @@
         "stabilityScore": -0.1
       },
       "defense": {
-        "overallScore": 0.28
+        "overallScore": 0.497,
+        "pointsAllowedProjection": 19.5882,
+        "sourceRank": 7,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.15,
@@ -530,7 +593,7 @@
       "olRun": 14,
       "olPass": 14,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 3,
       "sosRB": 4,
       "sosWRTE": 6,
       "sosQB": 10,
@@ -543,7 +606,10 @@
         "stabilityScore": -0.2
       },
       "defense": {
-        "overallScore": -0.15
+        "overallScore": 0.74,
+        "pointsAllowedProjection": 17.8571,
+        "sourceRank": 3,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.22,
@@ -555,7 +621,7 @@
       "olRun": 11,
       "olPass": 11,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 14,
       "sosRB": 32,
       "sosWRTE": 16,
       "sosQB": 21,
@@ -568,7 +634,10 @@
         "stabilityScore": -0.35
       },
       "defense": {
-        "overallScore": -0.18
+        "overallScore": 0.083,
+        "pointsAllowedProjection": 22.5294,
+        "sourceRank": 14,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.2,
@@ -580,7 +649,7 @@
       "olRun": 18,
       "olPass": 18,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 26,
       "sosRB": 23,
       "sosWRTE": 29,
       "sosQB": 28,
@@ -593,7 +662,10 @@
         "stabilityScore": -0.45
       },
       "defense": {
-        "overallScore": -0.4
+        "overallScore": -0.381,
+        "pointsAllowedProjection": 25.8235,
+        "sourceRank": 26,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.42,
@@ -605,7 +677,7 @@
       "olRun": 16,
       "olPass": 16,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 31,
       "sosRB": 5,
       "sosWRTE": 9,
       "sosQB": 2,
@@ -618,7 +690,10 @@
         "stabilityScore": -0.25
       },
       "defense": {
-        "overallScore": 0.6
+        "overallScore": -0.911,
+        "pointsAllowedProjection": 29.5882,
+        "sourceRank": 31,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.33,
@@ -630,7 +705,7 @@
       "olRun": 2,
       "olPass": 2,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 6,
       "sosRB": 27,
       "sosWRTE": 32,
       "sosQB": 32,
@@ -643,7 +718,10 @@
         "stabilityScore": 0.85
       },
       "defense": {
-        "overallScore": 0.42
+        "overallScore": 0.533,
+        "pointsAllowedProjection": 19.3333,
+        "sourceRank": 6,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.5,
@@ -655,7 +733,7 @@
       "olRun": 24,
       "olPass": 24,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 17,
       "sosRB": 14,
       "sosWRTE": 12,
       "sosQB": 8,
@@ -668,7 +746,10 @@
         "stabilityScore": 0.05
       },
       "defense": {
-        "overallScore": 0.48
+        "overallScore": -0.007,
+        "pointsAllowedProjection": 23.1667,
+        "sourceRank": 17,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.27,
@@ -680,7 +761,7 @@
       "olRun": 13,
       "olPass": 13,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 1,
       "sosRB": 30,
       "sosWRTE": 21,
       "sosQB": 20,
@@ -693,7 +774,10 @@
         "stabilityScore": 0.15
       },
       "defense": {
-        "overallScore": 0.12
+        "overallScore": 0.875,
+        "pointsAllowedProjection": 16.9,
+        "sourceRank": 1,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.13,
@@ -705,7 +789,7 @@
       "olRun": 15,
       "olPass": 15,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 15,
       "sosRB": 11,
       "sosWRTE": 8,
       "sosQB": 5,
@@ -718,7 +802,10 @@
         "stabilityScore": 0.65
       },
       "defense": {
-        "overallScore": 0.52
+        "overallScore": 0.061,
+        "pointsAllowedProjection": 22.6842,
+        "sourceRank": 15,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.53,
@@ -730,7 +817,7 @@
       "olRun": 8,
       "olPass": 8,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 20,
       "sosRB": 12,
       "sosWRTE": 11,
       "sosQB": 9,
@@ -743,7 +830,10 @@
         "stabilityScore": 0.45
       },
       "defense": {
-        "overallScore": 0.08
+        "overallScore": -0.149,
+        "pointsAllowedProjection": 24.1765,
+        "sourceRank": 20,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.13,
@@ -755,7 +845,7 @@
       "olRun": 32,
       "olPass": 32,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 28,
       "sosRB": 24,
       "sosWRTE": 30,
       "sosQB": 30,
@@ -768,7 +858,10 @@
         "stabilityScore": -0.3
       },
       "defense": {
-        "overallScore": -0.28
+        "overallScore": -0.704,
+        "pointsAllowedProjection": 28.1176,
+        "sourceRank": 28,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": -0.3,
@@ -780,7 +873,7 @@
       "olRun": 23,
       "olPass": 23,
       "qbStrength": 16,
-      "defStrength": 16,
+      "defStrength": 27,
       "sosRB": 26,
       "sosWRTE": 15,
       "sosQB": 19,
@@ -793,7 +886,10 @@
         "stabilityScore": 0.55
       },
       "defense": {
-        "overallScore": -0.12
+        "overallScore": -0.481,
+        "pointsAllowedProjection": 26.5294,
+        "sourceRank": 27,
+        "source": "TeamRankings opponent points per game"
       },
       "expectedGameScript": {
         "leadProbabilityScore": 0.1,
@@ -801,5 +897,11 @@
         "source": "local-normalized-fixture"
       }
     }
+  },
+  "defenseSource": {
+    "provider": "TeamRankings",
+    "metric": "Opponent points per game",
+    "url": "https://www.teamrankings.com/nfl/stat/opponent-points-per-game",
+    "note": "Lower opponent points per game is treated as stronger defense, normalized with capped z-scores to the V3 -1..1 range."
   }
 }
