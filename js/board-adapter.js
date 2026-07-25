@@ -66,22 +66,30 @@ function buildAdpFromMarketOrFallback(adpRow, player, rankingRow) {
   };
 }
 
-export function buildV3BoardRows({ rankings = [], projections = [], adp = [], teamContext = null, historical = null } = {}, scoring, leagueSettings, contextWeights = {}) {
+export function buildV3BoardRows({ rankings = [], projections = [], adp = [], playerMetadata = [], teamContext = null, historical = null } = {}, scoring, leagueSettings, contextWeights = {}) {
   const projectionIndex = indexRows(projections);
   const adpIndex = indexRows(adp);
+  const metadataIndex = indexRows(playerMetadata);
 
   const players = rankings.map((rankingRow) => {
     const projectionRow = findMatch(projectionIndex, rankingRow);
     const adpRow = findMatch(adpIndex, rankingRow);
-    const player = createEmptyPlayer({ ...rankingRow, ...(adpRow || {}) });
+    const metadataRow = findMatch(metadataIndex, rankingRow);
+    const player = createEmptyPlayer({ ...(metadataRow || {}), ...rankingRow, ...(adpRow || {}) });
     const adpValue = buildAdpFromMarketOrFallback(adpRow, player, rankingRow);
     return {
       ...player,
+      sourceIds: {
+        ...(player.sourceIds || {}),
+        ...(metadataRow?.sourceIds || {}),
+      },
       projections: projectionRow?.projections || null,
       adp: adpValue,
+      metadataSource: metadataRow?.metadataSource || [],
       v3Status: {
         hasProjection: Boolean(projectionRow?.projections),
         hasAdp: Boolean(adpRow),
+        hasMetadata: Boolean(metadataRow),
         warnings: [
           ...(projectionRow?.projections ? [] : ['Projection missing; V3 score falls back to market/context components.']),
           ...(adpRow ? [] : [adpValue.overall
@@ -178,6 +186,7 @@ export function buildV3BoardRows({ rankings = [], projections = [], adp = [], te
       nextPick: player.draft?.nextPick,
       audit: player.audit || null,
       projectionSource: player.audit?.projectionSource || 'unknown',
+      metadataSource: player.metadataSource || [],
       warnings: player.v3Status?.warnings || [],
     },
   }));

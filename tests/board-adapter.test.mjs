@@ -59,6 +59,28 @@ test('uses loaded ADP ahead of consensus fallback when available', () => {
   assert.equal(row.v3Row.adpPlatform, 'Yahoo');
 });
 
+test('enriches V3 players from player metadata feed', () => {
+  const [row] = buildV3BoardRows({
+    rankings: [{ name: 'Metadata Player', team: 'BUF', position: 'QB', rank: 10 }],
+    playerMetadata: [{
+      name: 'Metadata Player',
+      team: 'BUF',
+      position: 'QB',
+      byeWeek: 7,
+      sourceIds: { yahoo: 'yahoo-123', sleeper: 'sleeper-456' },
+      metadataSource: ['rankings', 'adp'],
+    }],
+    projections: [{ name: 'Metadata Player', team: 'BUF', position: 'QB', projections: { passing: { yards: 4000, touchdowns: 30 } } }],
+    adp: [],
+  }, undefined, leagueSettings);
+
+  assert.equal(row.byeWeek, 7);
+  assert.equal(row.v3Status.hasMetadata, true);
+  assert.equal(row.sourceIds.yahoo, 'yahoo-123');
+  assert.equal(row.sourceIds.sleeper, 'sleeper-456');
+  assert.deepEqual(row.v3Row.metadataSource, ['rankings', 'adp']);
+});
+
 test('prefers later Yahoo projection rows over earlier fallback projections for the same player', () => {
   const [row] = buildV3BoardRows({
     rankings: [{ name: 'Yahoo Preferred Back', team: 'DET', position: 'RB', rank: 1 }],

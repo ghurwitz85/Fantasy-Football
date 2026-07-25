@@ -562,11 +562,12 @@ async function renderV3BoardPreview() {
   if (!target) return;
 
   try {
-    const [rankingsPayload, projectionsPayload, yahooProjectionsPayload, adpPayload, teamContextPayload, historicalPayload] = await Promise.all([
+    const [rankingsPayload, projectionsPayload, yahooProjectionsPayload, adpPayload, playerMetadataPayload, teamContextPayload, historicalPayload] = await Promise.all([
       loadJson('data/rankings.json'),
       loadJson('data/projections.json'),
       loadJson('data/yahoo-projections-2026.json').catch(() => ({ players: [] })),
       loadJson('data/adp.json'),
+      loadJson('data/players.json').catch(() => ({ players: [] })),
       loadJson('data/team-context.json'),
       loadJson('data/yahoo-history-2025.json'),
     ]);
@@ -576,6 +577,7 @@ async function renderV3BoardPreview() {
       rankings: rows(rankingsPayload),
       projections: [...v3CachedProjections, ...v3ImportedProjections],
       adp: [...v3CachedAdp, ...v3ImportedAdp],
+      playerMetadata: rows(playerMetadataPayload),
       teamContext: teamContextPayload,
       historical: historicalPayload,
     };
