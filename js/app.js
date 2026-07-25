@@ -355,10 +355,16 @@ function exportCurrentV3Board() {
   const headers = [
     'Personal Rank', 'Player', 'Team', 'Position', 'Consensus Rank', 'ADP', 'ADP Source',
     'Adjusted Projection', 'Base Projection', 'Replacement Baseline', 'VORP', 'Final Draft Score',
-    'Availability Next Pick', 'Draft Urgency', 'Projection Source', 'Archetype', 'Warnings',
+    'Availability Next Pick', 'Draft Urgency', 'Projection Source', 'Archetype',
+    'Run Blocking Adjustment', 'Pass Protection Adjustment', 'Receiver Protection Adjustment',
+    'QB Environment Adjustment', 'Schedule Adjustment', 'Game Script Adjustment',
+    'Risk Adjustment', 'History Calibration', 'Context Cap Applied', 'Context Cap Percent', 'Warnings',
   ];
   const rowsToExport = sortV3BoardForView(board, 'main').map((player) => {
     const row = player.v3Row || {};
+    const audit = row.audit || {};
+    const adjustments = audit.adjustments || {};
+    const contextCap = audit.contextCap || null;
     const warnings = [...(row.warnings || []), ...(row.audit?.warnings || []), ...(player.v3PreferenceAudit || [])];
     return [
       row.personalRank,
@@ -377,6 +383,16 @@ function exportCurrentV3Board() {
       formatNumber(row.draftUrgency, 2),
       row.projectionSource,
       row.archetype,
+      formatNumber(adjustments.runBlocking, 2),
+      formatNumber(adjustments.passProtection, 2),
+      formatNumber(adjustments.receiverPassProtection, 2),
+      formatNumber(adjustments.qbEnvironment, 2),
+      formatNumber(adjustments.schedule, 2),
+      formatNumber(adjustments.gameScript, 2),
+      formatNumber(adjustments.risk, 2),
+      formatNumber(adjustments.historyCalibration, 2),
+      contextCap ? (contextCap.applied ? 'yes' : 'no') : '',
+      contextCap ? formatNumber(contextCap.totalPct * 100, 2) : '',
       warnings.join(' '),
     ];
   });
