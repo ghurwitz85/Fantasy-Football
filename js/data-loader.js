@@ -10,16 +10,18 @@ export async function loadV3StatusData() {
   const entries = await Promise.allSettled([
     loadJson('data/rankings.json'),
     loadJson('data/projections.json'),
+    loadJson('data/yahoo-projections-2026.json'),
     loadJson('data/adp.json'),
     loadJson('data/team-context.json'),
     loadJson('data/yahoo-history-2025.json'),
     loadJson('data/metadata.json'),
   ]);
 
-  const [rankings, projections, adp, teamContext, yahooHistory, metadata] = entries;
+  const [rankings, projections, yahooProjections, adp, teamContext, yahooHistory, metadata] = entries;
   return {
     rankings: summarizePlayers(rankings),
     projections: summarizePlayers(projections),
+    yahooProjections: summarizePlayers(yahooProjections),
     adp: summarizePlayers(adp),
     teamContext: summarizeTeams(teamContext),
     yahooHistory: summarizePlayers(yahooHistory),

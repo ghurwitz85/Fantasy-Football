@@ -4,6 +4,7 @@
   "feeds": {
     "rankings": { "status": "loaded", "path": "data/rankings.json" },
     "projections": { "status": "fixture", "path": "data/projections.json" },
+    "yahooProjections": { "status": "loaded", "path": "data/yahoo-projections-2026.json" },
     "adp": { "status": "fixture", "path": "data/adp.json" },
     "teamContext": { "status": "partial", "path": "data/team-context.json" },
     "yahooHistory": { "status": "loaded", "path": "data/yahoo-history-2025.json" }

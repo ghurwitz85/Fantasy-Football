@@ -59,6 +59,21 @@ test('uses loaded ADP ahead of consensus fallback when available', () => {
   assert.equal(row.v3Row.adpPlatform, 'Yahoo');
 });
 
+test('prefers later Yahoo projection rows over earlier fallback projections for the same player', () => {
+  const [row] = buildV3BoardRows({
+    rankings: [{ name: 'Yahoo Preferred Back', team: 'DET', position: 'RB', rank: 1 }],
+    projections: [
+      { name: 'Yahoo Preferred Back', team: 'DET', position: 'RB', projectionSource: 'consensus-derived-fixture', projections: { rushing: { yards: 100, touchdowns: 0 } } },
+      { name: 'Yahoo Preferred Back', team: 'DET', position: 'RB', projectionSource: 'yahoo-2026-export', projections: { rushing: { yards: 200, touchdowns: 0 } } },
+    ],
+    adp: [],
+  }, undefined, leagueSettings);
+
+  assert.equal(row.v3Status.hasProjection, true);
+  assert.equal(row.projections.rushing.yards, 200);
+  assert.equal(row.v3Row.baseProjection, 20);
+});
+
 test('uses normalized name matching across apostrophe variants', () => {
   const [row] = buildV3BoardRows({
     rankings: [{ name: "Ja'Marr Chase", team: 'CIN', position: 'WR', rank: 1 }],

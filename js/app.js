@@ -88,7 +88,8 @@ async function renderV3Status() {
     const refresh = status.metadata?.lastSuccessfulRefresh || 'unknown refresh time';
     target.innerHTML = `
       ${card('Consensus rankings', status.rankings)}
-      ${card('Projections', status.projections, ' — actively used by V3 engines')}
+      ${card('Yahoo 2026 projections', status.yahooProjections, ' — preferred V3 stat projection feed')}
+      ${card('Fallback projections', status.projections, ' — used only when Yahoo is missing a player')}
       ${card('ADP', status.adp)}
       ${card('Team context', status.teamContext, ' — normalized QB, defense, and game-script data active')}
       ${teamEnvironmentCard(status.teamContext)}
@@ -551,14 +552,15 @@ async function renderV3BoardPreview() {
   if (!target) return;
 
   try {
-    const [rankingsPayload, projectionsPayload, adpPayload, teamContextPayload, historicalPayload] = await Promise.all([
+    const [rankingsPayload, projectionsPayload, yahooProjectionsPayload, adpPayload, teamContextPayload, historicalPayload] = await Promise.all([
       loadJson('data/rankings.json'),
       loadJson('data/projections.json'),
+      loadJson('data/yahoo-projections-2026.json').catch(() => ({ players: [] })),
       loadJson('data/adp.json'),
       loadJson('data/team-context.json'),
       loadJson('data/yahoo-history-2025.json'),
     ]);
-    v3CachedProjections = rows(projectionsPayload);
+    v3CachedProjections = [...rows(projectionsPayload), ...rows(yahooProjectionsPayload)];
     v3CachedAdp = rows(adpPayload);
     v3RawPayloads = {
       rankings: rows(rankingsPayload),

@@ -76,6 +76,19 @@ for(const [position,minimum] of Object.entries({QB:2,RB:2,WR:2,TE:2})) {
   if((projectionCounts[position]||0)<minimum) throw new Error(`projections.json needs at least ${minimum} ${position} projections`);
 }
 
+const yahooProjections = rows(await readJson('../data/yahoo-projections-2026.json'));
+if(!Array.isArray(yahooProjections)||yahooProjections.length<100) throw new Error('yahoo-projections-2026.json needs at least 100 player projections');
+for(const [i,p] of yahooProjections.entries()) if(!p.name||!p.position||!p.projections||p.projectionSource!=='yahoo-2026-export') throw new Error(`Invalid Yahoo projection row ${i}`);
+validatePlayerIdentityRows('yahoo-projections-2026.json', yahooProjections, { allowFreeAgents: false });
+const yahooProjectionCounts = yahooProjections.reduce((counts,p) => {
+  const position = String(p.position||'').replace(/[0-9]/g,'').toUpperCase();
+  counts[position] = (counts[position]||0)+1;
+  return counts;
+}, {});
+for(const [position,minimum] of Object.entries({QB:12,RB:24,WR:36,TE:12})) {
+  if((yahooProjectionCounts[position]||0)<minimum) throw new Error(`yahoo-projections-2026.json needs at least ${minimum} ${position} projections`);
+}
+
 const adp = rows(await readJson('../data/adp.json'));
 if(!Array.isArray(adp)||adp.length<3) throw new Error('adp.json needs ADP rows');
 for(const [i,p] of adp.entries()) if(!p.name||!Number.isFinite(Number(p.adp))) throw new Error(`Invalid ADP row ${i}`);
@@ -87,8 +100,8 @@ for(const [i,p] of playerMetadata.entries()) if(!p.name||!p.team||!p.position) t
 validatePlayerIdentityRows('players.json', playerMetadata, { allowFreeAgents: false });
 
 const metadata = await readJson('../data/metadata.json');
-for(const key of ['rankings','projections','adp','teamContext','yahooHistory']) {
+for(const key of ['rankings','projections','yahooProjections','adp','teamContext','yahooHistory']) {
   if(!metadata.feeds?.[key]?.status) throw new Error(`metadata.json missing feed status for ${key}`);
 }
 
-console.log(`Validated ${players.length} rankings, ${Object.keys(teamRows).length} team contexts with normalized V3 scores, ${projections.length} projections (${Object.entries(projectionCounts).map(([pos,count])=>`${pos}:${count}`).join(', ')}), ${adp.length} ADP rows, and ${playerMetadata.length} player metadata rows.`);
+console.log(`Validated ${players.length} rankings, ${Object.keys(teamRows).length} team contexts with normalized V3 scores, ${projections.length} fallback projections (${Object.entries(projectionCounts).map(([pos,count])=>`${pos}:${count}`).join(', ')}), ${yahooProjections.length} Yahoo projections (${Object.entries(yahooProjectionCounts).map(([pos,count])=>`${pos}:${count}`).join(', ')}), ${adp.length} ADP rows, and ${playerMetadata.length} player metadata rows.`);
