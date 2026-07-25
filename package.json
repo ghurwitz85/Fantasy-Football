@@ -6,6 +6,7 @@
     "update-data": "node scripts/update-data.mjs",
     "import-adp": "node scripts/import-fantasypros-adp.mjs",
     "import-defense": "node scripts/import-team-defense-rankings.mjs",
+    "generate-players": "node scripts/generate-player-metadata.mjs",
     "validate": "node scripts/validate-data.mjs",
     "test": "node --test tests/*.test.mjs"
   }
