@@ -18,21 +18,31 @@ export async function loadV3StatusData() {
   ]);
 
   const [rankings, projections, yahooProjections, adp, teamContext, yahooHistory, metadata] = entries;
+  const metadataValue = metadata.status === 'fulfilled' ? metadata.value : null;
   return {
-    rankings: summarizePlayers(rankings),
-    projections: summarizePlayers(projections),
-    yahooProjections: summarizePlayers(yahooProjections),
-    adp: summarizePlayers(adp),
+    rankings: summarizePlayers(rankings, metadataValue?.feeds?.rankings),
+    projections: summarizePlayers(projections, metadataValue?.feeds?.projections),
+    yahooProjections: summarizePlayers(yahooProjections, metadataValue?.feeds?.yahooProjections),
+    adp: summarizePlayers(adp, metadataValue?.feeds?.adp),
     teamContext: summarizeTeams(teamContext),
-    yahooHistory: summarizePlayers(yahooHistory),
-    metadata: metadata.status === 'fulfilled' ? metadata.value : null,
+    yahooHistory: summarizePlayers(yahooHistory, metadataValue?.feeds?.yahooHistory),
+    metadata: metadataValue,
   };
 }
 
-function summarizePlayers(result) {
+export function summarizePlayers(result, feedMetadata = null) {
   if (result.status !== 'fulfilled') return { status: 'missing', count: 0 };
   const rows = result.value.players || result.value;
-  return { status: Array.isArray(rows) && rows.length ? 'loaded' : 'missing', count: Array.isArray(rows) ? rows.length : 0 };
+  const count = Array.isArray(rows) ? rows.length : 0;
+  const loaded = count > 0;
+  const metadataStatus = feedMetadata?.status;
+  return {
+    status: loaded ? (metadataStatus || 'loaded') : 'missing',
+    count,
+    path: feedMetadata?.path || null,
+    source: result.value.source || feedMetadata?.source || null,
+    directness: metadataStatus === 'derived' ? 'derived' : metadataStatus === 'fixture' ? 'fixture' : loaded ? 'direct-or-cached' : 'missing',
+  };
 }
 
 function summarizeTeams(result) {

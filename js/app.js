@@ -62,12 +62,22 @@ function rebuildV3BoardFromState() {
 
 function statusClass(status) {
   if (status === 'loaded') return 'ok';
-  if (status === 'partial' || status === 'fixture') return 'warn';
+  if (status === 'partial' || status === 'fixture' || status === 'derived') return 'warn';
   return 'error';
 }
 
 function card(label, summary, extra = '') {
-  return `<div class="v2-status-card"><strong class="${statusClass(summary.status)}">${summary.status}</strong><span>${label}: ${summary.count}${extra}</span></div>`;
+  const title = summary.source ? ` title="${escapeHtml(summary.source)}"` : '';
+  return `<div class="v2-status-card"><strong class="${statusClass(summary.status)}">${summary.status}</strong><span${title}>${label}: ${summary.count}${extra}</span></div>`;
+}
+
+function adpStatusCard(adp) {
+  const detail = adp.directness === 'derived'
+    ? ' — derived from FantasyPros ECR-vs-ADP; actively influences cost/availability but is not direct platform ADP'
+    : adp.directness === 'fixture'
+      ? ' — fixture/sample feed; cost and availability are approximate'
+      : ' — actively used for draft cost and next-pick availability';
+  return card('ADP', adp, detail);
 }
 
 function teamEnvironmentCard(teamContext) {
@@ -90,7 +100,7 @@ async function renderV3Status() {
       ${card('Consensus rankings', status.rankings)}
       ${card('Yahoo 2026 projections', status.yahooProjections, ' — preferred V3 stat projection feed')}
       ${card('Fallback projections', status.projections, ' — used only when Yahoo is missing a player')}
-      ${card('ADP', status.adp)}
+      ${adpStatusCard(status.adp)}
       ${card('Team context', status.teamContext, ' — normalized QB, defense, and game-script data active')}
       ${teamEnvironmentCard(status.teamContext)}
       ${card('Yahoo history', status.yahooHistory)}
