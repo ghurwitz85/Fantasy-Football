@@ -388,7 +388,11 @@
   <section id="automatic-data">
     <div class="panel">
       <h2 class="section-title">V3 projection engine status</h2>
-      <p class="hint">Version 3 core modules are now loaded alongside the existing board. They add standardized players, exact scoring, projection-first ranking components, replacement value, fixture projections, ADP, and validation. The current board UI remains available while V3 wiring is completed incrementally.</p>
+      <div class="notice-box">
+        <strong>App deployed:</strong> V3 live draft tooling — commit <code>5c8b9ee</code>. If you do not see Live Draft Mode above the main board, hard refresh with <code>Cmd + Shift + R</code> or add <code>?v=5c8b9ee</code> to the page URL.<br>
+        <strong>Data freshness is separate:</strong> the feed refresh date below reflects ranking/projection data, not when the website code was deployed.
+      </div>
+      <p class="hint">Version 3 core modules are now loaded alongside the existing board. They add standardized players, exact scoring, projection-first ranking components, replacement value, fixture projections, ADP, live draft tracking, and validation.</p>
       <div class="v2-status-grid" aria-label="V2 data status summary">
         <div class="v2-status-card"><strong id="rankingsCount">…</strong><span>rankings loaded</span></div>
         <div class="v2-status-card"><strong id="teamContextCount">…</strong><span>team context rows</span></div>
@@ -676,20 +680,6 @@
   <section id="v3-preview">
     <h2 class="section-title" style="margin-bottom:16px;">V3 projection-first preview</h2>
     <p class="hint" style="margin-top:-8px;">This preview uses the new V3 pipeline: cached consensus + fixture projections + ADP → league scoring → replacement value → normalized final draft score. The legacy board below remains available for comparison during the transition.</p>
-    <div class="panel" style="margin-bottom:12px;">
-      <h3 style="margin-top:0;">Live Draft Mode</h3>
-      <p class="hint">Mark players drafted as your draft progresses. The board removes drafted players, updates next-pick availability, highlights ADP outliers, and tracks your roster locally in this browser.</p>
-      <div class="grid-3">
-        <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
-        <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
-        <label>Current pick<input id="v3CurrentPick" type="number" min="1" value="1"></label>
-      </div>
-      <div class="btn-row" style="margin-top:12px;">
-        <button class="btn-ghost" id="v3DraftUndoBtn">Undo last draft pick</button>
-        <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
-      </div>
-      <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
-    </div>
     <span class="fetch-status" id="v3BoardPreviewStatus">Loading V3 board preview…</span>
     <div class="table-wrap panel" style="padding:0;margin-top:12px;">
       <table id="v3BoardPreviewTable">
@@ -714,6 +704,20 @@
 
   <section id="board">
     <h2 class="section-title" style="margin-bottom:16px;">Your board</h2>
+    <div class="panel" style="margin-bottom:16px;border-color:var(--gold);">
+      <h3 style="margin-top:0;color:var(--gold);">Live Draft Mode</h3>
+      <p class="hint">Draft-day controls are here. Without direct Yahoo live sync, use <strong>Drafted</strong> to remove players as they come off the board and <strong>My Pick</strong> for your selections. Next upgrade will add bulk Yahoo draft-results paste/import so you do not have to click every pick manually.</p>
+      <div class="grid-3">
+        <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
+        <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
+        <label>Current pick<input id="v3CurrentPick" type="number" min="1" value="1"></label>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="v3DraftUndoBtn">Undo last draft pick</button>
+        <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
+      </div>
+      <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
+    </div>
     <div class="btn-row" style="margin-bottom:16px;">
       <button class="btn-ghost" id="exportBtn">Export your board as CSV</button>
       <button class="btn-ghost" id="resetFlagsBtn">Clear all flags &amp; overrides</button>
@@ -1968,7 +1972,7 @@
   loadAutomaticData();
 })();
 </script>
-<script type="module" src="js/app.js?v=v3-local-20260722"></script>
+<script type="module" src="js/app.js?v=5c8b9ee-live-draft"></script>
 
 </body>
 </html>
