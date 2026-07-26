@@ -39,7 +39,7 @@ let v3ImportedAdp = [];
 let v3Preferences = loadV3Preferences();
 let v3DraftState = loadV3DraftState();
 const v3SortState = {
-  main: null,
+  main: { key: 'modeledStarterPoints', direction: 'desc' },
   preview: null,
 };
 let v3OwnsMainBoard = false;
@@ -238,6 +238,13 @@ function sortV3BoardForView(board = [], tableName = 'main') {
   });
 }
 
+function simulationImpactLabel(pointsVsBest) {
+  const delta = Number(pointsVsBest);
+  if (!Number.isFinite(delta)) return 'not modeled';
+  if (Math.abs(delta) < 0.05) return 'Best modeled roster path';
+  return `${formatSigned(delta, 1)} starter pts vs best modeled roster path`;
+}
+
 function updateV3SortHeaders() {
   document.querySelectorAll('[data-v3-main-sort], [data-v3-preview-sort]').forEach((header) => {
     const tableName = header.dataset.v3MainSort ? 'main' : 'preview';
@@ -303,7 +310,7 @@ function renderV3MainBoard(board) {
       <td>${row.consensusRank || '—'}</td>
       <td title="Big-play bonus: ${formatNumber(bigPlayBonus, 1)} pts${bigPlay ? ` at ${formatNumber(bigPlay.confidence * 100, 0)}% confidence; confidence adjustment ${formatSigned(bigPlayConfidenceAdjustment, 1)} pts` : ''}">${formatNumber(row.adjustedProjection, 1)}</td>
       <td class="delta ${row.vorp >= 0 ? 'up' : 'down'}">${row.vorp >= 0 ? '+' : ''}${formatNumber(row.vorp, 1)}</td>
-      <td title="Modeled final starter points if this is your current pick. ${escapeHtml(simulation.explanation || '')}">${formatNumber(row.modeledStarterPoints, 1)} <span class="player-meta">${Number.isFinite(row.modeledPointsVsBest) ? formatSigned(row.modeledPointsVsBest, 1) : ''}</span></td>
+      <td title="Modeled final starter points if this is your current pick. ${escapeHtml(simulation.explanation || '')}">${formatNumber(row.modeledStarterPoints, 1)} <span class="player-meta">${escapeHtml(simulationImpactLabel(row.modeledPointsVsBest))}</span></td>
       <td class="delta up">${formatNumber(row.finalDraftScore, 3)}</td>
       <td><span class="player-meta" title="${escapeHtml(warningText)}">${escapeHtml(row.recommendation || player.draft?.recommendation || 'Active')}${row.isOutlierValue ? ' · value' : ''}${warnings.length ? ` · ${warnings.length} warning(s)` : ''}${preferenceAudit.length ? ` · ${preferenceAudit.length} pref` : ''}</span></td>
       <td><input type="number" class="override-input v3-override-input" data-pref-key="${escapeHtml(key)}" min="1" placeholder="#" value="${pref.overrideRank || ''}" title="Set a V3 manual override rank."></td>
@@ -343,7 +350,7 @@ function renderV3MainBoard(board) {
           Draft urgency score: ${formatNumber(row.draftUrgency, 1)}<br>
           Value versus ADP: ${formatSigned(row.valueVsAdp, 0)} pick(s)<br>
           Live draft hints: ${liveDraftHints.length ? escapeHtml(liveDraftHints.join('; ')) : 'No strong roster/tier signal'}<br>
-          Modeled final starter points if drafted now: ${formatNumber(row.modeledStarterPoints, 1)}${Number.isFinite(row.modeledPointsVsBest) ? ` (${formatSigned(row.modeledPointsVsBest, 1)} vs best modeled path)` : ''}<br>
+          Modeled final starter points if drafted now: ${formatNumber(row.modeledStarterPoints, 1)} (${escapeHtml(simulationImpactLabel(row.modeledPointsVsBest))})<br>
           ${simulation.explanation ? `Simulation: ${escapeHtml(simulation.explanation)}<br>` : ''}
           ${simulationPath ? `Modeled path: ${escapeHtml(simulationPath)}<br>` : ''}
           ${lineupSummary ? `Modeled starters: ${escapeHtml(lineupSummary)}<br>` : ''}
@@ -412,15 +419,21 @@ function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
   }, {})).slice(0, 5);
   const recommendedLine = recommended
     ? `<div style="font-size:18px;margin:8px 0;"><strong style="color:var(--gold);">Recommended now:</strong> ${escapeHtml(recommended.name)} (${escapeHtml(recommended.position || recommended.v3Row?.position || '')}) · ${formatNumber(recommended.draft?.strategy?.pointsMaximizingScore, 1)} strategy score</div>
-       <div><strong>Modeled final starters:</strong> ${formatNumber(recommended.draft?.simulation?.projectedStarterPoints, 1)} pts${Number.isFinite(recommended.draft?.simulation?.pointsVsBest) ? ` · ${formatSigned(recommended.draft.simulation.pointsVsBest, 1)} vs best modeled path` : ''}</div>
+       <div><strong>Modeled final starters:</strong> ${formatNumber(recommended.draft?.simulation?.projectedStarterPoints, 1)} pts · ${escapeHtml(simulationImpactLabel(recommended.draft?.simulation?.pointsVsBest))}</div>
        <div><strong>Why:</strong> ${escapeHtml(recommended.draft?.simulation?.explanation || recommended.draft?.strategy?.explanation || 'Best projected live-draft roster fit.')}</div>`
     : '<div><strong>Recommended now:</strong> No available players.</div>';
-  const alternativeSummary = alternatives.map((player) => `${player.position || player.v3Row?.position}: ${player.name} (${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} pts, ${formatSigned(player.draft?.simulation?.pointsVsBest, 1)})`).join(' · ');
+  const simulatedPathSteps = recommended?.draft?.simulation?.path?.slice(0, 6) || [];
+  const simulatedPath = simulatedPathSteps.join(' → ');
+  const simulatedPathDetails = simulatedPath
+    ? `<details style="margin:6px 0;"><summary><strong>Simulated path</strong> <span class="player-meta">next ${simulatedPathSteps.length} modeled picks</span></summary><div class="player-meta" style="margin-top:4px;">${escapeHtml(simulatedPath)}</div></details>`
+    : '';
+  const alternativeSummary = alternatives.map((player) => `${player.position || player.v3Row?.position}: ${player.name} (${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} pts, ${simulationImpactLabel(player.draft?.simulation?.pointsVsBest)})`).join(' · ');
   const topTargets = strategySorted.slice(0, 5).map((player) => `${player.name} (${player.position}, ${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} modeled pts)`).join('; ');
   target.innerHTML = `
     <strong>Pick ${v3DraftState.currentPick}</strong> · ${v3DraftState.picks.length} drafted · ${liveBoard.length}/${fullBoard.length} available<br>
     <strong>Your roster:</strong> ${escapeHtml(rosterSummary)}<br>
     ${recommendedLine}
+    ${simulatedPathDetails}
     <strong>Best by position:</strong> ${escapeHtml(alternativeSummary || 'No alternatives yet')}<br>
     <strong>Top strategy targets:</strong> ${escapeHtml(topTargets || 'No available players yet')}
   `;
