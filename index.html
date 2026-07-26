@@ -676,6 +676,20 @@
   <section id="v3-preview">
     <h2 class="section-title" style="margin-bottom:16px;">V3 projection-first preview</h2>
     <p class="hint" style="margin-top:-8px;">This preview uses the new V3 pipeline: cached consensus + fixture projections + ADP → league scoring → replacement value → normalized final draft score. The legacy board below remains available for comparison during the transition.</p>
+    <div class="panel" style="margin-bottom:12px;">
+      <h3 style="margin-top:0;">Live Draft Mode</h3>
+      <p class="hint">Mark players drafted as your draft progresses. The board removes drafted players, updates next-pick availability, highlights ADP outliers, and tracks your roster locally in this browser.</p>
+      <div class="grid-3">
+        <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
+        <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
+        <label>Current pick<input id="v3CurrentPick" type="number" min="1" value="1"></label>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="v3DraftUndoBtn">Undo last draft pick</button>
+        <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
+      </div>
+      <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
+    </div>
     <span class="fetch-status" id="v3BoardPreviewStatus">Loading V3 board preview…</span>
     <div class="table-wrap panel" style="padding:0;margin-top:12px;">
       <table id="v3BoardPreviewTable">
@@ -738,6 +752,7 @@
   const STORAGE_KEY = "theboard_state_v2";
   const el = (id) => document.getElementById(id);
   const V3_PREFERENCES_KEY = "theboard_state_v3_preferences";
+  const V3_DRAFT_STATE_KEY = "theboard_state_v3_live_draft";
   const RECOMMENDED_ACCURACY_PRESET = {
     scarcitySlider: 45,
     riskSlider: 40,
@@ -969,6 +984,7 @@
   function resetSavedLocalSettings(){
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(V3_PREFERENCES_KEY);
+    localStorage.removeItem(V3_DRAFT_STATE_KEY);
     const status = el("presetStatus");
     if(status){
       status.textContent = "Saved settings cleared. Reloading with code defaults…";
@@ -1649,6 +1665,7 @@
   }
 
   function render(){
+    if(window.__v3OwnsMainBoard) return;
     const body = el("boardBody");
     if(!players.length){
       body.innerHTML = `<tr><td colspan="9"><div class="empty-state">No rankings loaded yet — load at least one source above to build your board.</div></td></tr>`;

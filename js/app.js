@@ -1,6 +1,14 @@
 import { buildV3BoardRows } from './board-adapter.js';
 import { loadJson, loadV3StatusData } from './data-loader.js';
 import {
+  createDraftState,
+  draftPlayer,
+  prepareLiveDraftBoard,
+  resetDraftState,
+  rosterCountsByPosition,
+  undoLastPick,
+} from './draft-state-engine.js';
+import {
   adpCsvTextToV3,
   applyV3Preferences,
   buildV3ContextWeightsFromFormValues,
@@ -12,6 +20,7 @@ import {
 } from './v3-user-state.js';
 
 const V3_PREFERENCES_KEY = 'theboard_state_v3_preferences';
+const V3_DRAFT_STATE_KEY = 'theboard_state_v3_live_draft';
 const FORM_VALUE_IDS = [
   's_passYdsPerPt', 's_passTD', 's_int', 's_rushYdsPerPt', 's_rushTD', 's_rec',
   's_recYdsPerPt', 's_recTD', 's_fumLost', 's_pass40', 's_rush40', 's_rec40',
@@ -26,6 +35,7 @@ let v3ImportedProjections = [];
 let v3CachedAdp = [];
 let v3ImportedAdp = [];
 let v3Preferences = loadV3Preferences();
+let v3DraftState = loadV3DraftState();
 const v3SortState = {
   main: null,
   preview: null,
@@ -42,6 +52,30 @@ function loadV3Preferences() {
   } catch (_) {
     return {};
   }
+}
+
+function loadV3DraftState() {
+  try {
+    return createDraftState(JSON.parse(localStorage.getItem(V3_DRAFT_STATE_KEY) || '{}'));
+  } catch (_) {
+    return createDraftState();
+  }
+}
+
+function saveV3DraftState() {
+  localStorage.setItem(V3_DRAFT_STATE_KEY, JSON.stringify(v3DraftState));
+}
+
+function syncDraftStateFromControls() {
+  const teams = Number(document.getElementById('v3DraftTeams')?.value || document.getElementById('numTeams')?.value || v3DraftState.teams || 12);
+  const userDraftSlot = Number(document.getElementById('v3DraftSlot')?.value || v3DraftState.userDraftSlot || 1);
+  const currentPick = Number(document.getElementById('v3CurrentPick')?.value || v3DraftState.currentPick || 1);
+  v3DraftState = createDraftState({ ...v3DraftState, teams, userDraftSlot, currentPick });
+  saveV3DraftState();
+}
+
+function playerById(board = [], playerId = '') {
+  return board.find((player) => String(player.playerId) === String(playerId));
 }
 
 function saveV3Preferences() {
@@ -207,6 +241,7 @@ function renderV3MainBoard(board) {
   const body = document.getElementById('boardBody');
   if (!body || !Array.isArray(board) || !board.length) return;
   v3OwnsMainBoard = true;
+  window.__v3OwnsMainBoard = true;
 
   body.innerHTML = sortV3BoardForView(board, 'main').slice(0, 250).map((player) => {
     const row = player.v3Row;
@@ -226,22 +261,29 @@ function renderV3MainBoard(board) {
     const bigPlayConfidenceAdjustment = adjustments.bigPlayConfidenceAdjustment;
     const projectionLabel = projectionSourceLabel(row.projectionSource);
     const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'Consensus fallback ADP' : 'ADP missing';
+    const liveDraftHints = [
+      row.rosterNeed,
+      row.bestAvailableAtPosition ? `Best available ${row.position}` : '',
+      row.dropoffLabel,
+    ].filter(Boolean);
     const whyId = `why-${escapeHtml(player.playerId)}`;
     return `<tr data-id="${escapeHtml(player.playerId)}">
       <td class="rank-num">${row.personalRank}</td>
       <td>
+        <button class="flag-btn v3-draft-player" data-player-id="${escapeHtml(player.playerId)}" title="Mark player drafted by the team currently on the clock">Drafted</button>
+        <button class="flag-btn v3-my-pick" data-player-id="${escapeHtml(player.playerId)}" title="Draft this player to your roster">My Pick</button>
         <button class="flag-btn v3-injury-toggle ${pref.injuryFlag ? 'active-injury' : ''}" data-pref-key="${escapeHtml(key)}" title="Toggle V3 injury penalty">INJ</button>
         <button class="flag-btn v3-rookie-toggle ${pref.rookieFlag ? 'active-rookie' : ''}" data-pref-key="${escapeHtml(key)}" title="Toggle V3 rookie preference">ROK</button>
         <button class="flag-btn v3-why-toggle" data-why-id="${whyId}" title="Show V3 explanation">why</button>
         <div class="player-name" style="display:inline;">${escapeHtml(row.name)}</div>
-          <div class="player-meta">${escapeHtml(row.team || '')} · ${projectionLabel} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} pts @ ${formatNumber(bigPlay.confidence * 100, 0)}% (${formatSigned(bigPlayConfidenceAdjustment, 1)})` : ''}</div>
+          <div class="player-meta">${escapeHtml(row.team || '')} · ${escapeHtml(row.recommendation || player.draft?.recommendation || 'Watchlist')}${row.isOutlierValue ? ' · outlier target' : ''}${liveDraftHints.length ? ` · ${escapeHtml(liveDraftHints.join(' · '))}` : ''} · ${projectionLabel} · ${escapeHtml(adpLabel)}${bigPlay ? ` · BP ${formatNumber(bigPlayBonus, 1)} pts @ ${formatNumber(bigPlay.confidence * 100, 0)}% (${formatSigned(bigPlayConfidenceAdjustment, 1)})` : ''}</div>
       </td>
       <td><span class="pos-chip pos-${escapeHtml(row.position)}">${escapeHtml(row.position)}</span></td>
       <td>${row.consensusRank || '—'}</td>
       <td title="Big-play bonus: ${formatNumber(bigPlayBonus, 1)} pts${bigPlay ? ` at ${formatNumber(bigPlay.confidence * 100, 0)}% confidence; confidence adjustment ${formatSigned(bigPlayConfidenceAdjustment, 1)} pts` : ''}">${formatNumber(row.adjustedProjection, 1)}</td>
       <td class="delta ${row.vorp >= 0 ? 'up' : 'down'}">${row.vorp >= 0 ? '+' : ''}${formatNumber(row.vorp, 1)}</td>
       <td class="delta up">${formatNumber(row.finalDraftScore, 3)}</td>
-      <td><span class="player-meta" title="${escapeHtml(warningText)}">${warnings.length ? `${warnings.length} warning(s)` : 'Active'}${preferenceAudit.length ? ` · ${preferenceAudit.length} pref` : ''}</span></td>
+      <td><span class="player-meta" title="${escapeHtml(warningText)}">${escapeHtml(row.recommendation || player.draft?.recommendation || 'Active')}${row.isOutlierValue ? ' · value' : ''}${warnings.length ? ` · ${warnings.length} warning(s)` : ''}${preferenceAudit.length ? ` · ${preferenceAudit.length} pref` : ''}</span></td>
       <td><input type="number" class="override-input v3-override-input" data-pref-key="${escapeHtml(key)}" min="1" placeholder="#" value="${pref.overrideRank || ''}" title="Set a V3 manual override rank."></td>
     </tr>
     <tr id="${whyId}" class="v3-why-row" style="display:none;">
@@ -277,6 +319,9 @@ function renderV3MainBoard(board) {
           Historical calibration: ${formatSigned(adjustments.historyCalibration, 1)}<br>
           Chance available at pick ${formatNumber(row.nextPick, 0)}: ${formatNumber(row.availabilityProbability * 100, 0)}%<br>
           Draft urgency score: ${formatNumber(row.draftUrgency, 1)}<br>
+          Value versus ADP: ${formatSigned(row.valueVsAdp, 0)} pick(s)<br>
+          Live draft hints: ${liveDraftHints.length ? escapeHtml(liveDraftHints.join('; ')) : 'No strong roster/tier signal'}<br>
+          Recommendation: ${escapeHtml(row.recommendation || player.draft?.recommendation || 'Watchlist')}${row.isOutlierValue ? ' — outlier target versus ADP' : ''}<br>
           Replacement baseline: ${formatNumber(row.replacementBaseline, 1)}<br>
           VORP: ${row.vorp >= 0 ? '+' : ''}${formatNumber(row.vorp, 1)}<br>
           Final adjusted projection: ${formatNumber(row.adjustedProjection, 1)}<br>
@@ -302,12 +347,42 @@ function updateV3Preference(key, patch) {
 }
 
 function renderCurrentV3Board() {
-  const board = rebuildV3BoardFromState();
-  if (!board.length) return;
-  window.__v3Board = board;
-  renderV3MainBoard(board);
-  renderV3PreviewRows(board);
-  renderV3CoverageStatus(board);
+  const fullBoard = rebuildV3BoardFromState();
+  if (!fullBoard.length) return;
+  syncDraftInputsFromState();
+  const liveBoard = prepareLiveDraftBoard(fullBoard, v3DraftState, {
+    leagueSettings: buildV3LeagueSettingsFromFormValues(formValues()),
+  });
+  window.__v3FullBoard = fullBoard;
+  window.__v3Board = liveBoard;
+  renderV3DraftPanel(fullBoard, liveBoard);
+  renderV3MainBoard(liveBoard);
+  renderV3PreviewRows(liveBoard);
+  renderV3CoverageStatus(liveBoard);
+}
+
+function syncDraftInputsFromState() {
+  const teamsInput = document.getElementById('v3DraftTeams');
+  const slotInput = document.getElementById('v3DraftSlot');
+  const pickInput = document.getElementById('v3CurrentPick');
+  if (teamsInput) teamsInput.value = v3DraftState.teams;
+  if (slotInput) slotInput.value = v3DraftState.userDraftSlot;
+  if (pickInput) pickInput.value = v3DraftState.currentPick;
+}
+
+function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
+  const target = document.getElementById('v3DraftSummary');
+  if (!target) return;
+  const counts = rosterCountsByPosition(v3DraftState);
+  const rosterSummary = ['QB', 'RB', 'WR', 'TE', 'K', 'DST']
+    .map((position) => `${position}: ${counts[position] || 0}`)
+    .join(' · ');
+  const topTargets = liveBoard.slice(0, 5).map((player) => `${player.name} (${player.position}, ${player.draft?.recommendation || 'Watchlist'})`).join('; ');
+  target.innerHTML = `
+    <strong>Pick ${v3DraftState.currentPick}</strong> · ${v3DraftState.picks.length} drafted · ${liveBoard.length}/${fullBoard.length} available<br>
+    <strong>Your roster:</strong> ${escapeHtml(rosterSummary)}<br>
+    <strong>Top available targets:</strong> ${escapeHtml(topTargets || 'No available players yet')}
+  `;
 }
 
 function v3CoverageSummary(board = []) {
@@ -479,6 +554,42 @@ function handleV3AdpImport(text) {
 }
 
 document.addEventListener('click', (event) => {
+  const draftButton = event.target.closest?.('.v3-draft-player, .v3-my-pick');
+  if (draftButton) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const fullBoard = window.__v3FullBoard || rebuildV3BoardFromState();
+    const player = playerById(fullBoard, draftButton.dataset.playerId);
+    if (player) {
+      syncDraftStateFromControls();
+      v3DraftState = draftPlayer(v3DraftState, player, {
+        isUserPick: draftButton.classList.contains('v3-my-pick'),
+        teamNumber: draftButton.classList.contains('v3-my-pick') ? v3DraftState.userDraftSlot : undefined,
+      });
+      saveV3DraftState();
+      renderCurrentV3Board();
+    }
+    return;
+  }
+
+  const undoDraftButton = event.target.closest?.('#v3DraftUndoBtn');
+  if (undoDraftButton) {
+    event.preventDefault();
+    v3DraftState = undoLastPick(v3DraftState);
+    saveV3DraftState();
+    renderCurrentV3Board();
+    return;
+  }
+
+  const resetDraftButton = event.target.closest?.('#v3DraftResetBtn');
+  if (resetDraftButton) {
+    event.preventDefault();
+    v3DraftState = resetDraftState(v3DraftState);
+    saveV3DraftState();
+    renderCurrentV3Board();
+    return;
+  }
+
   const exportButton = event.target.closest?.('#exportBtn');
   if (exportButton && v3OwnsMainBoard) {
     event.preventDefault();
@@ -569,6 +680,13 @@ FORM_VALUE_IDS.forEach((id) => {
   });
 });
 
+['v3DraftTeams', 'v3DraftSlot', 'v3CurrentPick'].forEach((id) => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    syncDraftStateFromControls();
+    renderCurrentV3Board();
+  });
+});
+
 document.addEventListener('v3:preset-applied', () => {
   FORM_VALUE_IDS.forEach(updateSliderReadout);
   renderCurrentV3Board();
@@ -633,14 +751,8 @@ async function renderV3BoardPreview() {
       teamContext: teamContextPayload,
       historical: historicalPayload,
     };
-    const board = rebuildV3BoardFromState();
-    window.__v3Board = board;
-
-    renderV3PreviewRows(board);
-
-    renderV3CoverageStatus(board);
-    renderV3MainBoard(board);
-    setTimeout(() => renderV3MainBoard(board), 750);
+    renderCurrentV3Board();
+    setTimeout(() => renderCurrentV3Board(), 750);
   } catch (error) {
     target.innerHTML = `<tr><td colspan="8"><div class="empty-state">V3 preview unavailable: ${error.message}</div></td></tr>`;
     if (status) {
