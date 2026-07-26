@@ -203,6 +203,176 @@ function recommendationLabel({ draftUrgency = 0, valueVsAdp = 0, availabilityPro
   return 'Depth option';
 }
 
+function annotatePointsMaximizingStrategy(players = []) {
+  const bestByPosition = new Map();
+  players.forEach((player) => {
+    const position = positionOf(player);
+    const currentBest = bestByPosition.get(position);
+    if (!currentBest || projectionValue(player) > projectionValue(currentBest)) bestByPosition.set(position, player);
+  });
+
+  return players.map((player) => {
+    const projection = projectionValue(player);
+    const vorp = rowValue(player, 'vorp', rowValue(player, 'replacementValue', player.adjusted?.replacementValue || 0));
+    const rosterNeedScore = finite(player.draft?.rosterNeed?.score, 0);
+    const dropToNext = finite(player.draft?.tier?.dropToNext, 0);
+    const goneBeforeNextPick = finite(player.draft?.goneBeforeNextPick, 0.5);
+    const valueVsAdp = finite(player.draft?.valueVsAdp ?? (Number(player.adp?.overall) - rowValue(player, 'personalRank', 0)), 0);
+    const tierUrgency = dropToNext * Math.max(0.35, goneBeforeNextPick);
+    const availabilityRisk = Math.max(0, goneBeforeNextPick) * Math.max(0, vorp || projection * 0.25);
+    const rosterFitBonus = Math.max(0, vorp) * rosterNeedScore;
+    const valueBonus = Math.max(0, valueVsAdp) * 0.08;
+    const pointsMaximizingScore = Math.max(0, vorp) + tierUrgency + availabilityRisk + rosterFitBonus + valueBonus;
+    const position = positionOf(player);
+    const positionAlternative = bestByPosition.get(position);
+    const explanationParts = [
+      `${projection.toFixed(1)} projected pts`,
+      `${vorp >= 0 ? '+' : ''}${vorp.toFixed(1)} VORP`,
+    ];
+    if (dropToNext >= 6) explanationParts.push(`${dropToNext.toFixed(1)}-pt ${position} tier/dropoff edge`);
+    if (goneBeforeNextPick >= 0.6) explanationParts.push(`${Math.round(goneBeforeNextPick * 100)}% risk gone by next pick`);
+    if (player.draft?.rosterNeed?.level && player.draft.rosterNeed.level !== 'depth') explanationParts.push(player.draft.rosterNeed.label);
+
+    return {
+      ...player,
+      draft: {
+        ...(player.draft || {}),
+        strategy: {
+          projection,
+          pointsMaximizingScore,
+          tierUrgency,
+          availabilityRisk,
+          rosterFitBonus,
+          valueBonus,
+          isBestAtPosition: playerKey(positionAlternative) === playerKey(player),
+          explanation: explanationParts.join(' · '),
+        },
+      },
+      v3Row: player.v3Row ? {
+        ...player.v3Row,
+        pointsMaximizingScore,
+        strategyExplanation: explanationParts.join(' · '),
+      } : player.v3Row,
+    };
+  });
+}
+
+function rosterTargetSize(leagueSettings = {}, benchSpots = 6) {
+  const starters = leagueSettings.starters || {};
+  return ['QB', 'RB', 'WR', 'TE', 'FLEX']
+    .reduce((total, position) => total + Math.max(0, finite(starters[position], 0)), 0) + benchSpots;
+}
+
+export function scoreStartingLineup(roster = [], leagueSettings = {}) {
+  const starters = leagueSettings.starters || {};
+  const flexEligibility = leagueSettings.flexEligibility || ['RB', 'WR', 'TE'];
+  const remaining = [...roster].sort((a, b) => projectionValue(b) - projectionValue(a));
+  const lineup = { QB: [], RB: [], WR: [], TE: [], FLEX: [] };
+
+  ['QB', 'RB', 'WR', 'TE'].forEach((position) => {
+    const needed = Math.max(0, finite(starters[position], 0));
+    for (let index = 0; index < remaining.length && lineup[position].length < needed; index += 1) {
+      if (positionOf(remaining[index]) === position) {
+        lineup[position].push(remaining.splice(index, 1)[0]);
+        index -= 1;
+      }
+    }
+    lineup[position].sort((a, b) => projectionValue(b) - projectionValue(a));
+  });
+
+  const flexNeeded = Math.max(0, finite(starters.FLEX, 0));
+  for (let index = 0; index < remaining.length && lineup.FLEX.length < flexNeeded; index += 1) {
+    if (flexEligibility.includes(positionOf(remaining[index]))) {
+      lineup.FLEX.push(remaining.splice(index, 1)[0]);
+      index -= 1;
+    }
+  }
+
+  const startersList = Object.values(lineup).flat();
+  return {
+    projectedStarterPoints: startersList.reduce((sum, player) => sum + projectionValue(player), 0),
+    lineup,
+    starters: startersList,
+    bench: remaining,
+  };
+}
+
+function otherTeamDraftScore(player = {}) {
+  const adp = player.adp?.overall ?? rowValue(player, 'adp', null);
+  const rank = rowValue(player, 'personalRank', 999);
+  return Number.isFinite(Number(adp)) ? Number(adp) : rank;
+}
+
+function chooseUserSimulationPick(available = []) {
+  return [...available].sort((a, b) => {
+    const strategyDelta = finite(b.draft?.strategy?.pointsMaximizingScore, 0) - finite(a.draft?.strategy?.pointsMaximizingScore, 0);
+    if (strategyDelta) return strategyDelta;
+    return projectionValue(b) - projectionValue(a);
+  })[0] || null;
+}
+
+export function simulateCandidatePickImpact(players = [], state = {}, candidate = {}, options = {}) {
+  const draftState = createDraftState(state);
+  const leagueSettings = options.leagueSettings || {};
+  const candidateId = playerKey(candidate);
+  const targetRosterSize = rosterTargetSize(leagueSettings, options.benchSpots ?? 6);
+  const maxPick = draftState.currentPick + Math.max(1, finite(options.maxSimulationPicks, draftState.teams * 12));
+  const roster = [candidate];
+  const path = [`Pick ${draftState.currentPick}: ${candidate.name || candidate.v3Row?.name} (${positionOf(candidate)})`];
+  let available = players.filter((player) => playerKey(player) !== candidateId);
+
+  for (let pick = draftState.currentPick + 1; pick <= maxPick && roster.length < targetRosterSize && available.length; pick += 1) {
+    const userIsPicking = isUserPick(pick, draftState);
+    const selected = userIsPicking
+      ? chooseUserSimulationPick(available)
+      : [...available].sort((a, b) => otherTeamDraftScore(a) - otherTeamDraftScore(b))[0];
+    if (!selected) break;
+    available = available.filter((player) => playerKey(player) !== playerKey(selected));
+    if (userIsPicking) {
+      roster.push(selected);
+      path.push(`Pick ${pick}: ${selected.name || selected.v3Row?.name} (${positionOf(selected)})`);
+    }
+  }
+
+  const scored = scoreStartingLineup(roster, leagueSettings);
+  return {
+    projectedStarterPoints: scored.projectedStarterPoints,
+    startingLineup: scored.lineup,
+    roster,
+    path,
+    explanation: `${(candidate.name || candidate.v3Row?.name || 'This pick')} models to ${scored.projectedStarterPoints.toFixed(1)} starter points after ${path.length} user pick(s).`,
+  };
+}
+
+export function annotatePickImpactSimulation(players = [], state = {}, options = {}) {
+  if (!options.leagueSettings?.starters) return players;
+  const candidateLimit = Math.max(1, finite(options.simulationCandidateLimit, 24));
+  const candidateIds = new Set(players.slice(0, candidateLimit).map(playerKey));
+  const simulations = players
+    .filter((player) => candidateIds.has(playerKey(player)))
+    .map((player) => [playerKey(player), simulateCandidatePickImpact(players, state, player, options)]);
+  const bestPoints = simulations.reduce((best, [, simulation]) => Math.max(best, simulation.projectedStarterPoints), 0);
+  const simulationById = new Map(simulations.map(([key, simulation]) => [key, {
+    ...simulation,
+    pointsVsBest: simulation.projectedStarterPoints - bestPoints,
+  }]));
+
+  return players.map((player) => {
+    const simulation = simulationById.get(playerKey(player));
+    if (!simulation) return player;
+    return {
+      ...player,
+      draft: { ...(player.draft || {}), simulation },
+      v3Row: player.v3Row ? {
+        ...player.v3Row,
+        modeledStarterPoints: simulation.projectedStarterPoints,
+        modeledPointsVsBest: simulation.pointsVsBest,
+        simulationExplanation: simulation.explanation,
+      } : player.v3Row,
+    };
+  });
+}
+
 export function annotateDraftRecommendations(players = [], options = {}) {
   return players.map((player) => {
     const personalRank = rowValue(player, 'personalRank', null);
@@ -314,7 +484,12 @@ export function prepareLiveDraftBoard(players = [], state = {}, options = {}) {
   });
   const withRosterNeed = annotateRosterNeed(withAvailability, draftState, options.leagueSettings);
   const withTiers = annotatePositionTiers(withRosterNeed);
-  return annotateDraftRecommendations(withTiers, options).sort((a, b) => {
+  const withRecommendations = annotateDraftRecommendations(withTiers, options);
+  const withStrategy = annotatePointsMaximizingStrategy(withRecommendations);
+  const withSimulation = options.simulatePickImpact === false
+    ? withStrategy
+    : annotatePickImpactSimulation(withStrategy, draftState, options);
+  return withSimulation.sort((a, b) => {
     const ar = rowValue(a, 'personalRank', Infinity);
     const br = rowValue(b, 'personalRank', Infinity);
     return ar - br;

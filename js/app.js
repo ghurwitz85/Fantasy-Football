@@ -18,6 +18,8 @@ import {
   createPreferenceKey,
   projectionCsvTextToV3,
 } from './v3-user-state.js';
+import { normalizeName } from './player-normalizer.js';
+import { summarizeDraftTendencies, yahooDraftCsvTextToV3 } from './yahoo-draft-results.js';
 
 const V3_PREFERENCES_KEY = 'theboard_state_v3_preferences';
 const V3_DRAFT_STATE_KEY = 'theboard_state_v3_live_draft';
@@ -76,6 +78,14 @@ function syncDraftStateFromControls() {
 
 function playerById(board = [], playerId = '') {
   return board.find((player) => String(player.playerId) === String(playerId));
+}
+
+function playerByDraftImportRow(board = [], draftRow = {}) {
+  const importedId = String(draftRow.playerId || '');
+  const normalizedName = draftRow.normalizedName || normalizeName(draftRow.name || '');
+  return board.find((player) => String(player.playerId) === importedId)
+    || board.find((player) => normalizeName(player.name || player.v3Row?.name || '') === normalizedName && (!draftRow.position || player.position === draftRow.position || player.v3Row?.position === draftRow.position))
+    || null;
 }
 
 function saveV3Preferences() {
@@ -205,6 +215,8 @@ function valueForV3Sort(player = {}, key = '') {
     adp: row.adp,
     adjustedProjection: row.adjustedProjection,
     vorp: row.vorp,
+    modeledStarterPoints: row.modeledStarterPoints,
+    modeledPointsVsBest: row.modeledPointsVsBest,
     finalDraftScore: row.finalDraftScore,
     warningsCount: rowWarnings.length + auditWarnings.length,
   };
@@ -261,10 +273,19 @@ function renderV3MainBoard(board) {
     const bigPlayConfidenceAdjustment = adjustments.bigPlayConfidenceAdjustment;
     const projectionLabel = projectionSourceLabel(row.projectionSource);
     const adpLabel = row.adpSource === 'loaded' ? `${row.adpPlatform || 'Loaded'} ADP` : row.adpSource === 'consensus-fallback' ? 'Consensus fallback ADP' : 'ADP missing';
+    const simulation = player.draft?.simulation || {};
+    const simulationPath = (simulation.path || []).slice(0, 5).join(' → ');
+    const lineupSummary = simulation.startingLineup
+      ? Object.entries(simulation.startingLineup)
+        .filter(([, lineupPlayers]) => lineupPlayers.length)
+        .map(([slot, lineupPlayers]) => `${slot}: ${lineupPlayers.map((lineupPlayer) => lineupPlayer.name || lineupPlayer.v3Row?.name).join(', ')}`)
+        .join('; ')
+      : '';
     const liveDraftHints = [
       row.rosterNeed,
       row.bestAvailableAtPosition ? `Best available ${row.position}` : '',
       row.dropoffLabel,
+      Number.isFinite(row.modeledStarterPoints) ? `Modeled ${formatNumber(row.modeledStarterPoints, 1)} starter pts` : '',
     ].filter(Boolean);
     const whyId = `why-${escapeHtml(player.playerId)}`;
     return `<tr data-id="${escapeHtml(player.playerId)}">
@@ -282,13 +303,14 @@ function renderV3MainBoard(board) {
       <td>${row.consensusRank || '—'}</td>
       <td title="Big-play bonus: ${formatNumber(bigPlayBonus, 1)} pts${bigPlay ? ` at ${formatNumber(bigPlay.confidence * 100, 0)}% confidence; confidence adjustment ${formatSigned(bigPlayConfidenceAdjustment, 1)} pts` : ''}">${formatNumber(row.adjustedProjection, 1)}</td>
       <td class="delta ${row.vorp >= 0 ? 'up' : 'down'}">${row.vorp >= 0 ? '+' : ''}${formatNumber(row.vorp, 1)}</td>
+      <td title="Modeled final starter points if this is your current pick. ${escapeHtml(simulation.explanation || '')}">${formatNumber(row.modeledStarterPoints, 1)} <span class="player-meta">${Number.isFinite(row.modeledPointsVsBest) ? formatSigned(row.modeledPointsVsBest, 1) : ''}</span></td>
       <td class="delta up">${formatNumber(row.finalDraftScore, 3)}</td>
       <td><span class="player-meta" title="${escapeHtml(warningText)}">${escapeHtml(row.recommendation || player.draft?.recommendation || 'Active')}${row.isOutlierValue ? ' · value' : ''}${warnings.length ? ` · ${warnings.length} warning(s)` : ''}${preferenceAudit.length ? ` · ${preferenceAudit.length} pref` : ''}</span></td>
       <td><input type="number" class="override-input v3-override-input" data-pref-key="${escapeHtml(key)}" min="1" placeholder="#" value="${pref.overrideRank || ''}" title="Set a V3 manual override rank."></td>
     </tr>
     <tr id="${whyId}" class="v3-why-row" style="display:none;">
       <td></td>
-      <td colspan="8">
+      <td colspan="9">
         <div class="notice-box">
           <strong>${escapeHtml(row.name)} — V3 why</strong><br>
           Base league projection: ${formatNumber(row.baseProjection, 1)}<br>
@@ -321,6 +343,10 @@ function renderV3MainBoard(board) {
           Draft urgency score: ${formatNumber(row.draftUrgency, 1)}<br>
           Value versus ADP: ${formatSigned(row.valueVsAdp, 0)} pick(s)<br>
           Live draft hints: ${liveDraftHints.length ? escapeHtml(liveDraftHints.join('; ')) : 'No strong roster/tier signal'}<br>
+          Modeled final starter points if drafted now: ${formatNumber(row.modeledStarterPoints, 1)}${Number.isFinite(row.modeledPointsVsBest) ? ` (${formatSigned(row.modeledPointsVsBest, 1)} vs best modeled path)` : ''}<br>
+          ${simulation.explanation ? `Simulation: ${escapeHtml(simulation.explanation)}<br>` : ''}
+          ${simulationPath ? `Modeled path: ${escapeHtml(simulationPath)}<br>` : ''}
+          ${lineupSummary ? `Modeled starters: ${escapeHtml(lineupSummary)}<br>` : ''}
           Recommendation: ${escapeHtml(row.recommendation || player.draft?.recommendation || 'Watchlist')}${row.isOutlierValue ? ' — outlier target versus ADP' : ''}<br>
           Replacement baseline: ${formatNumber(row.replacementBaseline, 1)}<br>
           VORP: ${row.vorp >= 0 ? '+' : ''}${formatNumber(row.vorp, 1)}<br>
@@ -377,12 +403,74 @@ function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
   const rosterSummary = ['QB', 'RB', 'WR', 'TE', 'K', 'DST']
     .map((position) => `${position}: ${counts[position] || 0}`)
     .join(' · ');
-  const topTargets = liveBoard.slice(0, 5).map((player) => `${player.name} (${player.position}, ${player.draft?.recommendation || 'Watchlist'})`).join('; ');
+  const strategySorted = [...liveBoard].sort((a, b) => Number(b.draft?.strategy?.pointsMaximizingScore || 0) - Number(a.draft?.strategy?.pointsMaximizingScore || 0));
+  const recommended = strategySorted[0];
+  const alternatives = Object.values(strategySorted.reduce((byPosition, player) => {
+    const position = player.position || player.v3Row?.position || 'UNK';
+    if (!byPosition[position]) byPosition[position] = player;
+    return byPosition;
+  }, {})).slice(0, 5);
+  const recommendedLine = recommended
+    ? `<div style="font-size:18px;margin:8px 0;"><strong style="color:var(--gold);">Recommended now:</strong> ${escapeHtml(recommended.name)} (${escapeHtml(recommended.position || recommended.v3Row?.position || '')}) · ${formatNumber(recommended.draft?.strategy?.pointsMaximizingScore, 1)} strategy score</div>
+       <div><strong>Modeled final starters:</strong> ${formatNumber(recommended.draft?.simulation?.projectedStarterPoints, 1)} pts${Number.isFinite(recommended.draft?.simulation?.pointsVsBest) ? ` · ${formatSigned(recommended.draft.simulation.pointsVsBest, 1)} vs best modeled path` : ''}</div>
+       <div><strong>Why:</strong> ${escapeHtml(recommended.draft?.simulation?.explanation || recommended.draft?.strategy?.explanation || 'Best projected live-draft roster fit.')}</div>`
+    : '<div><strong>Recommended now:</strong> No available players.</div>';
+  const alternativeSummary = alternatives.map((player) => `${player.position || player.v3Row?.position}: ${player.name} (${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} pts, ${formatSigned(player.draft?.simulation?.pointsVsBest, 1)})`).join(' · ');
+  const topTargets = strategySorted.slice(0, 5).map((player) => `${player.name} (${player.position}, ${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} modeled pts)`).join('; ');
   target.innerHTML = `
     <strong>Pick ${v3DraftState.currentPick}</strong> · ${v3DraftState.picks.length} drafted · ${liveBoard.length}/${fullBoard.length} available<br>
     <strong>Your roster:</strong> ${escapeHtml(rosterSummary)}<br>
-    <strong>Top available targets:</strong> ${escapeHtml(topTargets || 'No available players yet')}
+    ${recommendedLine}
+    <strong>Best by position:</strong> ${escapeHtml(alternativeSummary || 'No alternatives yet')}<br>
+    <strong>Top strategy targets:</strong> ${escapeHtml(topTargets || 'No available players yet')}
   `;
+}
+
+function setYahooDraftSyncStatus(message, className = '') {
+  const status = document.getElementById('v3YahooDraftSyncStatus');
+  if (!status) return;
+  status.textContent = message;
+  status.className = `fetch-status ${className}`.trim();
+}
+
+function syncYahooDraftResultsFromText(text = '') {
+  const fullBoard = window.__v3FullBoard || rebuildV3BoardFromState();
+  if (!fullBoard.length) {
+    setYahooDraftSyncStatus('V3 board is not ready yet.', 'error');
+    return;
+  }
+
+  const importedPicks = yahooDraftCsvTextToV3(text, { teams: v3DraftState.teams, season: 2026 })
+    .filter((pick) => Number(pick.pickNumber) > 0)
+    .sort((a, b) => Number(a.pickNumber) - Number(b.pickNumber));
+  if (!importedPicks.length) {
+    setYahooDraftSyncStatus('No draft picks found. Check the pasted columns.', 'error');
+    return;
+  }
+
+  syncDraftStateFromControls();
+  let nextState = createDraftState({ ...v3DraftState, picks: [], currentPick: 1 });
+  let matched = 0;
+  const unmatched = [];
+  importedPicks.forEach((pick) => {
+    const player = playerByDraftImportRow(fullBoard, pick);
+    if (player) matched += 1;
+    else unmatched.push(pick.name);
+    nextState = draftPlayer(nextState, player || pick, {
+      pickNumber: pick.pickNumber,
+      timestamp: `import-${pick.pickNumber}`,
+    });
+  });
+
+  v3DraftState = nextState;
+  saveV3DraftState();
+  renderCurrentV3Board();
+  const tendencies = summarizeDraftTendencies(importedPicks);
+  const positionSummary = Object.entries(tendencies.byPosition)
+    .sort(([, a], [, b]) => b - a)
+    .map(([position, count]) => `${position}: ${count}`)
+    .join(' · ');
+  setYahooDraftSyncStatus(`Synced ${importedPicks.length} pick(s), matched ${matched} to board. ${positionSummary}${unmatched.length ? ` · unmatched: ${unmatched.slice(0, 3).join(', ')}` : ''}`, unmatched.length ? '' : 'ok');
 }
 
 function v3CoverageSummary(board = []) {
@@ -587,6 +675,23 @@ document.addEventListener('click', (event) => {
     v3DraftState = resetDraftState(v3DraftState);
     saveV3DraftState();
     renderCurrentV3Board();
+    return;
+  }
+
+  const resetFlagsButton = event.target.closest?.('#resetFlagsBtn');
+  if (resetFlagsButton && v3OwnsMainBoard) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    v3Preferences = {};
+    saveV3Preferences();
+    renderCurrentV3Board();
+    return;
+  }
+
+  const yahooDraftSyncButton = event.target.closest?.('#v3YahooDraftSyncBtn');
+  if (yahooDraftSyncButton) {
+    event.preventDefault();
+    syncYahooDraftResultsFromText(document.getElementById('v3YahooDraftPaste')?.value || '');
     return;
   }
 

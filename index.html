@@ -385,6 +385,36 @@
 
 <div class="wrap">
 
+  <section id="live-draft-command-center">
+    <div class="panel" style="margin-bottom:16px;border:2px solid var(--gold);box-shadow:0 0 0 1px rgba(231,178,60,0.15);">
+      <p class="eyebrow" style="margin-bottom:8px;">Draft day command center</p>
+      <h2 class="section-title" style="margin:0 0 10px;color:var(--gold);">Live Draft Mode</h2>
+      <p class="hint">Use this during the draft. Recommendations prioritize projected points for your assembled roster, then adjust for VORP, roster fit, tier cliffs, ADP/availability risk, and whether a position is likely to dry up before your next pick. Settings and data imports below are secondary once your league is locked in.</p>
+      <div class="grid-3">
+        <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
+        <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
+        <label>Current pick<input id="v3CurrentPick" type="number" min="1" value="1"></label>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="v3DraftUndoBtn">Undo last draft pick</button>
+        <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
+      </div>
+      <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
+      <details class="how" style="margin-top:12px;">
+        <summary>Bulk sync Yahoo draft results</summary>
+        <p>Paste the current Yahoo draft results table/CSV when you can copy it. Supported columns include Pick, Round, Player, Team, Pos, and Drafted By. This bulk-removes drafted players so you do not have to click every pick manually.</p>
+        <div class="field" style="margin-top:10px;">
+          <label>Paste Yahoo draft results CSV</label>
+          <textarea id="v3YahooDraftPaste" placeholder="Pick,Round,Player,Team,Pos,Drafted By&#10;1,1,Bijan Robinson,ATL,RB,Team Alpha" style="min-height:90px;"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" id="v3YahooDraftSyncBtn">Sync pasted draft picks</button>
+          <span class="fetch-status" id="v3YahooDraftSyncStatus"></span>
+        </div>
+      </details>
+    </div>
+  </section>
+
   <section id="automatic-data">
     <div class="panel">
       <h2 class="section-title">V3 projection engine status</h2>
@@ -704,20 +734,6 @@
 
   <section id="board">
     <h2 class="section-title" style="margin-bottom:16px;">Your board</h2>
-    <div class="panel" style="margin-bottom:16px;border-color:var(--gold);">
-      <h3 style="margin-top:0;color:var(--gold);">Live Draft Mode</h3>
-      <p class="hint">Draft-day controls are here. Without direct Yahoo live sync, use <strong>Drafted</strong> to remove players as they come off the board and <strong>My Pick</strong> for your selections. Next upgrade will add bulk Yahoo draft-results paste/import so you do not have to click every pick manually.</p>
-      <div class="grid-3">
-        <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
-        <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
-        <label>Current pick<input id="v3CurrentPick" type="number" min="1" value="1"></label>
-      </div>
-      <div class="btn-row" style="margin-top:12px;">
-        <button class="btn-ghost" id="v3DraftUndoBtn">Undo last draft pick</button>
-        <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
-      </div>
-      <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
-    </div>
     <div class="btn-row" style="margin-bottom:16px;">
       <button class="btn-ghost" id="exportBtn">Export your board as CSV</button>
       <button class="btn-ghost" id="resetFlagsBtn">Clear all flags &amp; overrides</button>
@@ -733,6 +749,7 @@
             <th data-v3-main-sort="consensusRank">Consensus</th>
             <th data-v3-main-sort="adjustedProjection">Adj Proj</th>
             <th data-v3-main-sort="vorp">VORP</th>
+            <th data-v3-main-sort="modeledStarterPoints">Modeled Pts</th>
             <th data-v3-main-sort="finalDraftScore">V3 Score</th>
             <th data-v3-main-sort="warningsCount">Status</th>
             <th>Override</th>
