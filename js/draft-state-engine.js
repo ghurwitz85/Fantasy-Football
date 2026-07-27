@@ -1,4 +1,5 @@
 import { applyReplacementValues } from './replacement-value-engine.js';
+import { projectionInputValue } from './projection-engine.js';
 
 function finite(value, fallback = 0) {
   const number = Number(value);
@@ -120,7 +121,7 @@ function positionOf(player = {}) {
 }
 
 function projectionValue(player = {}) {
-  return rowValue(player, 'adjustedProjection', finite(player.adjusted?.contextFantasyPoints, finite(player.adjusted?.baseFantasyPoints, 0)));
+  return rowValue(player, 'adjustedProjection', projectionInputValue(player));
 }
 
 function rosterNeedForPosition(state = {}, position = '', leagueSettings = {}) {
@@ -267,9 +268,10 @@ export function scoreStartingLineup(roster = [], leagueSettings = {}) {
   const starters = leagueSettings.starters || {};
   const flexEligibility = leagueSettings.flexEligibility || ['RB', 'WR', 'TE'];
   const remaining = [...roster].sort((a, b) => projectionValue(b) - projectionValue(a));
-  const lineup = { QB: [], RB: [], WR: [], TE: [], FLEX: [] };
+  const lineupPositions = [...new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST', ...Object.keys(starters).filter((position) => position !== 'FLEX')])];
+  const lineup = Object.fromEntries([...lineupPositions, 'FLEX'].map((position) => [position, []]));
 
-  ['QB', 'RB', 'WR', 'TE'].forEach((position) => {
+  lineupPositions.forEach((position) => {
     const needed = Math.max(0, finite(starters[position], 0));
     for (let index = 0; index < remaining.length && lineup[position].length < needed; index += 1) {
       if (positionOf(remaining[index]) === position) {
@@ -289,8 +291,10 @@ export function scoreStartingLineup(roster = [], leagueSettings = {}) {
   }
 
   const startersList = Object.values(lineup).flat();
+  const totalRosterPoints = roster.reduce((sum, player) => sum + projectionValue(player), 0);
   return {
     projectedStarterPoints: startersList.reduce((sum, player) => sum + projectionValue(player), 0),
+    totalRosterPoints,
     lineup,
     starters: startersList,
     bench: remaining,
@@ -337,10 +341,11 @@ export function simulateCandidatePickImpact(players = [], state = {}, candidate 
   const scored = scoreStartingLineup(roster, leagueSettings);
   return {
     projectedStarterPoints: scored.projectedStarterPoints,
+    totalRosterPoints: scored.totalRosterPoints,
     startingLineup: scored.lineup,
     roster,
     path,
-    explanation: `${(candidate.name || candidate.v3Row?.name || 'This pick')} models to ${scored.projectedStarterPoints.toFixed(1)} starter points after ${path.length} user pick(s).`,
+    explanation: `${(candidate.name || candidate.v3Row?.name || 'This pick')} models to ${scored.projectedStarterPoints.toFixed(1)} starter points and ${scored.totalRosterPoints.toFixed(1)} total roster points after ${path.length} user pick(s).`,
   };
 }
 
@@ -366,6 +371,7 @@ export function annotatePickImpactSimulation(players = [], state = {}, options =
       v3Row: player.v3Row ? {
         ...player.v3Row,
         modeledStarterPoints: simulation.projectedStarterPoints,
+        modeledTotalRosterPoints: simulation.totalRosterPoints,
         modeledPointsVsBest: simulation.pointsVsBest,
         simulationExplanation: simulation.explanation,
       } : player.v3Row,

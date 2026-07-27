@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createEmptyPlayer,
   createPlayerId,
+  namesMatchLoosely,
   normalizeName,
   normalizePosition,
   normalizeTeam,
@@ -20,6 +21,15 @@ test('normalizes team and position aliases', () => {
   assert.equal(normalizeTeam('wsh'), 'WAS');
   assert.equal(normalizePosition('WR12'), 'WR');
   assert.equal(normalizePosition('def'), 'DST');
+});
+
+test('loosely matches Yahoo app abbreviated names to full board names', () => {
+  assert.equal(namesMatchLoosely('B. Robinson', 'Bijan Robinson'), true);
+  assert.equal(namesMatchLoosely('J. Gibbs', 'Jahmyr Gibbs'), true);
+  assert.equal(namesMatchLoosely('A. St. Brown', 'Amon-Ra St. Brown'), true);
+  assert.equal(namesMatchLoosely('T. McBride', 'Trey McBride'), true);
+  assert.equal(namesMatchLoosely('B. Robinson', 'Brian Robinson'), true);
+  assert.equal(namesMatchLoosely('B. Robinson', 'Bijan Robertson'), false);
 });
 
 test('creates stable player IDs from normalized fields', () => {

@@ -196,7 +196,22 @@ test('scores the best legal starting lineup with flex from a modeled roster', ()
   ], { starters: { QB: 1, RB: 1, WR: 1, TE: 1, FLEX: 1 }, flexEligibility: ['RB', 'WR', 'TE'] });
 
   assert.equal(scored.projectedStarterPoints, 300 + 210 + 205 + 140 + 190);
+  assert.equal(scored.totalRosterPoints, 300 + 210 + 180 + 205 + 190 + 140);
   assert.equal(scored.lineup.FLEX[0].playerId, 'wr2');
+});
+
+test('scores K and DST starters plus fallback-adjusted roster totals', () => {
+  const scored = scoreStartingLineup([
+    { playerId: 'qb1', name: 'QB One', position: 'QB', adjusted: { fallbackFantasyPoints: 295 } },
+    { playerId: 'k1', name: 'K One', position: 'K', adjusted: { contextFantasyPoints: 128 } },
+    { playerId: 'dst1', name: 'DST One', position: 'DST', adjusted: { baseFantasyPoints: 135 } },
+    { playerId: 'te1', name: 'TE One', position: 'TE', adjusted: { fallbackFantasyPoints: 95 } },
+  ], { starters: { QB: 1, TE: 1, K: 1, DST: 1, FLEX: 0 }, flexEligibility: ['RB', 'WR', 'TE'] });
+
+  assert.equal(scored.projectedStarterPoints, 295 + 128 + 135 + 95);
+  assert.equal(scored.totalRosterPoints, 295 + 128 + 135 + 95);
+  assert.equal(scored.lineup.K[0].playerId, 'k1');
+  assert.equal(scored.lineup.DST[0].playerId, 'dst1');
 });
 
 test('simulates candidate pick impact and annotates modeled final starter points', () => {
@@ -214,6 +229,7 @@ test('simulates candidate pick impact and annotates modeled final starter points
   });
 
   assert.ok(simulation.projectedStarterPoints >= 520);
+  assert.ok(simulation.totalRosterPoints >= simulation.projectedStarterPoints);
   assert.deepEqual(simulation.path.map((line) => line.replace(/:.*/, '')), ['Pick 1', 'Pick 4', 'Pick 5']);
-  assert.match(simulation.explanation, /starter points/);
+  assert.match(simulation.explanation, /starter points and .* total roster points/);
 });

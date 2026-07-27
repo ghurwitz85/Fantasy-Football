@@ -424,10 +424,10 @@
         <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
         <details class="how" style="margin-top:12px;" open>
           <summary>Bulk sync Yahoo draft results</summary>
-          <p>Paste the current Yahoo draft results table/CSV when you can copy it. Supported columns include Pick, Round, Player, Team, Pos, and Drafted By. This bulk-removes drafted players so you do not have to click every pick manually.</p>
+          <p>Paste whatever Yahoo gives you: a draft results table/CSV, or the Yahoo Draft App copied player blocks with repeated player name, position, NFL team, bye, pick number, and manager. This bulk-removes drafted players so you do not have to click every pick manually.</p>
           <div class="field" style="margin-top:10px;">
-            <label>Paste Yahoo draft results CSV</label>
-            <textarea id="v3YahooDraftPaste" placeholder="Pick,Round,Player,Team,Pos,Drafted By&#10;1,1,Bijan Robinson,ATL,RB,Team Alpha" style="min-height:140px;"></textarea>
+            <label>Paste Yahoo draft results / app copied picks</label>
+            <textarea id="v3YahooDraftPaste" placeholder="CSV example:&#10;Pick,Round,Player,Team,Pos,Drafted By&#10;1,1,Bijan Robinson,ATL,RB,Team Alpha&#10;&#10;Yahoo Draft App example:&#10;B. Robinson&#10;B. Robinson&#10;RB&#10;Atl&#10;Bye 11&#10;2&#10;You" style="min-height:160px;"></textarea>
           </div>
           <div class="btn-row">
             <button class="btn-ghost" id="v3YahooDraftSyncBtn">Sync pasted draft picks</button>
@@ -453,7 +453,7 @@
                 <th data-v3-main-sort="consensusRank">Consensus</th>
                 <th data-v3-main-sort="adjustedProjection">Adj Proj</th>
                 <th data-v3-main-sort="vorp">VORP</th>
-                <th data-v3-main-sort="modeledStarterPoints">Modeled Pts</th>
+                <th data-v3-main-sort="modeledStarterPoints">Modeled Roster</th>
                 <th data-v3-main-sort="finalDraftScore">V3 Score</th>
                 <th data-v3-main-sort="warningsCount">Status</th>
                 <th>Override</th>

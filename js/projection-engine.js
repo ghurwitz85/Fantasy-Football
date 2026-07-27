@@ -8,6 +8,15 @@ function positionOf(player) {
   return String(player.position || '').replace(/[0-9]/g, '').toUpperCase();
 }
 
+export const FALLBACK_PROJECTION_CURVES = Object.freeze({
+  QB: { top: 360, drop: 7.5, floor: 120, starterDepth: 18 },
+  RB: { top: 295, drop: 6.2, floor: 45, starterDepth: 48 },
+  WR: { top: 285, drop: 5.1, floor: 45, starterDepth: 60 },
+  TE: { top: 220, drop: 4.7, floor: 35, starterDepth: 24 },
+  K: { top: 155, drop: 2.6, floor: 80, starterDepth: 18 },
+  DST: { top: 165, drop: 3.1, floor: 70, starterDepth: 18 },
+});
+
 function inferredPositionRank(player) {
   const explicit = Number(player.consensus?.positionRank || 0);
   if (explicit > 0) return explicit;
@@ -21,15 +30,21 @@ function inferredPositionRank(player) {
 export function estimateFallbackFantasyPoints(player = {}) {
   const position = positionOf(player);
   const rank = inferredPositionRank(player);
-  const curves = {
-    QB: { top: 360, drop: 7.5, floor: 120 },
-    RB: { top: 295, drop: 6.2, floor: 45 },
-    WR: { top: 285, drop: 5.1, floor: 45 },
-    TE: { top: 220, drop: 4.7, floor: 35 },
-  };
-  const curve = curves[position];
+  const curve = FALLBACK_PROJECTION_CURVES[position];
   if (!curve) return 0;
-  return Math.max(curve.floor, curve.top - (rank - 1) * curve.drop);
+  const starterDepth = Number(curve.starterDepth || 1);
+  const starterDrop = Math.max(0, rank - 1) * curve.drop;
+  const depthDrop = Math.max(0, rank - starterDepth) * curve.drop * 0.35;
+  return Math.max(curve.floor, curve.top - starterDrop - depthDrop);
+}
+
+function fallbackProjectionNote(player = {}) {
+  const position = positionOf(player) || 'player';
+  const rank = inferredPositionRank(player);
+  const curve = FALLBACK_PROJECTION_CURVES[position];
+  if (!curve) return 'Projection data missing and no supported fallback curve is available.';
+  const depthLabel = rank > Number(curve.starterDepth || 0) ? 'lower-ranked depth' : 'ranked';
+  return `Projection data missing; using explicit consensus-derived fallback projection via ${depthLabel} ${position} consensus fallback curve from position rank ${rank}.`;
 }
 
 export function createFallbackProjection(player = {}, scoring = {}) {
@@ -68,6 +83,12 @@ export function createFallbackProjection(player = {}, scoring = {}) {
     stats.receiving.yards = stats.receiving.receptions * 10.4;
     stats.receiving.touchdowns = target / 42;
     stats.receiving.fortyYardReceptions = Math.max(0, target / 120);
+  } else if (position === 'K' || position === 'DST') {
+    // Season-long kicker and defense/special-teams projections do not map to
+    // the offensive stat categories in the custom scoring engine yet. Store the
+    // fallback as neutral synthetic yardage so every ranked draftable slot has a
+    // non-zero points input for VORP, live-draft simulation, and roster analysis.
+    stats.receiving.yards = target * Number(scoring.receivingYardsPerPoint || 10);
   }
 
   const calculated = calculateFantasyPoints(stats, scoring);
@@ -86,6 +107,15 @@ export function createFallbackProjection(player = {}, scoring = {}) {
     stats.receiving.fortyYardReceptions *= scale;
   }
   return stats;
+}
+
+export function projectionInputValue(player = {}) {
+  return Number(player.adjusted?.contextFantasyPoints
+    ?? player.adjusted?.baseFantasyPoints
+    ?? player.adjusted?.fallbackFantasyPoints
+    ?? player.v3Row?.adjustedProjection
+    ?? player.v3Row?.baseProjection
+    ?? 0) || 0;
 }
 
 function applyBigPlayConfidence(stats, confidence = 1) {
@@ -167,6 +197,7 @@ export function attachBaseProjection(player, scoring, options = {}) {
       ...(player.adjusted || {}),
       baseFantasyPoints,
       contextFantasyPoints: baseFantasyPoints,
+      ...(!hasProjection ? { fallbackFantasyPoints: baseFantasyPoints } : {}),
     },
     audit: {
       baseProjection: baseFantasyPoints,
@@ -183,7 +214,14 @@ export function attachBaseProjection(player, scoring, options = {}) {
         projectedBonusAfterConfidence: bigPlayPoints,
         note: 'League 40+ yard bonuses are scored explicitly; confidence only regresses expected event counts and does not multiply scoring rules.',
       },
-      warnings: hasProjection ? [] : ['Projection data missing; using explicit consensus-derived fallback projection until real stat projections are loaded.'],
+      fallbackProjection: hasProjection ? null : {
+        position: positionOf(player),
+        inferredPositionRank: inferredPositionRank(player),
+        curve: FALLBACK_PROJECTION_CURVES[positionOf(player)] || null,
+        targetFantasyPoints: estimateFallbackFantasyPoints(player),
+        syntheticStatCategory: ['K', 'DST'].includes(positionOf(player)) ? 'receiving.yards' : null,
+      },
+      warnings: hasProjection ? [] : [fallbackProjectionNote(player)],
     },
   };
 }

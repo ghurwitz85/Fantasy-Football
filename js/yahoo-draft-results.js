@@ -57,6 +57,37 @@ function numberFrom(row = {}, aliases = [], fallback = null) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function isPositionLine(line = '') {
+  return /^(QB|RB|WR|TE|K|DST|DEF)$/i.test(String(line).trim());
+}
+
+function isByeLine(line = '') {
+  return /^bye\s+\d+$/i.test(String(line).trim());
+}
+
+function isIntegerLine(line = '') {
+  return /^\d+$/.test(String(line).trim());
+}
+
+function isLikelyTeamLine(line = '') {
+  const normalized = normalizeTeam(line);
+  return /^[A-Z]{2,3}$/.test(normalized) && !isPositionLine(line);
+}
+
+function startsYahooAppPlayerBlock(lines = [], index = 0) {
+  if (index < 0 || index + 4 >= lines.length) return false;
+  const name = lines[index];
+  const duplicateName = lines[index + 1];
+  const position = normalizePosition(lines[index + 2]);
+  const team = normalizeTeam(lines[index + 3]);
+  const bye = lines[index + 4];
+  return Boolean(name)
+    && normalizeName(name) === normalizeName(duplicateName)
+    && isPositionLine(position)
+    && isLikelyTeamLine(team)
+    && isByeLine(bye);
+}
+
 export function yahooDraftCsvTextToRows(text = '') {
   const lines = cleanCsvText(text).split('\n').filter((line) => line.trim());
   if (lines.length < 2) return [];
@@ -65,6 +96,51 @@ export function yahooDraftCsvTextToRows(text = '') {
     const cells = splitCsvLine(line);
     return Object.fromEntries(header.map((field, index) => [field, cells[index] ?? '']));
   });
+}
+
+export function yahooDraftAppTextToRows(text = '', { teams = 12 } = {}) {
+  const lines = cleanCsvText(text)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const rows = [];
+
+  for (let index = 0; index < lines.length - 4; index += 1) {
+    if (!startsYahooAppPlayerBlock(lines, index)) continue;
+
+    const name = lines[index];
+    const position = normalizePosition(lines[index + 2]);
+    const team = normalizeTeam(lines[index + 3]);
+
+    let pickNumber = null;
+    let fantasyTeam = '';
+    let cursor = index + 5;
+    if (cursor < lines.length && isIntegerLine(lines[cursor])) {
+      pickNumber = Number(lines[cursor]);
+      cursor += 1;
+      if (cursor < lines.length
+        && !startsYahooAppPlayerBlock(lines, cursor)
+        && !isPositionLine(lines[cursor])
+        && !isByeLine(lines[cursor])) {
+        fantasyTeam = lines[cursor];
+        cursor += 1;
+      }
+    } else {
+      pickNumber = rows.length + 1;
+    }
+
+    rows.push({
+      pick: pickNumber,
+      round: Math.ceil(pickNumber / Number(teams || 12)),
+      player: name,
+      team,
+      pos: position,
+      manager: fantasyTeam,
+    });
+    index = cursor - 1;
+  }
+
+  return rows;
 }
 
 export function normalizeYahooDraftResults(rows = [], { season = 2025, source = 'yahoo-draft-results-import' } = {}) {
@@ -94,7 +170,12 @@ export function normalizeYahooDraftResults(rows = [], { season = 2025, source = 
 }
 
 export function yahooDraftCsvTextToV3(text = '', options = {}) {
-  return normalizeYahooDraftResults(yahooDraftCsvTextToRows(text), options);
+  const csvRows = normalizeYahooDraftResults(yahooDraftCsvTextToRows(text), options);
+  if (csvRows.length) return csvRows;
+  return normalizeYahooDraftResults(yahooDraftAppTextToRows(text, options), {
+    ...options,
+    source: options.source || 'yahoo-draft-app-paste',
+  });
 }
 
 export function summarizeDraftTendencies(draftRows = []) {

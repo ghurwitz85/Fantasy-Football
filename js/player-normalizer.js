@@ -36,6 +36,27 @@ export function normalizeName(name = '') {
     .replace(/\s+/g, ' ');
 }
 
+function nameParts(name = '') {
+  return normalizeName(name).split(' ').filter(Boolean);
+}
+
+export function namesMatchLoosely(candidateName = '', boardName = '') {
+  const candidate = nameParts(candidateName);
+  const board = nameParts(boardName);
+  if (!candidate.length || !board.length) return false;
+  if (candidate.join(' ') === board.join(' ')) return true;
+
+  const candidateLast = candidate.at(-1);
+  const boardLast = board.at(-1);
+  if (candidateLast !== boardLast) return false;
+
+  const candidateFirst = candidate[0] || '';
+  const boardFirst = board[0] || '';
+  if (candidateFirst.length === 1) return boardFirst.startsWith(candidateFirst);
+  if (boardFirst.length === 1) return candidateFirst.startsWith(boardFirst);
+  return candidateFirst === boardFirst;
+}
+
 export function createPlayerId({ name, team, position } = {}) {
   const normalizedName = normalizeName(name).replace(/\s+/g, '-');
   const normalizedTeam = normalizeTeam(team) || 'FA';
