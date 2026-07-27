@@ -426,7 +426,11 @@ function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
   const rosterSummary = ['QB', 'RB', 'WR', 'TE', 'K', 'DST']
     .map((position) => `${position}: ${counts[position] || 0}`)
     .join(' · ');
-  const strategySorted = [...liveBoard].sort((a, b) => Number(b.draft?.strategy?.pointsMaximizingScore || 0) - Number(a.draft?.strategy?.pointsMaximizingScore || 0));
+  const strategySorted = [...liveBoard].sort((a, b) => {
+    const modeledDelta = Number(b.draft?.simulation?.projectedStarterPoints || 0) - Number(a.draft?.simulation?.projectedStarterPoints || 0);
+    if (modeledDelta) return modeledDelta;
+    return Number(b.draft?.strategy?.pointsMaximizingScore || 0) - Number(a.draft?.strategy?.pointsMaximizingScore || 0);
+  });
   const recommended = strategySorted[0];
   const alternatives = Object.values(strategySorted.reduce((byPosition, player) => {
     const position = player.position || player.v3Row?.position || 'UNK';

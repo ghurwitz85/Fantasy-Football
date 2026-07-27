@@ -27,6 +27,7 @@ export function createDraftState({ teams = 12, userDraftSlot = 1, currentPick = 
       playerId: String(pick.playerId || ''),
       name: pick.name || '',
       position: pick.position || '',
+      adjustedProjection: finite(pick.adjustedProjection, null),
       fantasyTeam: pick.fantasyTeam || null,
       isUserPick: Boolean(pick.isUserPick),
       timestamp: pick.timestamp || null,
@@ -72,6 +73,7 @@ export function draftPlayer(state = {}, player = {}, options = {}) {
     playerId,
     name: player.name || player.v3Row?.name || '',
     position: player.position || player.v3Row?.position || '',
+    adjustedProjection: projectionValue(player),
     fantasyTeam: player.team || player.v3Row?.team || null,
     isUserPick: Boolean(isUserSelection),
     timestamp: options.timestamp || new Date().toISOString(),
@@ -307,8 +309,32 @@ function otherTeamDraftScore(player = {}) {
   return Number.isFinite(Number(adp)) ? Number(adp) : rank;
 }
 
-function chooseUserSimulationPick(available = []) {
-  return [...available].sort((a, b) => {
+function hasUnfilledCoreStarter(roster = [], leagueSettings = {}) {
+  const starters = leagueSettings.starters || {};
+  const counts = roster.reduce((summary, player) => {
+    const position = positionOf(player);
+    summary[position] = (summary[position] || 0) + 1;
+    return summary;
+  }, {});
+  const corePositions = ['QB', 'RB', 'WR', 'TE'];
+  const missingCore = corePositions.some((position) => (counts[position] || 0) < Math.max(0, finite(starters[position], 0)));
+  const flexEligibility = leagueSettings.flexEligibility || ['RB', 'WR', 'TE'];
+  const flexEligibleCount = flexEligibility.reduce((total, position) => total + (counts[position] || 0), 0);
+  const requiredFlexEligible = flexEligibility.reduce((total, position) => total + Math.max(0, finite(starters[position], 0)), 0)
+    + Math.max(0, finite(starters.FLEX, 0));
+  return missingCore || flexEligibleCount < requiredFlexEligible;
+}
+
+function isEarlySpecialTeamsPick(player = {}, roster = [], leagueSettings = {}) {
+  return ['K', 'DST'].includes(positionOf(player)) && hasUnfilledCoreStarter(roster, leagueSettings);
+}
+
+function chooseUserSimulationPick(available = [], roster = [], leagueSettings = {}) {
+  const draftable = available.filter((player) => !isEarlySpecialTeamsPick(player, roster, leagueSettings));
+  const nonSpecialTeams = available.filter((player) => !['K', 'DST'].includes(positionOf(player)));
+  const pool = draftable.length ? draftable : nonSpecialTeams;
+  if (!pool.length) return null;
+  return [...pool].sort((a, b) => {
     const strategyDelta = finite(b.draft?.strategy?.pointsMaximizingScore, 0) - finite(a.draft?.strategy?.pointsMaximizingScore, 0);
     if (strategyDelta) return strategyDelta;
     return projectionValue(b) - projectionValue(a);
@@ -321,14 +347,20 @@ export function simulateCandidatePickImpact(players = [], state = {}, candidate 
   const candidateId = playerKey(candidate);
   const targetRosterSize = rosterTargetSize(leagueSettings, options.benchSpots ?? 6);
   const maxPick = draftState.currentPick + Math.max(1, finite(options.maxSimulationPicks, draftState.teams * 12));
-  const roster = [candidate];
+  const existingRoster = rosterForTeam(draftState).map((pick) => ({
+    playerId: pick.playerId,
+    name: pick.name,
+    position: pick.position,
+    v3Row: { adjustedProjection: finite(pick.adjustedProjection, 0) },
+  }));
+  const roster = [...existingRoster, candidate];
   const path = [`Pick ${draftState.currentPick}: ${candidate.name || candidate.v3Row?.name} (${positionOf(candidate)})`];
   let available = players.filter((player) => playerKey(player) !== candidateId);
 
   for (let pick = draftState.currentPick + 1; pick <= maxPick && roster.length < targetRosterSize && available.length; pick += 1) {
     const userIsPicking = isUserPick(pick, draftState);
     const selected = userIsPicking
-      ? chooseUserSimulationPick(available)
+      ? chooseUserSimulationPick(available, roster, leagueSettings)
       : [...available].sort((a, b) => otherTeamDraftScore(a) - otherTeamDraftScore(b))[0];
     if (!selected) break;
     available = available.filter((player) => playerKey(player) !== playerKey(selected));

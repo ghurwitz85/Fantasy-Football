@@ -233,3 +233,47 @@ test('simulates candidate pick impact and annotates modeled final starter points
   assert.deepEqual(simulation.path.map((line) => line.replace(/:.*/, '')), ['Pick 1', 'Pick 4', 'Pick 5']);
   assert.match(simulation.explanation, /starter points and .* total roster points/);
 });
+
+test('simulation keeps existing user roster projections in modeled starters', () => {
+  const allen = { playerId: 'qb1', name: 'Josh Allen', position: 'QB', v3Row: { adjustedProjection: 330 } };
+  const bowers = { playerId: 'te1', name: 'Brock Bowers', position: 'TE', v3Row: { adjustedProjection: 170 } };
+  const state = draftPlayer(createDraftState({ teams: 2, userDraftSlot: 1, currentPick: 1 }), allen, {
+    pickNumber: 1,
+    isUserPick: true,
+    timestamp: 'now',
+  });
+  const simulation = simulateCandidatePickImpact([allen, bowers], createDraftState({ ...state, currentPick: 3 }), bowers, {
+    leagueSettings: { starters: { QB: 1, RB: 0, WR: 0, TE: 1, FLEX: 0 }, flexEligibility: ['RB', 'WR', 'TE'] },
+    benchSpots: 0,
+    maxSimulationPicks: 2,
+  });
+
+  assert.equal(state.picks[0].adjustedProjection, 330);
+  assert.equal(simulation.projectedStarterPoints, 500);
+  assert.equal(simulation.startingLineup.QB[0].name, 'Josh Allen');
+  assert.equal(simulation.startingLineup.TE[0].name, 'Brock Bowers');
+});
+
+test('simulation avoids early K and DST while core starters and flex are unfilled', () => {
+  const players = [
+    { playerId: 'wr1', name: 'Drake London', position: 'WR', adp: { overall: 19 }, draft: { strategy: { pointsMaximizingScore: 90 } }, v3Row: { personalRank: 1, adp: 19, adjustedProjection: 210, vorp: 55 } },
+    { playerId: 'k1', name: 'Daniel Carlson', position: 'K', adp: { overall: 48 }, draft: { strategy: { pointsMaximizingScore: 300 } }, v3Row: { personalRank: 2, adp: 48, adjustedProjection: 150, vorp: 80 } },
+    { playerId: 'dst1', name: 'Elite DST', position: 'DST', adp: { overall: 49 }, draft: { strategy: { pointsMaximizingScore: 280 } }, v3Row: { personalRank: 3, adp: 49, adjustedProjection: 145, vorp: 75 } },
+    { playerId: 'qb1', name: 'Josh Allen', position: 'QB', adp: { overall: 24 }, draft: { strategy: { pointsMaximizingScore: 70 } }, v3Row: { personalRank: 4, adp: 24, adjustedProjection: 330, vorp: 70 } },
+    { playerId: 'te1', name: 'Brock Bowers', position: 'TE', adp: { overall: 25 }, draft: { strategy: { pointsMaximizingScore: 65 } }, v3Row: { personalRank: 5, adp: 25, adjustedProjection: 170, vorp: 60 } },
+    { playerId: 'rb1', name: 'Kenneth Walker III', position: 'RB', adp: { overall: 26 }, draft: { strategy: { pointsMaximizingScore: 60 } }, v3Row: { personalRank: 6, adp: 26, adjustedProjection: 205, vorp: 50 } },
+    { playerId: 'wr2', name: 'Nico Collins', position: 'WR', adp: { overall: 27 }, draft: { strategy: { pointsMaximizingScore: 55 } }, v3Row: { personalRank: 7, adp: 27, adjustedProjection: 200, vorp: 45 } },
+    { playerId: 'rb2', name: 'RB Depth', position: 'RB', adp: { overall: 28 }, draft: { strategy: { pointsMaximizingScore: 50 } }, v3Row: { personalRank: 8, adp: 28, adjustedProjection: 190, vorp: 40 } },
+  ];
+  const simulation = simulateCandidatePickImpact(players, createDraftState({ teams: 2, userDraftSlot: 1, currentPick: 19 }), players[0], {
+    leagueSettings: { starters: { QB: 1, RB: 1, WR: 2, TE: 1, K: 1, DST: 1, FLEX: 1 }, flexEligibility: ['RB', 'WR', 'TE'] },
+    benchSpots: 0,
+    maxSimulationPicks: 12,
+  });
+  const earlyPathPositions = simulation.path.map((line) => line.match(/\(([^)]+)\)$/)?.[1]);
+
+  assert.ok(!earlyPathPositions.includes('K'));
+  assert.ok(!earlyPathPositions.includes('DST'));
+  assert.ok(earlyPathPositions.includes('QB'));
+  assert.ok(earlyPathPositions.includes('TE'));
+});
