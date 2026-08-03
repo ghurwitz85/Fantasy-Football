@@ -4,18 +4,126 @@
   "teams": 12,
   "rounds": 15,
   "standings": [
-    { "rank": 1, "team": "TebowDied4OurSins", "record": "13-1-0", "pointsFor": 1667.50, "pointsAgainst": 1463.72, "streak": "W-10", "waiver": 10, "moves": 59 },
-    { "rank": 2, "team": "Ball & Achane", "record": "10-4-0", "pointsFor": 1770.34, "pointsAgainst": 1557.02, "streak": "W-2", "waiver": 11, "moves": 51 },
-    { "rank": 3, "team": "The Packers", "record": "8-6-0", "pointsFor": 1703.54, "pointsAgainst": 1569.74, "streak": "W-1", "waiver": 12, "moves": 9 },
-    { "rank": 4, "team": "I Thought This Was America!", "record": "9-5-0", "pointsFor": 1692.26, "pointsAgainst": 1618.48, "streak": "W-1", "waiver": 7, "moves": 13 },
-    { "rank": 5, "team": "Banner 18", "record": "8-6-0", "pointsFor": 1598.26, "pointsAgainst": 1577.44, "streak": "W-1", "waiver": 6, "moves": 10 },
-    { "rank": 6, "team": "Beef Injection", "record": "7-7-0", "pointsFor": 1662.14, "pointsAgainst": 1649.82, "streak": "L-1", "waiver": 8, "moves": 14 },
-    { "rank": 7, "team": "Baby loves milk", "record": "7-7-0", "pointsFor": 1581.06, "pointsAgainst": 1574.24, "streak": "W-2", "waiver": 4, "moves": 25 },
-    { "rank": 8, "team": "Beezer Twelve Washingbeard", "record": "6-8-0", "pointsFor": 1566.18, "pointsAgainst": 1701.64, "streak": "L-2", "waiver": 5, "moves": 16 },
-    { "rank": 9, "team": "HeSpunMeRightRound", "record": "3-11-0", "pointsFor": 1439.36, "pointsAgainst": 1632.06, "streak": "L-1", "waiver": 3, "moves": 33 },
-    { "rank": 10, "team": "The Burgs", "record": "3-11-0", "pointsFor": 1470.06, "pointsAgainst": 1693.08, "streak": "L-5", "waiver": 2, "moves": 10 },
-    { "rank": 11, "team": "Oprah's Trophy Wife", "record": "4-10-0", "pointsFor": 1426.56, "pointsAgainst": 1554.26, "streak": "L-3", "waiver": 1, "moves": 7 },
-    { "rank": 12, "team": "DalCowAZZBoyz", "record": "6-8-0", "pointsFor": 1556.98, "pointsAgainst": 1542.74, "streak": "L-1", "waiver": 9, "moves": 20 }
+    {
+      "rank": 1,
+      "team": "TebowDied4OurSins",
+      "record": "13-1-0",
+      "pointsFor": 1667.5,
+      "pointsAgainst": 1463.72,
+      "streak": "W-10",
+      "waiver": 10,
+      "moves": 59
+    },
+    {
+      "rank": 2,
+      "team": "Ball & Achane",
+      "record": "10-4-0",
+      "pointsFor": 1770.34,
+      "pointsAgainst": 1557.02,
+      "streak": "W-2",
+      "waiver": 11,
+      "moves": 51
+    },
+    {
+      "rank": 3,
+      "team": "The Packers",
+      "record": "8-6-0",
+      "pointsFor": 1703.54,
+      "pointsAgainst": 1569.74,
+      "streak": "W-1",
+      "waiver": 12,
+      "moves": 9
+    },
+    {
+      "rank": 4,
+      "team": "I Thought This Was America!",
+      "record": "9-5-0",
+      "pointsFor": 1692.26,
+      "pointsAgainst": 1618.48,
+      "streak": "W-1",
+      "waiver": 7,
+      "moves": 13
+    },
+    {
+      "rank": 5,
+      "team": "Banner 18",
+      "record": "8-6-0",
+      "pointsFor": 1598.26,
+      "pointsAgainst": 1577.44,
+      "streak": "W-1",
+      "waiver": 6,
+      "moves": 10
+    },
+    {
+      "rank": 6,
+      "team": "Beef Injection",
+      "record": "7-7-0",
+      "pointsFor": 1662.14,
+      "pointsAgainst": 1649.82,
+      "streak": "L-1",
+      "waiver": 8,
+      "moves": 14
+    },
+    {
+      "rank": 7,
+      "team": "Baby loves milk",
+      "record": "7-7-0",
+      "pointsFor": 1581.06,
+      "pointsAgainst": 1574.24,
+      "streak": "W-2",
+      "waiver": 4,
+      "moves": 25
+    },
+    {
+      "rank": 8,
+      "team": "Beezer Twelve Washingbeard",
+      "record": "6-8-0",
+      "pointsFor": 1566.18,
+      "pointsAgainst": 1701.64,
+      "streak": "L-2",
+      "waiver": 5,
+      "moves": 16
+    },
+    {
+      "rank": 9,
+      "team": "HeSpunMeRightRound",
+      "record": "3-11-0",
+      "pointsFor": 1439.36,
+      "pointsAgainst": 1632.06,
+      "streak": "L-1",
+      "waiver": 3,
+      "moves": 33
+    },
+    {
+      "rank": 10,
+      "team": "The Burgs",
+      "record": "3-11-0",
+      "pointsFor": 1470.06,
+      "pointsAgainst": 1693.08,
+      "streak": "L-5",
+      "waiver": 2,
+      "moves": 10
+    },
+    {
+      "rank": 11,
+      "team": "Oprah's Trophy Wife",
+      "record": "4-10-0",
+      "pointsFor": 1426.56,
+      "pointsAgainst": 1554.26,
+      "streak": "L-3",
+      "waiver": 1,
+      "moves": 7
+    },
+    {
+      "rank": 12,
+      "team": "DalCowAZZBoyz",
+      "record": "6-8-0",
+      "pointsFor": 1556.98,
+      "pointsAgainst": 1542.74,
+      "streak": "L-1",
+      "waiver": 9,
+      "moves": 20
+    }
   ],
-  "compactDraftCsv": "1,1,Ja'Marr Chase,CIN,WR,TebowDied4OurSins\n1,2,Bijan Robinson,ATL,RB,DalCowAZZBoyz\n1,3,Saquon Barkley,PHI,RB,The Packers\n1,4,Jahmyr Gibbs,DET,RB,Beezer Twelve Washingbeard\n1,5,Derrick Henry,BAL,RB,Ball & Achane\n1,6,CeeDee Lamb,DAL,WR,Baby loves milk\n1,7,Christian McCaffrey,SF,RB,Beef Injection\n1,8,Justin Jefferson,MIN,WR,HeSpunMeRightRound\n1,9,Amon-Ra St. Brown,DET,WR,I Thought This Was America!\n1,10,Ashton Jeanty,LV,RB,Banner 18\n1,11,Nico Collins,HOU,WR,The Burgs\n1,12,Malik Nabers,NYG,WR,Oprah's Trophy Wife\n2,1,Chase Brown,CIN,RB,Oprah's Trophy Wife\n2,2,Drake London,ATL,WR,The Burgs\n2,3,Puka Nacua,LAR,WR,Banner 18\n2,4,Bucky Irving,TB,RB,I Thought This Was America!\n2,5,Brian Thomas Jr.,JAX,WR,HeSpunMeRightRound\n2,6,A.J. Brown,NE,WR,Beef Injection\n2,7,Josh Jacobs,GB,RB,Baby loves milk\n2,8,De'Von Achane,MIA,RB,Ball & Achane\n2,9,Kyren Williams,LAR,RB,Beezer Twelve Washingbeard\n2,10,Jonathan Taylor,IND,RB,The Packers\n2,11,Ladd McConkey,LAC,WR,DalCowAZZBoyz\n2,12,Lamar Jackson,BAL,QB,TebowDied4OurSins\n3,1,James Cook III,BUF,RB,TebowDied4OurSins\n3,2,Brock Bowers,LV,TE,DalCowAZZBoyz\n3,3,Josh Allen,BUF,QB,The Packers\n3,4,Terry McLaurin,WAS,WR,Beezer Twelve Washingbeard\n3,5,Tee Higgins,CIN,WR,Ball & Achane\n3,6,Trey McBride,ARI,TE,Baby loves milk\n3,7,Jalen Hurts,PHI,QB,Beef Injection\n3,8,Omarion Hampton,LAC,RB,HeSpunMeRightRound\n3,9,George Kittle,SF,TE,I Thought This Was America!\n3,10,DeVonta Smith,PHI,WR,Banner 18\n3,11,Jayden Daniels,WAS,QB,The Burgs\n3,12,Jaxon Smith-Njigba,SEA,WR,Oprah's Trophy Wife\n4,1,Kenneth Walker III,KC,RB,Oprah's Trophy Wife\n4,2,Mike Evans,SF,WR,The Burgs\n4,3,Jaylen Waddle,DEN,WR,Banner 18\n4,4,Chuba Hubbard,CAR,RB,I Thought This Was America!\n4,5,Marvin Harrison Jr.,ARI,WR,HeSpunMeRightRound\n4,6,Davante Adams,LAR,WR,Beef Injection\n4,7,Garrett Wilson,NYJ,WR,Baby loves milk\n4,8,Tyreek Hill,MIA,WR,Ball & Achane\n4,9,James Conner,ARI,RB,Beezer Twelve Washingbeard\n4,10,DK Metcalf,PIT,WR,The Packers\n4,11,Alvin Kamara,NO,RB,DalCowAZZBoyz\n4,12,George Pickens,DAL,WR,TebowDied4OurSins\n5,1,Breece Hall,NYJ,RB,TebowDied4OurSins\n5,2,TreVeyon Henderson,NE,RB,DalCowAZZBoyz\n5,3,Xavier Worthy,KC,WR,The Packers\n5,4,Courtland Sutton,DEN,WR,Beezer Twelve Washingbeard\n5,5,Tony Pollard,TEN,RB,Ball & Achane\n5,6,Zay Flowers,BAL,WR,Baby loves milk\n5,7,David Montgomery,HOU,RB,Beef Injection\n5,8,Isiah Pacheco,DET,RB,HeSpunMeRightRound\n5,9,DJ Moore,BUF,WR,I Thought This Was America!\n5,10,RJ Harvey,DEN,RB,Banner 18\n5,11,Tetairoa McMillan,CAR,WR,The Burgs\n5,12,Joe Burrow,CIN,QB,Oprah's Trophy Wife\n6,1,Calvin Ridley,TEN,WR,Oprah's Trophy Wife\n6,2,D'Andre Swift,CHI,RB,The Burgs\n6,3,Matthew Golden,GB,WR,Banner 18\n6,4,Aaron Jones Sr.,MIN,RB,I Thought This Was America!\n6,5,Jameson Williams,DET,WR,HeSpunMeRightRound\n6,6,Rome Odunze,CHI,WR,Beef Injection\n6,7,Travis Hunter,JAX,WR,Baby loves milk\n6,8,Chris Olave,NO,WR,Ball & Achane\n6,9,Sam LaPorta,DET,TE,Beezer Twelve Washingbeard\n6,10,Emeka Egbuka,TB,WR,The Packers\n6,11,Ricky Pearsall,SF,WR,DalCowAZZBoyz\n6,12,Jaylen Warren,PIT,RB,TebowDied4OurSins"
+  "compactDraftCsv": "1,1,Ja'Marr Chase,CIN,WR,TebowDied4OurSins\n1,2,Bijan Robinson,ATL,RB,DalCowAZZBoyz\n1,3,Saquon Barkley,PHI,RB,The Packers\n1,4,Jahmyr Gibbs,DET,RB,Beezer Twelve Washingbeard\n1,5,Derrick Henry,BAL,RB,Ball & Achane\n1,6,CeeDee Lamb,DAL,WR,Baby loves milk\n1,7,Christian McCaffrey,SF,RB,Beef Injection\n1,8,Justin Jefferson,MIN,WR,HeSpunMeRightRound\n1,9,Amon-Ra St. Brown,DET,WR,I Thought This Was America!\n1,10,Ashton Jeanty,LV,RB,Banner 18\n1,11,Nico Collins,HOU,WR,The Burgs\n1,12,Malik Nabers,NYG,WR,Oprah's Trophy Wife\n2,1,Chase Brown,CIN,RB,Oprah's Trophy Wife\n2,2,Drake London,ATL,WR,The Burgs\n2,3,Puka Nacua,LAR,WR,Banner 18\n2,4,Bucky Irving,TB,RB,I Thought This Was America!\n2,5,Brian Thomas Jr.,JAX,WR,HeSpunMeRightRound\n2,6,A.J. Brown,NE,WR,Beef Injection\n2,7,Josh Jacobs,GB,RB,Baby loves milk\n2,8,De'Von Achane,MIA,RB,Ball & Achane\n2,9,Kyren Williams,LAR,RB,Beezer Twelve Washingbeard\n2,10,Jonathan Taylor,IND,RB,The Packers\n2,11,Ladd McConkey,LAC,WR,DalCowAZZBoyz\n2,12,Lamar Jackson,BAL,QB,TebowDied4OurSins\n3,1,James Cook III,BUF,RB,TebowDied4OurSins\n3,2,Brock Bowers,LV,TE,DalCowAZZBoyz\n3,3,Josh Allen,BUF,QB,The Packers\n3,4,Terry McLaurin,WAS,WR,Beezer Twelve Washingbeard\n3,5,Tee Higgins,CIN,WR,Ball & Achane\n3,6,Trey McBride,ARI,TE,Baby loves milk\n3,7,Jalen Hurts,PHI,QB,Beef Injection\n3,8,Omarion Hampton,LAC,RB,HeSpunMeRightRound\n3,9,George Kittle,SF,TE,I Thought This Was America!\n3,10,DeVonta Smith,PHI,WR,Banner 18\n3,11,Jayden Daniels,WAS,QB,The Burgs\n3,12,Jaxon Smith-Njigba,SEA,WR,Oprah's Trophy Wife\n4,1,Kenneth Walker III,KC,RB,Oprah's Trophy Wife\n4,2,Mike Evans,SF,WR,The Burgs\n4,3,Jaylen Waddle,DEN,WR,Banner 18\n4,4,Chuba Hubbard,CAR,RB,I Thought This Was America!\n4,5,Marvin Harrison Jr.,ARI,WR,HeSpunMeRightRound\n4,6,Davante Adams,LAR,WR,Beef Injection\n4,7,Garrett Wilson,NYJ,WR,Baby loves milk\n4,8,Tyreek Hill,MIA,WR,Ball & Achane\n4,9,James Conner,ARI,RB,Beezer Twelve Washingbeard\n4,10,DK Metcalf,PIT,WR,The Packers\n4,11,Alvin Kamara,NO,RB,DalCowAZZBoyz\n4,12,George Pickens,DAL,WR,TebowDied4OurSins\n5,1,Breece Hall,NYJ,RB,TebowDied4OurSins\n5,2,TreVeyon Henderson,NE,RB,DalCowAZZBoyz\n5,3,Xavier Worthy,KC,WR,The Packers\n5,4,Courtland Sutton,DEN,WR,Beezer Twelve Washingbeard\n5,5,Tony Pollard,TEN,RB,Ball & Achane\n5,6,Zay Flowers,BAL,WR,Baby loves milk\n5,7,David Montgomery,HOU,RB,Beef Injection\n5,8,Isiah Pacheco,DET,RB,HeSpunMeRightRound\n5,9,DJ Moore,BUF,WR,I Thought This Was America!\n5,10,RJ Harvey,DEN,RB,Banner 18\n5,11,Tetairoa McMillan,CAR,WR,The Burgs\n5,12,Joe Burrow,CIN,QB,Oprah's Trophy Wife\n6,1,Calvin Ridley,TEN,WR,Oprah's Trophy Wife\n6,2,D'Andre Swift,CHI,RB,The Burgs\n6,3,Matthew Golden,GB,WR,Banner 18\n6,4,Aaron Jones Sr.,MIN,RB,I Thought This Was America!\n6,5,Jameson Williams,DET,WR,HeSpunMeRightRound\n6,6,Rome Odunze,CHI,WR,Beef Injection\n6,7,Travis Hunter,JAX,WR,Baby loves milk\n6,8,Chris Olave,NO,WR,Ball & Achane\n6,9,Sam LaPorta,DET,TE,Beezer Twelve Washingbeard\n6,10,Emeka Egbuka,TB,WR,The Packers\n6,11,Ricky Pearsall,SF,WR,DalCowAZZBoyz\n6,12,Jaylen Warren,PIT,RB,TebowDied4OurSins\n7,1,Jerry Jeudy,CLE,WR,TebowDied4OurSins\n7,2,Rashee Rice,KC,WR,DalCowAZZBoyz\n7,3,T.J. Hockenson,MIN,TE,The Packers\n7,4,Jakobi Meyers,JAX,WR,Beezer Twelve Washingbeard\n7,5,Patrick Mahomes,KC,QB,Ball & Achane\n7,6,Tyrone Tracy Jr.,NYG,RB,Baby loves milk\n7,7,Travis Kelce,KC,TE,Beef Injection\n7,8,Tyler Warren,IND,TE,HeSpunMeRightRound\n7,9,Deebo Samuel,SF,WR,I Thought This Was America!\n7,10,Kaleb Johnson,PIT,RB,Banner 18\n7,11,Jordan Mason,MIN,RB,The Burgs\n7,12,Zach Charbonnet,SEA,RB,Oprah's Trophy Wife\n8,1,Jauan Jennings,MIN,WR,Oprah's Trophy Wife\n8,2,Mark Andrews,BAL,TE,The Burgs\n8,3,Jordan Addison,MIN,WR,Banner 18\n8,4,Baker Mayfield,TB,QB,I Thought This Was America!\n8,5,J.K. Dobbins,DEN,RB,HeSpunMeRightRound\n8,6,Tank Bigsby,PHI,RB,Beef Injection\n8,7,Bo Nix,DEN,QB,Baby loves milk\n8,8,Tucker Kraft,GB,TE,Ball & Achane\n8,9,Jared Goff,DET,QB,Beezer Twelve Washingbeard\n8,10,Stefon Diggs,NE,WR,The Packers\n8,11,Brock Purdy,SF,QB,DalCowAZZBoyz\n8,12,Austin Ekeler,WAS,RB,TebowDied4OurSins\n9,1,David Njoku,LAC,TE,TebowDied4OurSins\n9,2,Dak Prescott,DAL,QB,DalCowAZZBoyz\n9,3,Travis Etienne Jr.,NO,RB,The Packers\n9,4,Keenan Allen,LAC,WR,Beezer Twelve Washingbeard\n9,5,Rashid Shaheed,SEA,WR,Ball & Achane\n9,6,Braelon Allen,NYJ,RB,Baby loves milk\n9,7,Khalil Shakir,BUF,WR,Beef Injection\n9,8,Justin Fields,KC,QB,HeSpunMeRightRound\n9,9,Michael Pittman Jr.,PIT,WR,I Thought This Was America!\n9,10,Keon Coleman,BUF,WR,Banner 18\n9,11,Evan Engram,DEN,TE,The Burgs\n9,12,Jacory Croskey-Merritt,WAS,RB,Oprah's Trophy Wife\n10,1,Josh Downs,IND,WR,Oprah's Trophy Wife\n10,2,Kyler Murray,MIN,QB,The Burgs\n10,3,Colston Loveland,CHI,TE,Banner 18\n10,4,Cooper Kupp,SEA,WR,I Thought This Was America!\n10,5,Javonte Williams,DAL,RB,HeSpunMeRightRound\n10,6,Chris Godwin Jr.,TB,WR,Beef Injection\n10,7,Drake Maye,NE,QB,Baby loves milk\n10,8,Rhamondre Stevenson,NE,RB,Ball & Achane\n10,9,Broncos,DEN,DST,Beezer Twelve Washingbeard\n10,10,Jayden Reed,GB,WR,The Packers\n10,11,Bhayshul Tuten,JAX,RB,DalCowAZZBoyz\n10,12,Rachaad White,WAS,RB,TebowDied4OurSins\n11,1,Darnell Mooney,NYG,WR,TebowDied4OurSins\n11,2,Jake Ferguson,DAL,TE,DalCowAZZBoyz\n11,3,Rashod Bateman,BAL,WR,The Packers\n11,4,Najee Harris,LAC,RB,Beezer Twelve Washingbeard\n11,5,Christian Kirk,SF,WR,Ball & Achane\n11,6,Jayden Higgins,HOU,WR,Baby loves milk\n11,7,Cam Skattebo,NYG,RB,Beef Injection\n11,8,Nick Chubb,HOU,RB,HeSpunMeRightRound\n11,9,Trey Benson,ARI,RB,I Thought This Was America!\n11,10,Jordan Love,GB,QB,Banner 18\n11,11,Dallas Goedert,PHI,TE,The Burgs\n11,12,Quinshon Judkins,CLE,RB,Oprah's Trophy Wife\n12,1,Steelers,PIT,DST,Oprah's Trophy Wife\n12,2,Dylan Sampson,CLE,RB,The Burgs\n12,3,Ray Davis,BUF,RB,Banner 18\n12,4,Rico Dowdle,PIT,RB,I Thought This Was America!\n12,5,Brandon Aiyuk,SF,WR,HeSpunMeRightRound\n12,6,Tyler Allgeier,ARI,RB,Beef Injection\n12,7,Dalton Kincaid,BUF,TE,Baby loves milk\n12,8,Eagles,PHI,DST,Ball & Achane\n12,9,Zach Ertz,WAS,TE,Beezer Twelve Washingbeard\n12,10,Ravens,BAL,DST,The Packers\n12,11,Jerome Ford,WAS,RB,DalCowAZZBoyz\n12,12,Packers,GB,DST,TebowDied4OurSins\n13,1,Jaydon Blue,DAL,RB,TebowDied4OurSins\n13,2,Cedric Tillman,CLE,WR,DalCowAZZBoyz\n13,3,Brandon Aubrey,DAL,K,The Packers\n13,4,Jake Bates,DET,K,Beezer Twelve Washingbeard\n13,5,Kyle Pitts Sr.,ATL,TE,Ball & Achane\n13,6,Tyjae Spears,TEN,RB,Baby loves milk\n13,7,Darren Waller,MIA,TE,Beef Injection\n13,8,Woody Marks,HOU,RB,HeSpunMeRightRound\n13,9,Ollie Gordon II,MIA,RB,I Thought This Was America!\n13,10,Vikings,MIN,DST,Banner 18\n13,11,Joshua Palmer,BUF,WR,The Burgs\n13,12,Brenton Strange,JAX,TE,Oprah's Trophy Wife\n14,1,Marvin Mims Jr.,DEN,WR,Oprah's Trophy Wife\n14,2,Chiefs,KC,DST,The Burgs\n14,3,J.J. McCarthy,MIN,QB,Banner 18\n14,4,Texans,HOU,DST,I Thought This Was America!\n14,5,Bills,BUF,DST,HeSpunMeRightRound\n14,6,Harrison Butker,KC,K,Beef Injection\n14,7,Lions,DET,DST,Baby loves milk\n14,8,Cameron Dicker,LAC,K,Ball & Achane\n14,9,Justin Herbert,LAC,QB,Beezer Twelve Washingbeard\n14,10,DeMario Douglas,NE,WR,The Packers\n14,11,Chargers,LAC,DST,DalCowAZZBoyz\n14,12,Luther Burden III,CHI,WR,TebowDied4OurSins\n15,1,Chris Boswell,PIT,K,TebowDied4OurSins\n15,2,Ka'imi Fairbairn,HOU,K,DalCowAZZBoyz\n15,3,Brian Robinson,ATL,RB,The Packers\n15,4,Alec Pierce,IND,WR,Beezer Twelve Washingbeard\n15,5,Caleb Williams,CHI,QB,Ball & Achane\n15,6,Wil Lutz,DEN,K,Baby loves milk\n15,7,Rams,LAR,DST,Beef Injection\n15,8,Matt Gay,LV,K,HeSpunMeRightRound\n15,9,Evan McPherson,CIN,K,I Thought This Was America!\n15,10,Chase McLaughlin,TB,K,Banner 18\n15,11,Jason Sanders,NYJ,K,The Burgs\n15,12,Tyler Bass,BUF,K,Oprah's Trophy Wife"
 }

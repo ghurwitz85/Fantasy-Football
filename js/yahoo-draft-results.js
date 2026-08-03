@@ -143,6 +143,156 @@ export function yahooDraftAppTextToRows(text = '', { teams = 12 } = {}) {
   return rows;
 }
 
+
+function parseEspnStyleLine(line = '', fallbackPick = null) {
+  const cleaned = String(line).trim();
+  if (!cleaned) return null;
+  const patterns = [
+    /^(?:pick\s*)?(\d+)[.)-]?\s*(?:\(\d+\)\s*)?(.+?)\s*\(([A-Za-z]{2,3})\s*[-,/]\s*(QB|RB|WR|TE|K|DST|DEF)\)(?:\s+(.+))?$/i,
+    /^(?:pick\s*)?(\d+)[.)-]?\s+(.+?)\s+([A-Za-z]{2,3})\s+(QB|RB|WR|TE|K|DST|DEF)(?:\s+(.+))?$/i,
+    /^(.+?)\s*\(([A-Za-z]{2,3})\s*[-,/]\s*(QB|RB|WR|TE|K|DST|DEF)\)(?:\s+(.+))?$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern);
+    if (!match) continue;
+    const hasExplicitPick = /^\d/.test(match[1] || '');
+    const pick = hasExplicitPick ? Number(match[1]) : fallbackPick;
+    const offset = hasExplicitPick ? 1 : 0;
+    return {
+      pick,
+      player: match[1 + offset],
+      team: match[2 + offset],
+      pos: match[3 + offset],
+      manager: match[4 + offset] || '',
+    };
+  }
+  return null;
+}
+
+function escapeRegex(value = '') {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function playerCatalogEntries(players = []) {
+  return players
+    .map((player) => ({
+      name: String(player.name || player.playerName || '').trim(),
+      normalizedName: normalizeName(player.name || player.playerName || ''),
+      team: normalizeTeam(player.team || player.nflTeam || ''),
+      position: normalizePosition(player.position || player.pos || ''),
+    }))
+    .filter((player) => player.name && player.normalizedName)
+    .sort((a, b) => b.name.length - a.name.length);
+}
+
+function explicitPickFromChatLine(line = '') {
+  const patterns = [
+    /\bwith\s+(?:the\s+)?(?:overall\s+)?(?:pick\s+)?#?(\d+)\b/i,
+    /\b(?:overall\s+)?pick\s*#?\s*(\d+)\b/i,
+    /^\s*#?(\d+)[.)\-:]\s*/,
+  ];
+  for (const pattern of patterns) {
+    const match = String(line).match(pattern);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function managerFromChatLine(line = '', playerName = '') {
+  const cleaned = String(line)
+    .replace(/^\s*\[[^\]]+\]\s*/, '')
+    .replace(/^\s*[^:]{1,30}:\s*/, '')
+    .trim();
+  const player = escapeRegex(playerName);
+  const patterns = [
+    new RegExp(`^(?:with\\s+.+?pick[,.:]?\\s*)?(.+?)\\s+(?:selected|selects|drafted|drafts|picked|picks|chose|chooses|took|takes)\\s+${player}(?:\\s|$)`, 'i'),
+    new RegExp(`^${player}\\s+(?:was\\s+)?(?:selected|drafted|picked|chosen|taken)\\s+by\\s+(.+?)(?:\\s|$)`, 'i'),
+  ];
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern);
+    if (match?.[1]) return match[1].replace(/[\s,:\-]+$/, '').trim();
+  }
+  return '';
+}
+
+function looksLikeDraftAnnouncement(line = '', playerName = '') {
+  const cleaned = String(line).trim();
+  const player = escapeRegex(playerName);
+  if (explicitPickFromChatLine(cleaned)) return true;
+  if (/\b(draft bot|draftbot|commissioner|selection|is now on the clock)\b/i.test(cleaned)) return true;
+  if (new RegExp(`${player}\\s+(?:was\\s+)?(?:selected|drafted|picked|chosen|taken)\\s+by\\s+`, 'i').test(cleaned)) return true;
+  const beforePlayer = cleaned.match(new RegExp(`^(?:\\[[^\\]]+\\]\\s*)?(?:[^:]{1,30}:\\s*)?(.+?)\\s+(?:selected|selects|drafted|drafts|picked|picks|chose|chooses|took|takes)\\s+${player}(?:\\s|$)`, 'i'));
+  if (!beforePlayer?.[1]) return false;
+  const actor = beforePlayer[1].trim();
+  if (/^(i|you|he|she|we|they|someone|who)\b/i.test(actor)) return false;
+  if (/\b(can't believe|cannot believe|should have|would have|could have|almost|wanted to|wish)\b/i.test(cleaned)) return false;
+  return actor.length <= 60;
+}
+
+export function noisyDraftChatTextToRows(text = '', {
+  teams = 12,
+  players = [],
+  startingPick = 1,
+} = {}) {
+  const catalog = playerCatalogEntries(players);
+  if (!catalog.length) return [];
+  const lines = cleanCsvText(text)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const rows = [];
+  const seenPlayers = new Set();
+  let nextImplicitPick = Math.max(1, Number(startingPick) || 1);
+  const draftVerb = /\b(selected|selects|drafted|drafts|picked|picks|chose|chooses|chosen|took|takes|taken)\b/i;
+
+  lines.forEach((line) => {
+    if (!draftVerb.test(line)) return;
+    const normalizedLine = normalizeName(line);
+    const matches = catalog.filter((player) => normalizedLine.includes(player.normalizedName));
+    if (matches.length !== 1) return;
+    const player = matches[0];
+    if (!looksLikeDraftAnnouncement(line, player.name)) return;
+    if (seenPlayers.has(player.normalizedName)) return;
+
+    const explicitPick = explicitPickFromChatLine(line);
+    const pick = explicitPick || nextImplicitPick;
+    if (!explicitPick) nextImplicitPick += 1;
+    else nextImplicitPick = Math.max(nextImplicitPick, explicitPick + 1);
+    seenPlayers.add(player.normalizedName);
+    rows.push({
+      pick,
+      pickExplicit: Boolean(explicitPick),
+      round: Math.ceil(pick / Number(teams || 12)),
+      player: player.name,
+      team: player.team,
+      pos: player.position,
+      manager: managerFromChatLine(line, player.name),
+      sourceFormat: 'noisy-draft-chat',
+      originalLine: line,
+    });
+  });
+  return rows;
+}
+
+export function genericDraftTextToRows(text = '', { teams = 12 } = {}) {
+  const lines = cleanCsvText(text)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const rows = [];
+  lines.forEach((line, index) => {
+    const parsed = parseEspnStyleLine(line, rows.length + 1);
+    if (!parsed?.player) return;
+    const pick = Number(parsed.pick) || rows.length + 1;
+    rows.push({
+      ...parsed,
+      pick,
+      round: Math.ceil(pick / Number(teams || 12)),
+    });
+  });
+  return rows;
+}
+
 export function normalizeYahooDraftResults(rows = [], { season = 2025, source = 'yahoo-draft-results-import' } = {}) {
   return rows.map((row, index) => {
     const name = lookup(row, ['Player', 'Player Name', 'Name']);
@@ -164,6 +314,9 @@ export function normalizeYahooDraftResults(rows = [], { season = 2025, source = 
       round,
       fantasyTeam: fantasyTeam || null,
       cost,
+      pickExplicit: row.pickExplicit !== false,
+      sourceFormat: row.sourceFormat || null,
+      originalLine: row.originalLine || null,
       source,
     };
   }).filter(Boolean);
@@ -172,9 +325,19 @@ export function normalizeYahooDraftResults(rows = [], { season = 2025, source = 
 export function yahooDraftCsvTextToV3(text = '', options = {}) {
   const csvRows = normalizeYahooDraftResults(yahooDraftCsvTextToRows(text), options);
   if (csvRows.length) return csvRows;
-  return normalizeYahooDraftResults(yahooDraftAppTextToRows(text, options), {
+  const yahooRows = normalizeYahooDraftResults(yahooDraftAppTextToRows(text, options), {
     ...options,
     source: options.source || 'yahoo-draft-app-paste',
+  });
+  if (yahooRows.length) return yahooRows;
+  const genericRows = normalizeYahooDraftResults(genericDraftTextToRows(text, options), {
+    ...options,
+    source: options.source || 'generic-draft-app-paste',
+  });
+  if (genericRows.length) return genericRows;
+  return normalizeYahooDraftResults(noisyDraftChatTextToRows(text, options), {
+    ...options,
+    source: options.source || 'noisy-draft-chat-paste',
   });
 }
 

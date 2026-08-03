@@ -8,6 +8,8 @@ import {
   summarizeDraftTendencies,
   yahooDraftAppTextToRows,
   yahooDraftCsvTextToV3,
+  genericDraftTextToRows,
+  noisyDraftChatTextToRows,
 } from '../js/yahoo-draft-results.js';
 
 test('splits quoted Yahoo draft CSV rows', () => {
@@ -20,12 +22,12 @@ test('bundled 2025 Yahoo standings and draft fixture has expected early data', (
 
   assert.equal(fixture.standings.length, 12);
   assert.equal(fixture.standings[0].team, 'TebowDied4OurSins');
-  assert.equal(picks.length, 72);
+  assert.equal(picks.length, 180);
   assert.equal(picks[0].name, "Ja'Marr Chase");
   assert.equal(picks[0].fantasyTeam, 'TebowDied4OurSins');
   assert.equal(picks[1].name, 'Bijan Robinson');
   assert.equal(picks[12].name, 'Chase Brown');
-  assert.equal(picks.at(-1).name, 'Jaylen Warren');
+  assert.equal(picks.at(-1).name, 'Tyler Bass');
 });
 
 test('normalizes Yahoo draft results into stable V3 draft rows', () => {
@@ -189,4 +191,74 @@ test('normalizes object rows and summarizes draft tendencies', () => {
   assert.deepEqual(summary.byPosition, { QB: 1, RB: 1, TE: 1 });
   assert.equal(summary.teams.A.byPosition.RB, 1);
   assert.equal(summary.earlyRoundsByPosition.TE, 1);
+});
+
+test('parses common ESPN-style copied draft lines', () => {
+  const text = `
+1. Bijan Robinson (ATL - RB) Team Alpha
+2. Ja'Marr Chase (CIN - WR) Team Beta
+3 CeeDee Lamb DAL WR Team Gamma
+`;
+  const raw = genericDraftTextToRows(text, { teams: 12 });
+  const rows = yahooDraftCsvTextToV3(text, { teams: 12, season: 2026 });
+
+  assert.equal(raw.length, 3);
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].name, 'Bijan Robinson');
+  assert.equal(rows[0].team, 'ATL');
+  assert.equal(rows[1].position, 'WR');
+  assert.equal(rows[2].fantasyTeam, 'Team Gamma');
+  assert.equal(rows[0].source, 'generic-draft-app-paste');
+});
+
+test('parses draft announcements from noisy live chat and ignores conversation', () => {
+  const players = [
+    { name: 'Bijan Robinson', team: 'ATL', position: 'RB' },
+    { name: "Ja'Marr Chase", team: 'CIN', position: 'WR' },
+    { name: 'Josh Allen', team: 'BUF', position: 'QB' },
+  ];
+  const text = `
+Mike: good luck everyone
+Draft Bot: With the 1st pick, Team Alpha selects Bijan Robinson
+Sarah: wow great pick
+Ja'Marr Chase was drafted by Team Beta
+Tom: I can't believe you picked Josh Allen this early
+Draft Bot: Pick 3 - Team Gamma drafted Josh Allen
+Sarah: Bijan Robinson is going to be great
+`;
+  const raw = noisyDraftChatTextToRows(text, { teams: 12, players });
+  const rows = yahooDraftCsvTextToV3(text, { teams: 12, season: 2026, players });
+
+  assert.equal(raw.length, 3);
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].name, 'Bijan Robinson');
+  assert.equal(rows[0].pickNumber, 1);
+  assert.equal(rows[0].fantasyTeam, 'Team Alpha');
+  assert.equal(rows[1].name, "Ja'Marr Chase");
+  assert.equal(rows[1].position, 'WR');
+  assert.equal(rows[2].name, 'Josh Allen');
+  assert.equal(rows[2].pickNumber, 3);
+  assert.equal(rows[2].source, 'noisy-draft-chat-paste');
+});
+
+test('assigns sequential implicit picks and rejects ambiguous player matches', () => {
+  const players = [
+    { name: 'Michael Wilson', team: 'ARI', position: 'WR' },
+    { name: 'Garrett Wilson', team: 'NYJ', position: 'WR' },
+    { name: 'Puka Nacua', team: 'LAR', position: 'WR' },
+  ];
+  const text = `
+Team Alpha selects Wilson
+Team Beta selects Puka Nacua
+people chatting about lunch
+Team Gamma drafted Michael Wilson
+`;
+  const rows = noisyDraftChatTextToRows(text, { teams: 12, players, startingPick: 8 });
+
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].player, 'Puka Nacua');
+  assert.equal(rows[0].pick, 8);
+  assert.equal(rows[0].pickExplicit, false);
+  assert.equal(rows[1].player, 'Michael Wilson');
+  assert.equal(rows[1].pick, 9);
 });

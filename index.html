@@ -411,7 +411,7 @@
       <aside id="live-draft-command-center" class="panel draft-day-command-panel">
         <p class="eyebrow" style="margin-bottom:8px;">Draft day command center</p>
         <h2 class="section-title" style="margin:0 0 10px;color:var(--gold);">Live Draft Mode</h2>
-        <p class="hint">Use this during the draft. Keep this panel beside the board to mark picks live, paste Yahoo draft results from the other app, and keep recommendations synced to your roster.</p>
+        <p class="hint">Use this during the draft. Keep this panel beside the board to mark picks live, paste Yahoo or ESPN draft results, or paste a noisy draft-chat transcript. The importer ignores ordinary conversation and matches confirmed draft announcements to the loaded player pool.</p>
         <div class="grid-3">
           <label>Teams<input id="v3DraftTeams" type="number" min="1" max="32" value="12"></label>
           <label>Your draft slot<input id="v3DraftSlot" type="number" min="1" max="32" value="1"></label>
@@ -422,15 +422,38 @@
           <button class="btn-ghost" id="v3DraftResetBtn">Reset live draft</button>
         </div>
         <div class="notice-box" id="v3DraftSummary" style="margin-top:12px;">Live draft board will load after V3 rankings are ready.</div>
+        <details class="how" style="margin-top:12px;">
+          <summary>Deep Simulation &amp; Decision Explorer</summary>
+          <p>Run a heavier on-demand comparison of the leading picks. This simulates the rest of the draft repeatedly and compares median starting-lineup points, floor, ceiling, total roster value, position-run risk, and how often each candidate produces the best outcome.</p>
+          <div class="grid-3" style="margin-top:10px;">
+            <label>Trials per candidate
+              <select id="v3DeepSimTrials">
+                <option value="100">100 · fast</option>
+                <option value="300" selected>300 · balanced</option>
+                <option value="600">600 · deeper</option>
+                <option value="1000">1000 · maximum</option>
+              </select>
+            </label>
+            <label>Candidates
+              <select id="v3DeepSimCandidates">
+                <option value="3">Top 3</option>
+                <option value="4" selected>Top 4</option>
+                <option value="6">Top 6</option>
+              </select>
+            </label>
+            <div style="display:flex;align-items:end;"><button class="btn-primary" id="v3DeepSimBtn" style="width:100%;">Run deep simulation</button></div>
+          </div>
+          <div class="notice-box" id="v3DecisionExplorerResult" style="margin-top:10px;">Run this when you want a deeper comparison than the automatic live recommendation.</div>
+        </details>
         <details class="how" style="margin-top:12px;" open>
-          <summary>Bulk sync Yahoo draft results</summary>
-          <p>Paste whatever Yahoo gives you: a draft results table/CSV, or the Yahoo Draft App copied player blocks with repeated player name, position, NFL team, bye, pick number, and manager. This bulk-removes drafted players so you do not have to click every pick manually.</p>
+          <summary>Bulk sync Yahoo / ESPN draft results</summary>
+          <p>Paste a full draft-results table, only the newest copied picks, or a chat transcript containing draft announcements mixed with normal conversation. The importer preserves earlier picks, ignores already-drafted players, recognizes Yahoo CSV/player blocks and ESPN-style lines, and safely matches chat announcements against the loaded player database before recalculating recommendations.</p>
           <div class="field" style="margin-top:10px;">
-            <label>Paste Yahoo draft results / app copied picks</label>
-            <textarea id="v3YahooDraftPaste" placeholder="CSV example:&#10;Pick,Round,Player,Team,Pos,Drafted By&#10;1,1,Bijan Robinson,ATL,RB,Team Alpha&#10;&#10;Yahoo Draft App example:&#10;B. Robinson&#10;B. Robinson&#10;RB&#10;Atl&#10;Bye 11&#10;2&#10;You" style="min-height:160px;"></textarea>
+            <label>Paste Yahoo / ESPN results, copied picks, or draft chat</label>
+            <textarea id="v3YahooDraftPaste" placeholder="CSV example:&#10;Pick,Round,Player,Team,Pos,Drafted By&#10;1,1,Bijan Robinson,ATL,RB,Team Alpha&#10;&#10;ESPN-style example:&#10;2. Ja'Marr Chase (CIN - WR) Team Beta&#10;&#10;Noisy chat example:&#10;Mike: great pick&#10;Draft Bot: Team Alpha selected Bijan Robinson&#10;Sarah: wow&#10;Ja'Marr Chase was drafted by Team Beta" style="min-height:180px;"></textarea>
           </div>
           <div class="btn-row">
-            <button class="btn-ghost" id="v3YahooDraftSyncBtn">Sync pasted draft picks</button>
+            <button class="btn-ghost" id="v3YahooDraftSyncBtn">Merge pasted draft picks</button>
             <span class="fetch-status" id="v3YahooDraftSyncStatus"></span>
           </div>
         </details>

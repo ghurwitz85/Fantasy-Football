@@ -1,11 +1,13 @@
 import { buildV3BoardRows } from './board-adapter.js';
 import { loadJson, loadV3StatusData } from './data-loader.js';
 import {
+  compareCandidateSimulations,
   createDraftState,
   draftPlayer,
   prepareLiveDraftBoard,
   resetDraftState,
   rosterCountsByPosition,
+  runDecisionExplorer,
   undoLastPick,
 } from './draft-state-engine.js';
 import {
@@ -38,6 +40,7 @@ let v3CachedAdp = [];
 let v3ImportedAdp = [];
 let v3Preferences = loadV3Preferences();
 let v3DraftState = loadV3DraftState();
+let v3PreviousRecommendation = null;
 const v3SortState = {
   main: { key: 'modeledStarterPoints', direction: 'desc' },
   preview: null,
@@ -401,6 +404,8 @@ function renderCurrentV3Board() {
   syncDraftInputsFromState();
   const liveBoard = prepareLiveDraftBoard(fullBoard, v3DraftState, {
     leagueSettings: buildV3LeagueSettingsFromFormValues(formValues()),
+    monteCarloTrials: 24,
+    monteCarloCandidateLimit: 4,
   });
   window.__v3FullBoard = fullBoard;
   window.__v3Board = liveBoard;
@@ -427,19 +432,36 @@ function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
     .map((position) => `${position}: ${counts[position] || 0}`)
     .join(' · ');
   const strategySorted = [...liveBoard].sort((a, b) => {
+    const utilityDelta = Number(b.draft?.simulation?.modeledDraftUtility || 0) - Number(a.draft?.simulation?.modeledDraftUtility || 0);
+    if (utilityDelta) return utilityDelta;
     const modeledDelta = Number(b.draft?.simulation?.projectedStarterPoints || 0) - Number(a.draft?.simulation?.projectedStarterPoints || 0);
     if (modeledDelta) return modeledDelta;
     return Number(b.draft?.strategy?.pointsMaximizingScore || 0) - Number(a.draft?.strategy?.pointsMaximizingScore || 0);
   });
   const recommended = strategySorted[0];
+  const recommendationChangeLine = recommended && v3PreviousRecommendation && v3PreviousRecommendation.playerId !== recommended.playerId
+    ? `<div class="player-meta"><strong>Recommendation changed:</strong> ${escapeHtml(v3PreviousRecommendation.name)} → ${escapeHtml(recommended.name)} after the latest draft-state update.</div>`
+    : '';
+  if (recommended) v3PreviousRecommendation = { playerId: recommended.playerId, name: recommended.name };
   const alternatives = Object.values(strategySorted.reduce((byPosition, player) => {
     const position = player.position || player.v3Row?.position || 'UNK';
     if (!byPosition[position]) byPosition[position] = player;
     return byPosition;
-  }, {})).slice(0, 5);
+  }, {})).filter((player) => player.playerId !== recommended?.playerId).slice(0, 5);
+  const utility = recommended?.draft?.simulation?.modeledUtilityBreakdown;
+  const monteCarlo = recommended?.draft?.monteCarlo;
+  const monteCarloLine = monteCarlo
+    ? `<div class="player-meta"><strong>${monteCarlo.trials}-trial outcome range:</strong> Avg ${formatNumber(monteCarlo.averageStarterPoints, 1)} starter pts · Floor ${formatNumber(monteCarlo.starterFloor, 1)} · Median ${formatNumber(monteCarlo.starterMedian, 1)} · Ceiling ${formatNumber(monteCarlo.starterCeiling, 1)} · ${Math.round((monteCarlo.positionRunRisk?.probabilityAtLeastOne || 0) * 100)}% chance at least one more ${escapeHtml(recommended.position || recommended.v3Row?.position || '')} goes before your next turn</div>`
+    : '';
+  const utilityLine = utility
+    ? `<div class="player-meta"><strong>Utility breakdown:</strong> Starter ${formatNumber(utility.starter, 1)} · Flex ${formatNumber(utility.flex, 1)} · Bench ${formatNumber(utility.bench, 1)} · Roster plan ${formatNumber(utility.rosterPlan, 1)} · Opportunity ${formatNumber(utility.opportunity, 1)} · Tier/scarcity ${formatNumber(utility.tierScarcity, 1)} · Availability ${formatNumber(utility.availability, 1)} · Strategy ${formatNumber(utility.strategy, 1)} · Replaceability penalty -${formatNumber(utility.replaceabilityPenalty, 1)} · <strong>Total ${formatNumber(utility.total, 1)}</strong></div>`
+    : '';
   const recommendedLine = recommended
-    ? `<div style="font-size:18px;margin:8px 0;"><strong style="color:var(--gold);">Recommended now:</strong> ${escapeHtml(recommended.name)} (${escapeHtml(recommended.position || recommended.v3Row?.position || '')}) · ${formatNumber(recommended.draft?.strategy?.pointsMaximizingScore, 1)} strategy score</div>
+    ? `<div style="font-size:18px;margin:8px 0;"><strong style="color:var(--gold);">Recommended now:</strong> ${escapeHtml(recommended.name)} (${escapeHtml(recommended.position || recommended.v3Row?.position || '')}) · ${formatNumber(recommended.draft?.simulation?.modeledDraftUtility, 1)} modeled utility</div>
        <div><strong>Modeled final starters:</strong> ${formatNumber(recommended.draft?.simulation?.projectedStarterPoints, 1)} pts · ${escapeHtml(simulationImpactLabel(recommended.draft?.simulation?.pointsVsBest))}</div>
+       ${monteCarloLine}
+       ${utilityLine}
+       ${recommendationChangeLine}
        <div><strong>Why:</strong> ${escapeHtml(recommended.draft?.simulation?.explanation || recommended.draft?.strategy?.explanation || 'Best projected live-draft roster fit.')}</div>`
     : '<div><strong>Recommended now:</strong> No available players.</div>';
   const simulatedPathSteps = recommended?.draft?.simulation?.path?.slice(0, 6) || [];
@@ -448,15 +470,100 @@ function renderV3DraftPanel(fullBoard = [], liveBoard = []) {
     ? `<details style="margin:6px 0;"><summary><strong>Simulated path</strong> <span class="player-meta">next ${simulatedPathSteps.length} modeled picks</span></summary><div class="player-meta" style="margin-top:4px;">${escapeHtml(simulatedPath)}</div></details>`
     : '';
   const alternativeSummary = alternatives.map((player) => `${player.position || player.v3Row?.position}: ${player.name} (${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} pts, ${simulationImpactLabel(player.draft?.simulation?.pointsVsBest)})`).join(' · ');
+  const comparisonRows = recommended ? alternatives.slice(0, 3).map((player) => {
+    const comparison = compareCandidateSimulations(recommended, player);
+    const strongestUtilityEdges = Object.entries(comparison.utilityDeltas)
+      .filter(([, value]) => Math.abs(Number(value)) >= 0.5)
+      .sort(([, a], [, b]) => Math.abs(Number(b)) - Math.abs(Number(a)))
+      .slice(0, 3)
+      .map(([field, value]) => `${field.replace(/([A-Z])/g, ' $1').toLowerCase()} ${formatSigned(value, 1)}`)
+      .join(' · ');
+    return `<tr>
+      <td>${escapeHtml(player.name)} (${escapeHtml(comparison.alternativePosition)})</td>
+      <td>${formatSigned(comparison.utilityDelta, 1)}</td>
+      <td>${formatSigned(comparison.starterPointsDelta, 1)}</td>
+      <td>${formatSigned(comparison.totalRosterPointsDelta, 1)}</td>
+      <td>${formatSigned(comparison.nextTurnDropoffDelta, 1)}</td>
+      <td>${escapeHtml(strongestUtilityEdges || 'Near-even component profile')}</td>
+    </tr>`;
+  }).join('') : '';
+  const comparisonDetails = comparisonRows
+    ? `<details style="margin:8px 0;"><summary><strong>Why this pick beats the alternatives</strong></summary>
+       <div style="overflow-x:auto;margin-top:6px;"><table class="rank-table"><thead><tr><th>Alternative</th><th>Utility edge</th><th>Starter pts edge</th><th>Total roster edge</th><th>Next-turn dropoff edge</th><th>Largest component edges</th></tr></thead><tbody>${comparisonRows}</tbody></table></div></details>`
+    : '';
   const topTargets = strategySorted.slice(0, 5).map((player) => `${player.name} (${player.position}, ${formatNumber(player.draft?.simulation?.projectedStarterPoints, 1)} modeled pts)`).join('; ');
   target.innerHTML = `
     <strong>Pick ${v3DraftState.currentPick}</strong> · ${v3DraftState.picks.length} drafted · ${liveBoard.length}/${fullBoard.length} available<br>
     <strong>Your roster:</strong> ${escapeHtml(rosterSummary)}<br>
     ${recommendedLine}
     ${simulatedPathDetails}
+    ${comparisonDetails}
+    <strong>League-history influence:</strong> OFF · 2025 draft data is advisory only and does not affect rankings or simulations.<br>
     <strong>Best by position:</strong> ${escapeHtml(alternativeSummary || 'No alternatives yet')}<br>
     <strong>Top strategy targets:</strong> ${escapeHtml(topTargets || 'No available players yet')}
   `;
+}
+
+function renderDecisionExplorerResult(analysis = null) {
+  const target = document.getElementById('v3DecisionExplorerResult');
+  if (!target) return;
+  if (!analysis?.recommended) {
+    target.innerHTML = '<span class="fetch-status error">No candidates were available for deep simulation.</span>';
+    return;
+  }
+  const confidence = Math.round(analysis.confidence * 100);
+  const rows = analysis.candidates.map((candidate, index) => `<tr>
+    <td>${index + 1}. ${escapeHtml(candidate.name)} (${escapeHtml(candidate.position)})</td>
+    <td>${formatNumber(candidate.starterMedian, 1)}</td>
+    <td>${formatNumber(candidate.starterFloor, 1)}</td>
+    <td>${formatNumber(candidate.starterCeiling, 1)}</td>
+    <td>${formatNumber(candidate.averageRosterPoints, 1)}</td>
+    <td>${Math.round(candidate.bestOutcomeRate * 100)}%</td>
+    <td>${Math.round((candidate.positionRunRisk?.probabilityAtLeastOne || 0) * 100)}%</td>
+    <td>${formatSigned(candidate.averageContextAdjustment, 1)}</td>
+  </tr>`).join('');
+  const medianRoster = analysis.recommended.medianRoster.slice(0, 12).join(' · ');
+  const context = analysis.recommended.medianContext || {};
+  const stackText = context.stack?.stacks?.length ? context.stack.stacks.map((stack) => `${stack.team}: ${stack.quarterback} + ${stack.receivers.join(', ')}`).join(' · ') : 'No active QB-receiver stack';
+  const byeText = context.bye?.worstWeek ? `Week ${context.bye.worstWeek.week}: ${context.bye.worstWeek.players.join(', ')} (${formatSigned(-context.bye.worstWeek.penalty, 1)})` : 'No material bye-week concentration';
+  const playoffText = `${formatSigned(context.playoff?.value, 1)} (${context.playoff?.source || 'neutral'})`;
+  const volatilityText = context.volatility ? `${formatNumber(context.volatility.floorPoints, 1)} floor / ${formatNumber(context.volatility.ceilingPoints, 1)} ceiling` : 'Unavailable';
+  target.innerHTML = `
+    <div style="font-size:17px;margin-bottom:6px;"><strong style="color:var(--gold);">Deep recommendation:</strong> ${escapeHtml(analysis.recommended.name)} (${escapeHtml(analysis.recommended.position)})</div>
+    <div class="player-meta"><strong>Confidence:</strong> ${confidence}% · Median edge over runner-up: ${formatSigned(analysis.medianEdge, 1)} starter points · ${analysis.trials} complete draft trials per candidate</div>
+    <div style="overflow-x:auto;margin-top:8px;"><table class="rank-table"><thead><tr><th>Candidate</th><th>Median starters</th><th>Floor</th><th>Ceiling</th><th>Avg roster</th><th>Best outcome rate</th><th>Position run risk</th><th>Context edge</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <details style="margin-top:8px;"><summary><strong>Typical final roster after drafting ${escapeHtml(analysis.recommended.name)}</strong></summary><div class="player-meta" style="margin-top:5px;">${escapeHtml(medianRoster || 'Roster details unavailable')}</div></details>
+    <details style="margin-top:8px;"><summary><strong>Stack, bye, playoff, and volatility effects</strong></summary><div class="player-meta" style="margin-top:5px;"><strong>Stack:</strong> ${escapeHtml(stackText)}<br><strong>Bye-week risk:</strong> ${escapeHtml(byeText)}<br><strong>Playoff schedule:</strong> ${escapeHtml(playoffText)}<br><strong>Volatility range:</strong> ${escapeHtml(volatilityText)}</div></details>
+  `;
+}
+
+function runDeepDecisionExplorer() {
+  const target = document.getElementById('v3DecisionExplorerResult');
+  const button = document.getElementById('v3DeepSimBtn');
+  const board = window.__v3Board || [];
+  if (!board.length) {
+    if (target) target.textContent = 'The live board is not ready yet.';
+    return;
+  }
+  const trials = Number(document.getElementById('v3DeepSimTrials')?.value || 300);
+  const candidateLimit = Number(document.getElementById('v3DeepSimCandidates')?.value || 4);
+  if (target) target.innerHTML = `<span class="fetch-status">Running ${trials} full-draft trials for ${candidateLimit} candidates…</span>`;
+  if (button) button.disabled = true;
+  window.setTimeout(() => {
+    try {
+      const analysis = runDecisionExplorer(board, v3DraftState, {
+        trials,
+        candidateLimit,
+        leagueSettings: buildV3LeagueSettingsFromFormValues(formValues()),
+            benchSpots: 6,
+      });
+      renderDecisionExplorerResult(analysis);
+    } catch (error) {
+      if (target) target.innerHTML = `<span class="fetch-status error">Deep simulation failed: ${escapeHtml(error.message || String(error))}</span>`;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }, 20);
 }
 
 function setYahooDraftSyncStatus(message, className = '') {
@@ -473,7 +580,12 @@ function syncYahooDraftResultsFromText(text = '') {
     return;
   }
 
-  const importedPicks = yahooDraftCsvTextToV3(text, { teams: v3DraftState.teams, season: 2026 })
+  const importedPicks = yahooDraftCsvTextToV3(text, {
+    teams: v3DraftState.teams,
+    season: 2026,
+    players: fullBoard,
+    startingPick: Math.max(1, Number(v3DraftState.currentPick) || 1),
+  })
     .filter((pick) => Number(pick.pickNumber) > 0)
     .sort((a, b) => Number(a.pickNumber) - Number(b.pickNumber));
   if (!importedPicks.length) {
@@ -482,28 +594,46 @@ function syncYahooDraftResultsFromText(text = '') {
   }
 
   syncDraftStateFromControls();
+  const existingPlayerNames = new Set((v3DraftState.picks || []).map((pick) => normalizeName(pick.name || '')));
+  let nextOpenPick = Math.max(1, ...((v3DraftState.picks || []).map((pick) => Number(pick.pickNumber) || 0))) + 1;
+  const preparedImportedPicks = importedPicks
+    .filter((pick) => !existingPlayerNames.has(normalizeName(pick.name || '')))
+    .map((pick) => {
+      if (pick.pickExplicit !== false) return pick;
+      const prepared = { ...pick, pickNumber: nextOpenPick, round: Math.ceil(nextOpenPick / Number(v3DraftState.teams || 12)) };
+      nextOpenPick += 1;
+      return prepared;
+    });
+  const importedByPick = new Map(preparedImportedPicks.map((pick) => [Number(pick.pickNumber), pick]));
+  const preserved = (v3DraftState.picks || [])
+    .filter((pick) => !importedByPick.has(Number(pick.pickNumber)))
+    .map((pick) => ({ ...pick, source: 'preserved-live-state' }));
+  const mergedRows = [...preserved, ...preparedImportedPicks]
+    .sort((a, b) => Number(a.pickNumber) - Number(b.pickNumber));
   let nextState = createDraftState({ ...v3DraftState, picks: [], currentPick: 1 });
   let matched = 0;
   const unmatched = [];
-  importedPicks.forEach((pick) => {
+  mergedRows.forEach((pick) => {
     const player = playerByDraftImportRow(fullBoard, pick);
     if (player) matched += 1;
-    else unmatched.push(pick.name);
+    else if (pick.source !== 'preserved-live-state') unmatched.push(pick.name);
     nextState = draftPlayer(nextState, player || pick, {
       pickNumber: pick.pickNumber,
-      timestamp: `import-${pick.pickNumber}`,
+      fantasyTeam: pick.fantasyTeam || null,
+      timestamp: pick.timestamp || `import-${pick.pickNumber}`,
     });
   });
 
   v3DraftState = nextState;
   saveV3DraftState();
   renderCurrentV3Board();
-  const tendencies = summarizeDraftTendencies(importedPicks);
+  const tendencies = summarizeDraftTendencies(preparedImportedPicks);
   const positionSummary = Object.entries(tendencies.byPosition)
     .sort(([, a], [, b]) => b - a)
     .map(([position, count]) => `${position}: ${count}`)
     .join(' · ');
-  setYahooDraftSyncStatus(`Synced ${importedPicks.length} pick(s), matched ${matched} to board. ${positionSummary}${unmatched.length ? ` · unmatched: ${unmatched.slice(0, 3).join(', ')}` : ''}`, unmatched.length ? '' : 'ok');
+  const ignoredDuplicates = importedPicks.length - preparedImportedPicks.length;
+  setYahooDraftSyncStatus(`Merged ${preparedImportedPicks.length} new pasted pick(s); ${nextState.picks.length} total drafted, matched ${matched} to board. ${positionSummary}${ignoredDuplicates ? ` · ignored ${ignoredDuplicates} already-drafted player(s)` : ''}${unmatched.length ? ` · unmatched: ${unmatched.slice(0, 3).join(', ')}` : ''}`, unmatched.length ? '' : 'ok');
 }
 
 function v3CoverageSummary(board = []) {
@@ -725,6 +855,13 @@ document.addEventListener('click', (event) => {
   if (yahooDraftSyncButton) {
     event.preventDefault();
     syncYahooDraftResultsFromText(document.getElementById('v3YahooDraftPaste')?.value || '');
+    return;
+  }
+
+  const deepSimButton = event.target.closest?.('#v3DeepSimBtn');
+  if (deepSimButton) {
+    event.preventDefault();
+    runDeepDecisionExplorer();
     return;
   }
 

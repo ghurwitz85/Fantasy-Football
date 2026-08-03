@@ -74,3 +74,34 @@ This is a heuristic tool, not a formal value-based-drafting calculator — it's 
 This package now loads `data/rankings.json`, `data/team-context.json`, and `data/yahoo-history-2025.json` automatically. The scheduled workflow in `.github/workflows/update-rankings.yml` refreshes configured licensed feeds without exposing API credentials to the browser.
 
 Custom league scoring now includes imported 40+ yard pass-completion, rushing, and receiving bonuses. The board retains separate controls for run blocking, pass protection, QB support for WR/TE, team defense/game script, and position-specific strength of schedule. See `SETUP.md` for the minimal deployment steps.
+
+## Live draft paste sync
+
+Live Draft Mode accepts Yahoo draft CSV/player-block text and common ESPN-style copied lines. Pasted picks are merged by overall pick number, so you can paste the full draft repeatedly or only newly drafted picks without erasing earlier state. The Command Center compares the top recommendation against leading alternatives using modeled utility, starter points, total roster points, and next-turn positional drop-off.
+
+## League-aware Monte Carlo draft intelligence
+
+The live Draft Command Center now loads the complete 2025 Yahoo draft (180 picks) and builds round-by-round positional demand and owner profiles. For the leading candidates it runs seeded multi-trial rest-of-draft simulations using ADP uncertainty plus the league's historical positional timing. The recommendation shows average, floor, median, and ceiling projected starter points and estimates the risk of a positional run before the user's next turn.
+
+The Monte Carlo layer is intentionally bounded to the top four candidates and 24 trials during interactive rendering to remain responsive on mobile. Core deterministic utility, VORP, roster construction, opportunity cost, and alternatives remain available for the full board.
+
+## Deep Simulation and Decision Explorer
+
+The Live Draft Command Center now includes an on-demand deep simulation. Choose 100–1,000 trials per candidate and compare the leading 3–6 picks across complete rest-of-draft outcomes. It reports median starting-lineup points, floor, ceiling, average total-roster value, position-run risk, best-outcome rate, a confidence score, and a representative final roster. The automatic live simulation remains intentionally lightweight for mobile performance.
+
+The Command Center also notes when the recommended player changes after a new pick, import, or settings update.
+
+## V6 simulation context upgrade
+
+The Decision Explorer now evaluates four roster-level dimensions inside each Monte Carlo outcome:
+
+- **QB/receiver stacks:** modestly rewards same-team QB + WR/TE combinations for correlated ceiling.
+- **Bye-week lineup concentration:** penalizes rosters whose likely starters cluster on the same bye week.
+- **Playoff schedule value:** currently uses the existing position-specific season schedule adjustment as an explicitly labeled proxy until dedicated Weeks 15–17 data are added.
+- **Weekly volatility:** aggregates player floor and ceiling projections so the Explorer reports practical roster range rather than treating all median projections as equally reliable.
+
+These effects are shown in the Decision Explorer under “Stack, bye, playoff, and volatility effects.” They adjust simulated starter outcomes modestly and remain auditable.
+
+## League history policy
+
+The bundled 2025 draft archive is advisory-only. It is not used to alter player rankings, opponent pick probabilities, position-run probabilities, availability estimates, or Monte Carlo outcomes. Live and deep simulations use current ADP, player projections, roster state, positional scarcity, and randomized market behavior.

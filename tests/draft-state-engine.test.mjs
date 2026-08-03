@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   annotateAvailability,
   annotateDraftRecommendations,
+  compareCandidateSimulations,
   createDraftState,
   draftedPlayerIds,
   draftPlayer,
@@ -15,8 +16,10 @@ import {
   resetDraftState,
   rosterCountsByPosition,
   rosterForTeam,
+  runDecisionExplorer,
   scoreStartingLineup,
   simulateCandidatePickImpact,
+  simulateCandidateMonteCarlo,
   undoLastPick,
 } from '../js/draft-state-engine.js';
 
@@ -276,4 +279,80 @@ test('simulation avoids early K and DST while core starters and flex are unfille
   assert.ok(!earlyPathPositions.includes('DST'));
   assert.ok(earlyPathPositions.includes('QB'));
   assert.ok(earlyPathPositions.includes('TE'));
+});
+
+
+test('compares recommended pick against alternatives with auditable deltas', () => {
+  const recommended = {
+    playerId: 'rb1', name: 'RB One', position: 'RB',
+    draft: { simulation: {
+      modeledDraftUtility: 82, projectedStarterPoints: 1400, totalRosterPoints: 1800, opportunityCost: 18, nextTurnDropoff: 24,
+      modeledUtilityBreakdown: { starter: 20, flex: 4, bench: 2, rosterPlan: 30, opportunity: 18, tierScarcity: 5, availability: 4, strategy: 3, replaceabilityPenalty: 4 },
+    } },
+  };
+  const alternative = {
+    playerId: 'wr1', name: 'WR One', position: 'WR',
+    draft: { simulation: {
+      modeledDraftUtility: 70, projectedStarterPoints: 1410, totalRosterPoints: 1780, opportunityCost: 6, nextTurnDropoff: 8,
+      modeledUtilityBreakdown: { starter: 18, flex: 4, bench: 3, rosterPlan: 22, opportunity: 6, tierScarcity: 2, availability: 5, strategy: 4, replaceabilityPenalty: 3 },
+    } },
+  };
+
+  const comparison = compareCandidateSimulations(recommended, alternative);
+  assert.equal(comparison.utilityDelta, 12);
+  assert.equal(comparison.starterPointsDelta, -10);
+  assert.equal(comparison.totalRosterPointsDelta, 20);
+  assert.equal(comparison.nextTurnDropoffDelta, 16);
+  assert.equal(comparison.utilityDeltas.rosterPlan, 8);
+  assert.equal(comparison.utilityDeltas.opportunity, 12);
+});
+
+test('Monte Carlo simulation returns stable floor median ceiling and league run risk', () => {
+  const players = [
+    { playerId: 'rb1', name: 'RB One', position: 'RB', adp: { overall: 1 }, draft: { strategy: { pointsMaximizingScore: 80 } }, v3Row: { personalRank: 1, adp: 1, adjustedProjection: 220, vorp: 70 } },
+    { playerId: 'wr1', name: 'WR One', position: 'WR', adp: { overall: 2 }, draft: { strategy: { pointsMaximizingScore: 70 } }, v3Row: { personalRank: 2, adp: 2, adjustedProjection: 215, vorp: 65 } },
+    { playerId: 'rb2', name: 'RB Two', position: 'RB', adp: { overall: 3 }, draft: { strategy: { pointsMaximizingScore: 40 } }, v3Row: { personalRank: 3, adp: 3, adjustedProjection: 190, vorp: 40 } },
+    { playerId: 'wr2', name: 'WR Two', position: 'WR', adp: { overall: 4 }, draft: { strategy: { pointsMaximizingScore: 35 } }, v3Row: { personalRank: 4, adp: 4, adjustedProjection: 185, vorp: 35 } },
+    { playerId: 'qb1', name: 'QB One', position: 'QB', adp: { overall: 5 }, draft: { strategy: { pointsMaximizingScore: 30 } }, v3Row: { personalRank: 5, adp: 5, adjustedProjection: 300, vorp: 45 } },
+  ];
+  const result = simulateCandidateMonteCarlo(players, createDraftState({ teams: 2, userDraftSlot: 1, currentPick: 1 }), players[0], {
+    trials: 20,
+    seed: 7,
+    benchSpots: 0,
+    maxSimulationPicks: 6,
+    leagueSettings: { starters: { QB: 1, RB: 1, WR: 1, TE: 0, FLEX: 0 }, flexEligibility: ['RB', 'WR', 'TE'] },
+    leagueTendencies: { teams: 2, roundPositionProbabilities: { 1: { RB: 0.5 }, 2: { RB: 0.5 } } },
+  });
+
+  assert.equal(result.trials, 20);
+  assert.ok(result.starterFloor <= result.starterMedian);
+  assert.ok(result.starterMedian <= result.starterCeiling);
+  assert.ok(result.positionRunRisk.probabilityAtLeastOne > 0);
+});
+
+test('decision explorer compares candidates and returns confidence plus representative rosters', () => {
+  const players = [
+    { playerId: 'rb1', name: 'RB One', position: 'RB', adp: { overall: 1 }, draft: { simulation: { modeledDraftUtility: 90 }, strategy: { pointsMaximizingScore: 80 } }, v3Row: { personalRank: 1, finalDraftScore: 0.95, adjustedProjection: 220, vorp: 70 } },
+    { playerId: 'wr1', name: 'WR One', position: 'WR', adp: { overall: 2 }, draft: { simulation: { modeledDraftUtility: 80 }, strategy: { pointsMaximizingScore: 70 } }, v3Row: { personalRank: 2, finalDraftScore: 0.90, adjustedProjection: 215, vorp: 65 } },
+    { playerId: 'qb1', name: 'QB One', position: 'QB', adp: { overall: 3 }, draft: { simulation: { modeledDraftUtility: 60 }, strategy: { pointsMaximizingScore: 50 } }, v3Row: { personalRank: 3, finalDraftScore: 0.80, adjustedProjection: 300, vorp: 45 } },
+    { playerId: 'rb2', name: 'RB Two', position: 'RB', adp: { overall: 4 }, draft: { simulation: { modeledDraftUtility: 40 }, strategy: { pointsMaximizingScore: 30 } }, v3Row: { personalRank: 4, finalDraftScore: 0.70, adjustedProjection: 185, vorp: 35 } },
+    { playerId: 'wr2', name: 'WR Two', position: 'WR', adp: { overall: 5 }, draft: { simulation: { modeledDraftUtility: 35 }, strategy: { pointsMaximizingScore: 25 } }, v3Row: { personalRank: 5, finalDraftScore: 0.65, adjustedProjection: 180, vorp: 30 } },
+  ];
+  const analysis = runDecisionExplorer(players, createDraftState({ teams: 2, userDraftSlot: 1, currentPick: 1 }), {
+    trials: 30,
+    candidateLimit: 3,
+    seed: 9,
+    benchSpots: 0,
+    maxSimulationPicks: 6,
+    leagueSettings: { starters: { QB: 1, RB: 1, WR: 1, TE: 0, FLEX: 0 }, flexEligibility: ['RB', 'WR', 'TE'] },
+    leagueTendencies: { teams: 2, roundPositionProbabilities: { 1: { RB: 0.5, WR: 0.5 }, 2: { QB: 0.5 } } },
+  });
+
+  assert.equal(analysis.trials, 30);
+  assert.equal(analysis.candidateCount, 3);
+  assert.ok(analysis.recommended);
+  assert.ok(analysis.confidence >= 0 && analysis.confidence <= 1);
+  assert.equal(analysis.candidates.length, 3);
+  assert.ok(Array.isArray(analysis.recommended.medianRoster));
+  assert.ok(analysis.candidates.every((candidate) => candidate.starterFloor <= candidate.starterMedian && candidate.starterMedian <= candidate.starterCeiling));
 });
